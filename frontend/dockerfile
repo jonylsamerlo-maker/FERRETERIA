@@ -1,0 +1,19 @@
+# Usamos la misma versión de Node que acabamos de instalar en tu máquina
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copiamos los archivos de configuración de paquetes
+COPY package*.json ./
+
+# Instalamos las dependencias adentro del contenedor
+RUN npm install
+
+# Copiamos el resto del código del frontend
+COPY . .
+
+# Exponemos el puerto de Astro
+EXPOSE 4321
+
+# Comando para correr Astro en modo desarrollo
+CMD ["npm", "run", "dev"]
