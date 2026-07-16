@@ -1,3 +1,9 @@
+<?php
+
+declare(strict_types=1);
+
+
+
 class Producto
 {
     private PDO $conn;
@@ -61,4 +67,42 @@ class Producto
 
         return $producto ?: null;
     }
+
+    public function crear(array $datos): bool
+{
+    $sql = "
+        INSERT INTO productos
+        (
+            codigo,
+            nombre,
+            descripcion,
+            precio,
+            stock,
+            imagen,
+            categoria_id
+        )
+        VALUES
+        (
+            :codigo,
+            :nombre,
+            :descripcion,
+            :precio,
+            :stock,
+            :imagen,
+            :categoria_id
+        )
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    return $stmt->execute([
+        ':codigo'       => $datos['codigo'],
+        ':nombre'       => $datos['nombre'],
+        ':descripcion'  => $datos['descripcion'],
+        ':precio'       => $datos['precio'],
+        ':stock'        => $datos['stock'],
+        ':imagen'       => $datos['imagen'],
+        ':categoria_id' => $datos['categoria_id']
+    ]);
+}
 }
