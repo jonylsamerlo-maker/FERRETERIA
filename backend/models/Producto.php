@@ -12,8 +12,23 @@ class Producto
     }
 
     public function listar(): array
-    {
-        $sql = "SELECT * FROM productos ORDER BY producto_id ASC";
+    {$sql = "
+SELECT
+    p.producto_id,
+    p.codigo,
+    p.nombre,
+    p.descripcion,
+    p.precio,
+    p.stock,
+    p.imagen,
+    c.nombre AS categoria,
+    p.fecha_creacion
+FROM productos p
+INNER JOIN categorias c
+    ON p.categoria_id = c.categoria_id
+ORDER BY p.producto_id ASC
+";
+        
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
