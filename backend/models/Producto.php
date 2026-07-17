@@ -105,4 +105,45 @@ class Producto
         ':categoria_id' => $datos['categoria_id']
     ]);
 }
+public function actualizar(int $id, array $datos): bool
+{
+    $sql = "
+        UPDATE productos
+        SET
+            codigo = :codigo,
+            nombre = :nombre,
+            descripcion = :descripcion,
+            precio = :precio,
+            stock = :stock,
+            imagen = :imagen,
+            categoria_id = :categoria_id
+        WHERE producto_id = :id
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    return $stmt->execute([
+        ':codigo'       => $datos['codigo'],
+        ':nombre'       => $datos['nombre'],
+        ':descripcion'  => $datos['descripcion'],
+        ':precio'       => $datos['precio'],
+        ':stock'        => $datos['stock'],
+        ':imagen'       => $datos['imagen'],
+        ':categoria_id' => $datos['categoria_id'],
+        ':id'           => $id
+    ]);
+}
+public function eliminar(int $id): bool
+{
+    $sql = "
+        DELETE FROM productos
+        WHERE producto_id = :id
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    return $stmt->execute([
+        ':id' => $id
+    ]);
+}
 }

@@ -16,48 +16,118 @@ try {
 
     $metodo = $_SERVER['REQUEST_METHOD'];
 
-    switch ($metodo) {
+  switch ($metodo) {
 
-        case 'GET':
+    case 'GET':
 
-            echo json_encode(
-                $producto->listar(),
-                JSON_UNESCAPED_UNICODE
-            );
+        echo json_encode(
+            $producto->listar(),
+            JSON_UNESCAPED_UNICODE
+        );
 
-            break;
+        break;
 
-        case 'POST':
+    case 'POST':
 
-            $datos = json_decode(file_get_contents("php://input"), true);
+        $datos = json_decode(file_get_contents("php://input"), true);
 
-            if ($producto->crear($datos)) {
+        if ($producto->crear($datos)) {
 
-                http_response_code(201);
-
-                echo json_encode([
-                    "mensaje" => "Producto creado correctamente"
-                ]);
-
-            } else {
-
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "No se pudo crear el producto"
-                ]);
-            }
-
-            break;
-
-        default:
-
-            http_response_code(405);
+            http_response_code(201);
 
             echo json_encode([
-                "mensaje" => "Método no permitido"
+                "mensaje" => "Producto creado correctamente"
             ]);
+
+        } else {
+
+            http_response_code(400);
+
+            echo json_encode([
+                "mensaje" => "No se pudo crear el producto"
+            ]);
+        }
+
+        break;
+
+    case 'PUT':
+
+        $id = $_GET['id'] ?? null;
+
+        if (!$id) {
+            http_response_code(400);
+
+            echo json_encode([
+                "mensaje" => "Debe enviar el ID del producto"
+            ]);
+
+            break;
+        }
+
+        $datos = json_decode(file_get_contents("php://input"), true);
+
+        if ($producto->actualizar((int)$id, $datos)) {
+
+            http_response_code(200);
+
+            echo json_encode([
+                "mensaje" => "Producto actualizado correctamente"
+            ]);
+
+        } else {
+
+            http_response_code(400);
+
+            echo json_encode([
+                "mensaje" => "No se pudo actualizar el producto"
+            ]);
+        }
+
+        break;
+      case 'DELETE':
+
+    $id = $_GET['id'] ?? null;
+
+    if (!$id) {
+
+        http_response_code(400);
+
+        echo json_encode([
+            "mensaje" => "Debe enviar el ID del producto"
+        ]);
+
+        break;
     }
+
+    if ($producto->eliminar((int)$id)) {
+
+        http_response_code(200);
+
+        echo json_encode([
+            "mensaje" => "Producto eliminado correctamente"
+        ]);
+
+    } else {
+
+        http_response_code(400);
+
+        echo json_encode([
+            "mensaje" => "No se pudo eliminar el producto"
+        ]);
+    }
+
+    break;  
+
+    default:
+
+        http_response_code(405);
+
+        echo json_encode([
+            "mensaje" => "Método no permitido"
+        ]);
+
+        break;
+}
 
 } catch (Throwable $e) {
 
