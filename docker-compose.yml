@@ -4,12 +4,12 @@ services:
   # Servidor de Astro (React)
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ./ferreteria-jm/apps/frontend
+      dockerfile: dockerfile
     ports:
       - "4321:4321"
     volumes:
-      - ./frontend:/app
+      - ./ferreteria-jm/apps/frontend:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
