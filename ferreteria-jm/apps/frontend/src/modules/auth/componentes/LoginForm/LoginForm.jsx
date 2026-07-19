@@ -1,6 +1,19 @@
+import { useState } from "react";
 import "./LoginForm.css";
 
 function LoginForm() {
+    const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const handleChange = (event) => {
+  const { name, value } = event.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
   return (
     <form className="login-form">
 
@@ -16,14 +29,16 @@ function LoginForm() {
         >
           Usuario
         </label>
-
         <input
           id="username"
-          type="text"
-          className="login-form__input"
-          placeholder="Ingrese su usuario"
-        />
-
+          name="username"
+            type="text"
+  className="login-form__input"
+  placeholder="Ingrese su usuario"
+  value={formData.username}
+  onChange={handleChange}
+       />  
+        
       </div>
 
       <div className="login-form__group">
@@ -36,11 +51,16 @@ function LoginForm() {
         </label>
 
         <input
-          id="password"
-          type="password"
-          className="login-form__input"
-          placeholder="Ingrese su contraseña"
-        />
+        
+  id="password"
+  name="password"
+  type="password"
+  className="login-form__input"
+  placeholder="Ingrese su contraseña"
+  value={formData.password}
+  onChange={handleChange}
+/>
+    
 
       </div>
 
