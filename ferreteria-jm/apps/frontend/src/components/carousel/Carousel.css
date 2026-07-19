@@ -1,0 +1,171 @@
+.ferreteria-carousel {
+    width: 100%;
+    padding: 2rem 1rem;
+    background: #f8fafc;
+}
+
+.ferreteria-carousel__viewport {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.ferreteria-carousel__image {
+    width: 100%;
+    height: 260px;
+    object-fit: cover;
+    display: block;
+}
+
+.ferreteria-carousel__overlay {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    padding: 2rem;
+
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, .75),
+        rgba(0, 0, 0, .20),
+        transparent
+    );
+
+    color: #ffffff;
+}
+
+.ferreteria-carousel__tag {
+    align-self: flex-start;
+
+    background: #f97316;
+
+    color: #ffffff;
+
+    padding: .4rem .8rem;
+
+    border-radius: 999px;
+
+    font-size: .8rem;
+
+    font-weight: 600;
+
+    margin-bottom: .8rem;
+}
+
+.ferreteria-carousel__title {
+    font-size: 1.8rem;
+    margin-bottom: .5rem;
+}
+
+.ferreteria-carousel__description {
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+.ferreteria-carousel__control {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+
+    width: 48px;
+    height: 48px;
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    background: rgba(255,255,255,.9);
+
+    color: #1f2937;
+
+    font-size: 2rem;
+
+    transition: .3s;
+}
+
+.ferreteria-carousel__control:hover {
+    background: #f97316;
+    color: #ffffff;
+}
+
+.ferreteria-carousel__control--prev {
+    left: 1rem;
+}
+
+.ferreteria-carousel__control--next {
+    right: 1rem;
+}
+
+.ferreteria-carousel__dots {
+    display: flex;
+    justify-content: center;
+    gap: .6rem;
+
+    margin-top: 1.2rem;
+}
+
+.ferreteria-carousel__dot {
+    width: 12px;
+    height: 12px;
+
+    border: none;
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    background: #cbd5e1;
+
+    transition: .3s;
+}
+
+.ferreteria-carousel__dot:hover {
+    background: #94a3b8;
+}
+
+.ferreteria-carousel__dot--active {
+    background: #f97316;
+}
+
+/* ===========================
+   TABLET
+=========================== */
+
+@media (min-width: 768px) {
+
+    .ferreteria-carousel__image {
+        height: 420px;
+    }
+
+    .ferreteria-carousel__title {
+        font-size: 2.5rem;
+    }
+
+    .ferreteria-carousel__description {
+        font-size: 1.15rem;
+    }
+
+}
+
+/* ===========================
+   DESKTOP
+=========================== */
+
+@media (min-width: 1024px) {
+
+    .ferreteria-carousel {
+        padding: 4rem 2rem;
+    }
+
+    .ferreteria-carousel__image {
+        height: 520px;
+    }
+
+}

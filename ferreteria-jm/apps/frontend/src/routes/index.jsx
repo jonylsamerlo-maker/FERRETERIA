@@ -12,7 +12,8 @@ export default function AppRoutes() {
     "/dashboard": Dashboard,
   };
 
-  const Page = routes[window.location.pathname] ?? NotFound;
+  const pathname = typeof window === "undefined" ? "/" : window.location.pathname;
+  const Page = routes[pathname] ?? NotFound;
 
   return <Page />;
 }

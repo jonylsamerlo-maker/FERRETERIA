@@ -1,0 +1,103 @@
+.categories {
+    width: 100%;
+    padding: 4rem 1rem;
+    background: #f8fafc;
+}
+
+.categories__container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.categories__title {
+    text-align: center;
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: .5rem;
+}
+
+.categories__subtitle {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 3rem;
+}
+
+.categories__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+.categories__card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem;
+
+    text-align: center;
+
+    cursor: pointer;
+
+    transition: all .3s ease;
+
+    border: 2px solid transparent;
+
+    box-shadow: 0 10px 20px rgba(0,0,0,.08);
+}
+
+.categories__card:hover {
+    transform: translateY(-8px);
+
+    border-color: #f97316;
+
+    box-shadow: 0 20px 35px rgba(0,0,0,.12);
+}
+
+.categories__icon {
+    display: block;
+
+    font-size: 3rem;
+
+    margin-bottom: 1rem;
+}
+
+.categories__card-title {
+    font-size: 1.3rem;
+
+    color: #1f2937;
+
+    margin-bottom: .6rem;
+}
+
+.categories__description {
+    color: #6b7280;
+
+    line-height: 1.5;
+}
+
+/* ===========================
+   TABLET
+=========================== */
+
+@media (min-width:768px){
+
+    .categories__grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+/* ===========================
+   DESKTOP
+=========================== */
+
+@media (min-width:1024px){
+
+    .categories__grid{
+
+        grid-template-columns:repeat(3,1fr);
+
+    }
+
+}

@@ -1,0 +1,53 @@
+.featured-products {
+    width: 100%;
+    padding: 4rem 1rem;
+    background: #ffffff;
+}
+
+.featured-products__container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.featured-products__title {
+    text-align: center;
+    font-size: 2rem;
+    color: #1f2937;
+    margin-bottom: .5rem;
+}
+
+.featured-products__subtitle {
+    text-align: center;
+    color: #6b7280;
+    margin-bottom: 3rem;
+}
+
+.featured-products__grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+/* Tablet */
+
+@media (min-width:768px){
+
+    .featured-products__grid{
+
+        grid-template-columns:repeat(2,1fr);
+
+    }
+
+}
+
+/* Desktop */
+
+@media (min-width:1024px){
+
+    .featured-products__grid{
+
+        grid-template-columns:repeat(4,1fr);
+
+    }
+
+}
