@@ -1,11 +1,23 @@
-import React from 'react';
+import "./Navbar.css";
+import { Menu } from "lucide-react";
 
-export default function Navbar() {
-  return (
-    <nav>
-      <a href="/">Inicio</a>
-      <a href="/productos">Productos</a>
-      <a href="/login">Login</a>
-    </nav>
-  );
+function Navbar() {
+    return (
+        <nav className="navbar">
+
+            <button
+                className="navbar__menu"
+                aria-label="Abrir menú"
+            >
+                <Menu size={28} />
+            </button>
+
+            <h1 className="navbar__logo">
+                Ferretería JM
+            </h1>
+
+        </nav>
+    );
 }
+
+export default Navbar;

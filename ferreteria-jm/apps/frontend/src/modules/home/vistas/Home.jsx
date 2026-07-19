@@ -1,7 +1,7 @@
 import Hero from "../../../components/hero/Hero.index";
 import Carousel from "../../../components/carousel/Carousel.index";
 import Categories from "../../../components/categories/Categories.index";
-import FeaturedProducts from "../../../components/featured-products/FeaturedProducts.index";
+import FeaturedProducts from "../components/featured-products/FeaturedProducts.index";
 
 import "./Home.css";
 

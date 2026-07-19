@@ -1,9 +1,12 @@
-import React from 'react';
+import Navbar from "./Navbar.index";
+import "./Header.css";
 
-export default function Header() {
-  return (
-    <header>
-      <h1>Ferretería</h1>
-    </header>
-  );
+function Header() {
+    return (
+        <header>
+            <Navbar />
+        </header>
+    );
 }
+
+export default Header;

@@ -1,7 +1,7 @@
-import Home from "../modules/home/pages/Home";
-import Productos from "../modules/productos/pages/Productos";
-import Login from "../modules/auth/pages/Login";
-import Dashboard from "../modules/dashboard/pages/Dashboard";
+import Home from "../modules/home/vistas/Home";
+import Productos from "../modules/productos/vistas/Productos";
+import Login from "../modules/auth/vistas/Login/Login.index";
+import Dashboard from "../modules/dashboard/vistas/Dashboard";
 import NotFound from "./NotFound";
 
 export default function AppRoutes() {

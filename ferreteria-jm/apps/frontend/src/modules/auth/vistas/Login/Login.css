@@ -1,0 +1,23 @@
+.login{
+
+    min-height:100vh;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:#f3f4f6;
+
+    padding:2rem;
+
+}
+
+.login__container{
+
+    width:100%;
+
+    max-width:500px;
+
+}

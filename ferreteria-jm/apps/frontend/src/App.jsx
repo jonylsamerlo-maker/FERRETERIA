@@ -1,5 +1,5 @@
-import Header from "./shared/components/layout/Header/Header.index";
-import Footer from "./shared/components/layout/Footer/Footer.index";
+import Header from "./components/layout/Header.index";
+import Footer from "./components/layout/Footer.index";
 import AppRoutes from "./routes";
 
 function App() {

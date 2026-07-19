@@ -1,36 +1,9 @@
 import "./FeaturedProducts.css";
 import ProductCard from "../product-card/ProductCard.index";
+import products from "../../../../data/products";
 
-const products = [
-  {
-    id: 1,
-    image: "https://via.placeholder.com/400x300?text=Taladro",
-    title: "Taladro Bosch",
-    description: "Taladro percutor de 800W.",
-    price: "125.000",
-  },
-  {
-    id: 2,
-    image: "https://via.placeholder.com/400x300?text=Amoladora",
-    title: "Amoladora",
-    description: "Ideal para trabajos profesionales.",
-    price: "98.000",
-  },
-  {
-    id: 3,
-    image: "https://via.placeholder.com/400x300?text=Martillo",
-    title: "Martillo",
-    description: "Acero forjado de alta resistencia.",
-    price: "15.500",
-  },
-  {
-    id: 4,
-    image: "https://via.placeholder.com/400x300?text=Destornillador",
-    title: "Destornillador",
-    description: "Punta imantada de precisión.",
-    price: "8.900",
-  },
-];
+
+
 
 function FeaturedProducts() {
   return (
