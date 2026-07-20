@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-
-
 class Producto
 {
     private PDO $conn;
@@ -24,6 +22,7 @@ class Producto
                 p.precio,
                 p.stock,
                 p.imagen,
+                p.categoria_id,
                 c.nombre AS categoria,
                 p.fecha_creacion
             FROM productos p
@@ -35,7 +34,7 @@ class Producto
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPorId(int $id): ?array
@@ -60,90 +59,99 @@ class Producto
         ";
 
         $stmt = $this->conn->prepare($sql);
+
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
 
-        $producto = $stmt->fetch();
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
 
         return $producto ?: null;
     }
 
     public function crear(array $datos): bool
-{
-    $sql = "
-        INSERT INTO productos
-        (
-            codigo,
-            nombre,
-            descripcion,
-            precio,
-            stock,
-            imagen,
-            categoria_id
-        )
-        VALUES
-        (
-            :codigo,
-            :nombre,
-            :descripcion,
-            :precio,
-            :stock,
-            :imagen,
-            :categoria_id
-        )
-    ";
+    {
+        $sql = "
+            INSERT INTO productos
+            (
+                codigo,
+                nombre,
+                descripcion,
+                precio,
+                stock,
+                imagen,
+                categoria_id
+            )
+            VALUES
+            (
+                :codigo,
+                :nombre,
+                :descripcion,
+                :precio,
+                :stock,
+                :imagen,
+                :categoria_id
+            )
+        ";
 
-    $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql);
 
-    return $stmt->execute([
-        ':codigo'       => $datos['codigo'],
-        ':nombre'       => $datos['nombre'],
-        ':descripcion'  => $datos['descripcion'] ?? null,
-        ':precio'       => $datos['precio'],
-        ':stock'        => $datos['stock'],
-        ':imagen'       => $datos['imagen'],
-        ':categoria_id' => $datos['categoria_id']
-    ]);
-}
-public function actualizar(int $id, array $datos): bool
-{
-    $sql = "
-        UPDATE productos
-        SET
-            codigo = :codigo,
-            nombre = :nombre,
-            descripcion = :descripcion,
-            precio = :precio,
-            stock = :stock,
-            imagen = :imagen,
-            categoria_id = :categoria_id
-        WHERE producto_id = :id
-    ";
+        return $stmt->execute([
+            ':codigo' => $datos['codigo'],
+            ':nombre' => $datos['nombre'],
+            ':descripcion' => $datos['descripcion'] ?? null,
+            ':precio' => $datos['precio'],
+            ':stock' => $datos['stock'],
+            ':imagen' => $datos['imagen'],
+            ':categoria_id' => $datos['categoria_id']
+        ]);
+    }
 
-    $stmt = $this->conn->prepare($sql);
+    public function actualizar(int $id, array $datos): bool
+    {
+        if ($this->obtenerPorId($id) === null) {
+            return false;
+        }
 
-    return $stmt->execute([
-        ':codigo'       => $datos['codigo'],
-        ':nombre'       => $datos['nombre'],
-        ':descripcion'  => $datos['descripcion'],
-        ':precio'       => $datos['precio'],
-        ':stock'        => $datos['stock'],
-        ':imagen'       => $datos['imagen'],
-        ':categoria_id' => $datos['categoria_id'],
-        ':id'           => $id
-    ]);
-}
-public function eliminar(int $id): bool
-{
-    $sql = "
-        DELETE FROM productos
-        WHERE producto_id = :id
-    ";
+        $sql = "
+            UPDATE productos
+            SET
+                codigo = :codigo,
+                nombre = :nombre,
+                descripcion = :descripcion,
+                precio = :precio,
+                stock = :stock,
+                imagen = :imagen,
+                categoria_id = :categoria_id
+            WHERE producto_id = :id
+        ";
 
-    $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare($sql);
 
-    return $stmt->execute([
-        ':id' => $id
-    ]);
-}
+        return $stmt->execute([
+            ':codigo' => $datos['codigo'],
+            ':nombre' => $datos['nombre'],
+            ':descripcion' => $datos['descripcion'] ?? null,
+            ':precio' => $datos['precio'],
+            ':stock' => $datos['stock'],
+            ':imagen' => $datos['imagen'],
+            ':categoria_id' => $datos['categoria_id'],
+            ':id' => $id
+        ]);
+    }
+
+    public function eliminar(int $id): bool
+    {
+        $sql = "
+            DELETE FROM productos
+            WHERE producto_id = :id
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+
+        $stmt->execute([
+            ':id' => $id
+        ]);
+
+        return $stmt->rowCount() > 0;
+    }
 }
