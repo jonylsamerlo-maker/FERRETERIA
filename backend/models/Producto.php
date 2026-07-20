@@ -98,7 +98,7 @@ class Producto
     return $stmt->execute([
         ':codigo'       => $datos['codigo'],
         ':nombre'       => $datos['nombre'],
-        ':descripcion'  => $datos['descripcion'],
+        ':descripcion'  => $datos['descripcion'] ?? null,
         ':precio'       => $datos['precio'],
         ':stock'        => $datos['stock'],
         ':imagen'       => $datos['imagen'],

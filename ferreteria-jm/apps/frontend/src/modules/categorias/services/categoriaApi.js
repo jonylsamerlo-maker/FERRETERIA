@@ -5,8 +5,8 @@ const API_URL = `${API_BASE_URL}/api/categorias.php`;
 async function handleResponse(response) {
   const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.mensaje || 'Ocurrió un error al procesar la categoría');
+  if (!response.ok || data.success === false) {
+    throw new Error(data.message || 'Ocurrió un error al procesar la categoría');
   }
 
   return data;
@@ -14,7 +14,8 @@ async function handleResponse(response) {
 
 export async function getCategorias() {
   const response = await fetch(API_URL);
-  return handleResponse(response);
+  const data = await handleResponse(response);
+  return data.data || [];
 }
 
 export async function crearCategoria(categoria) {

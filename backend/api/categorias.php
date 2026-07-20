@@ -5,7 +5,31 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../models/Categoria.php';
 
-header('Content-Type: application/json; charset=utf-8');
+header("Access-Control-Allow-Origin: http://localhost:4321");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json; charset=UTF-8");
+
+function responderJson(bool $success, string $message, mixed $data = null, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+
+    $respuesta = [
+        "success" => $success,
+        "message" => $message
+    ];
+
+    if ($data !== null) {
+        $respuesta["data"] = $data;
+    }
+
+    echo json_encode($respuesta, JSON_UNESCAPED_UNICODE);
+}
+
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(200);
+    exit;
+}
 
 try {
 
@@ -20,10 +44,7 @@ try {
 
         case 'GET':
 
-            echo json_encode(
-                $categoria->listar(),
-                JSON_UNESCAPED_UNICODE
-            );
+            responderJson(true, "Categorías listadas correctamente", $categoria->listar());
 
             break;
 
@@ -32,27 +53,24 @@ try {
             $datos = json_decode(file_get_contents("php://input"), true);
 
             if (!is_array($datos) || empty(trim($datos['nombre'] ?? ''))) {
-                http_response_code(400);
+                responderJson(false, "Debe enviar el nombre de la categoría", null, 400);
 
-                echo json_encode([
-                    "mensaje" => "Debe enviar el nombre de la categoría"
-                ]);
+                break;
+            }
+
+            $datos['nombre'] = trim($datos['nombre']);
+            $datos['descripcion'] = trim($datos['descripcion'] ?? '');
+
+            if ($categoria->existeNombre($datos['nombre'])) {
+                responderJson(false, "Ya existe una categoría con ese nombre", null, 409);
 
                 break;
             }
 
             if ($categoria->crear($datos)) {
-                http_response_code(201);
-
-                echo json_encode([
-                    "mensaje" => "Categoría creada correctamente"
-                ]);
+                responderJson(true, "Categoría creada correctamente", null, 201);
             } else {
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "No se pudo crear la categoría"
-                ]);
+                responderJson(false, "No se pudo crear la categoría", null, 400);
             }
 
             break;
@@ -62,11 +80,7 @@ try {
             $id = $_GET['id'] ?? null;
 
             if (!$id) {
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "Debe enviar el ID de la categoría"
-                ]);
+                responderJson(false, "Debe enviar el ID de la categoría", null, 400);
 
                 break;
             }
@@ -74,27 +88,24 @@ try {
             $datos = json_decode(file_get_contents("php://input"), true);
 
             if (!is_array($datos) || empty(trim($datos['nombre'] ?? ''))) {
-                http_response_code(400);
+                responderJson(false, "Debe enviar el nombre de la categoría", null, 400);
 
-                echo json_encode([
-                    "mensaje" => "Debe enviar el nombre de la categoría"
-                ]);
+                break;
+            }
+
+            $datos['nombre'] = trim($datos['nombre']);
+            $datos['descripcion'] = trim($datos['descripcion'] ?? '');
+
+            if ($categoria->existeNombre($datos['nombre'], (int)$id)) {
+                responderJson(false, "Ya existe una categoría con ese nombre", null, 409);
 
                 break;
             }
 
             if ($categoria->actualizar((int)$id, $datos)) {
-                http_response_code(200);
-
-                echo json_encode([
-                    "mensaje" => "Categoría actualizada correctamente"
-                ]);
+                responderJson(true, "Categoría actualizada correctamente");
             } else {
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "No se pudo actualizar la categoría"
-                ]);
+                responderJson(false, "No se pudo actualizar la categoría", null, 400);
             }
 
             break;
@@ -104,48 +115,27 @@ try {
             $id = $_GET['id'] ?? null;
 
             if (!$id) {
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "Debe enviar el ID de la categoría"
-                ]);
+                responderJson(false, "Debe enviar el ID de la categoría", null, 400);
 
                 break;
             }
 
             if ($categoria->eliminar((int)$id)) {
-                http_response_code(200);
-
-                echo json_encode([
-                    "mensaje" => "Categoría eliminada correctamente"
-                ]);
+                responderJson(true, "Categoría eliminada correctamente");
             } else {
-                http_response_code(400);
-
-                echo json_encode([
-                    "mensaje" => "No se pudo eliminar la categoría"
-                ]);
+                responderJson(false, "No se pudo eliminar la categoría", null, 400);
             }
 
             break;
 
         default:
 
-            http_response_code(405);
-
-            echo json_encode([
-                "mensaje" => "Método no permitido"
-            ]);
+            responderJson(false, "Método no permitido", null, 405);
 
             break;
     }
 
 } catch (Throwable $e) {
 
-    http_response_code(500);
-
-    echo json_encode([
-        "error" => true,
-        "mensaje" => $e->getMessage()
-    ]);
+    responderJson(false, $e->getMessage(), null, 500);
 }

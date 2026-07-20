@@ -71,11 +71,11 @@ export default function Categorias() {
       setMensaje('');
 
       if (categoriaEditando) {
-        await actualizarCategoria(categoriaEditando.categoria_id, datos);
-        setMensaje('Categoría actualizada correctamente');
+        const respuesta = await actualizarCategoria(categoriaEditando.categoria_id, datos);
+        setMensaje(respuesta.message);
       } else {
-        await crearCategoria(datos);
-        setMensaje('Categoría creada correctamente');
+        const respuesta = await crearCategoria(datos);
+        setMensaje(respuesta.message);
       }
 
       limpiarFormulario();
@@ -109,8 +109,8 @@ export default function Categorias() {
     try {
       setError('');
       setMensaje('');
-      await eliminarCategoria(categoria.categoria_id);
-      setMensaje('Categoría eliminada correctamente');
+      const respuesta = await eliminarCategoria(categoria.categoria_id);
+      setMensaje(respuesta.message);
 
       if (categoriaEditando?.categoria_id === categoria.categoria_id) {
         limpiarFormulario();
@@ -162,7 +162,7 @@ export default function Categorias() {
 
           <div className="categorias__actions">
             <button type="submit" disabled={guardando}>
-              {guardando ? 'Guardando...' : categoriaEditando ? 'Actualizar' : 'Crear'}
+              {guardando ? 'Guardando...' : 'Guardar'}
             </button>
 
             {categoriaEditando && (
@@ -188,29 +188,34 @@ export default function Categorias() {
               <table className="categorias__table">
                 <thead>
                   <tr>
+                    <th>ID</th>
                     <th>Nombre</th>
                     <th>Descripción</th>
-                    <th>Acciones</th>
+                    <th>Fecha</th>
+                    <th>Editar</th>
+                    <th>Eliminar</th>
                   </tr>
                 </thead>
                 <tbody>
                   {categorias.map((categoria) => (
                     <tr key={categoria.categoria_id}>
+                      <td>{categoria.categoria_id}</td>
                       <td>{categoria.nombre}</td>
                       <td>{categoria.descripcion || 'Sin descripción'}</td>
+                      <td>{categoria.fecha_creacion || '-'}</td>
                       <td>
-                        <div className="categorias__row-actions">
-                          <button type="button" onClick={() => handleEditar(categoria)}>
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            className="categorias__button--danger"
-                            onClick={() => handleEliminar(categoria)}
-                          >
-                            Eliminar
-                          </button>
-                        </div>
+                        <button type="button" onClick={() => handleEditar(categoria)}>
+                          Editar
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          className="categorias__button--danger"
+                          onClick={() => handleEliminar(categoria)}
+                        >
+                          Eliminar
+                        </button>
                       </td>
                     </tr>
                   ))}

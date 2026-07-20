@@ -17,15 +17,41 @@ class Categoria
             SELECT
                 categoria_id,
                 nombre,
-                descripcion
+                descripcion,
+                fecha_creacion
             FROM categorias
-            ORDER BY nombre ASC
+            ORDER BY categoria_id ASC
         ";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
         return $stmt->fetchAll();
+    }
+
+    public function existeNombre(string $nombre, ?int $id = null): bool
+    {
+        $sql = "
+            SELECT categoria_id
+            FROM categorias
+            WHERE nombre = :nombre
+        ";
+
+        $params = [
+            ':nombre' => $nombre
+        ];
+
+        if ($id !== null) {
+            $sql .= " AND categoria_id <> :id";
+            $params[':id'] = $id;
+        }
+
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+
+        return (bool)$stmt->fetch();
     }
 
     public function crear(array $datos): bool

@@ -5,7 +5,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../models/Producto.php';
 
-header('Content-Type: application/json; charset=utf-8');
+header("Access-Control-Allow-Origin: http://localhost:4321");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+header("Content-Type: application/json; charset=UTF-8");
+
+if ($_SERVER["REQUEST_METHOD"] === "OPTIONS") {
+    http_response_code(200);
+    exit;
+}
 
 try {
 
@@ -16,7 +24,7 @@ try {
 
     $metodo = $_SERVER['REQUEST_METHOD'];
 
-  switch ($metodo) {
+    switch ($metodo) {
 
     case 'GET':
 
@@ -30,6 +38,47 @@ try {
     case 'POST':
 
         $datos = json_decode(file_get_contents("php://input"), true);
+
+        if (!is_array($datos)) {
+            http_response_code(400);
+
+            echo json_encode([
+                "mensaje" => "Datos inválidos"
+            ]);
+
+            break;
+        }
+
+        $camposObligatorios = [
+            "codigo",
+            "nombre",
+            "precio",
+            "stock",
+            "categoria_id",
+            "imagen"
+        ];
+
+        foreach ($camposObligatorios as $campo) {
+            if (!isset($datos[$campo]) || trim((string)$datos[$campo]) === '') {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "El campo {$campo} es obligatorio"
+                ]);
+
+                break 2;
+            }
+        }
+
+        if (!is_numeric($datos["precio"]) || !is_numeric($datos["stock"]) || !is_numeric($datos["categoria_id"])) {
+            http_response_code(400);
+
+            echo json_encode([
+                "mensaje" => "Precio, stock y categoría deben ser valores numéricos"
+            ]);
+
+            break;
+        }
 
         if ($producto->crear($datos)) {
 
@@ -127,7 +176,7 @@ try {
         ]);
 
         break;
-}
+    }
 
 } catch (Throwable $e) {
 
