@@ -1,19 +1,36 @@
 import { useEffect, useState } from "react";
+import { API_BASE_URL } from "../../config/appConfig";
+import { getProductos } from "../../modules/productos/services/productoApi";
 import "./Carousel.css";
 
-function Carousel({ slides = [] }) {
-  const carouselSlides =
-    slides.length > 0
-      ? slides
-      : [
-          {
-            id: "fallback-1",
-            imagenUrl: "http://via.placeholder.com/800x500?text=Herramientas",
-            titulo: "Herramientas destacadas",
-            descripcion: "Enseguida vas a ver las imágenes reales del carrusel.",
-            categoria: "",
-          },
-        ];
+function obtenerProductos(data) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.data)) {
+    return data.data;
+  }
+
+  return [];
+}
+
+function resolverImagen(imagen) {
+  if (!imagen) {
+    return "";
+  }
+
+  if (imagen.startsWith("http")) {
+    return imagen;
+  }
+
+  return `${API_BASE_URL}/${imagen}`;
+}
+
+function Carousel() {
+  const [carouselSlides, setCarouselSlides] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -27,6 +44,31 @@ function Carousel({ slides = [] }) {
     activeSlide.categoria.toLowerCase() !== "carousel"
       ? activeSlide.categoria
       : "";
+
+  useEffect(() => {
+    const cargarOfertas = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getProductos();
+        const productos = obtenerProductos(data);
+
+        const ofertas = productos.filter(
+          (producto) =>
+            producto.categoria?.trim().toLowerCase() === "ofertas especiales"
+        );
+
+        setCarouselSlides(ofertas);
+      } catch (err) {
+        setError(err.message || "No se pudieron cargar las ofertas.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarOfertas();
+  }, []);
 
   useEffect(() => {
     if (activeIndex >= carouselSlides.length) {
@@ -60,61 +102,87 @@ function Carousel({ slides = [] }) {
 
   return (
     <section className="ferreteria-carousel">
-      <div className="ferreteria-carousel__viewport">
-        <img
-          key={activeSlide.id}
-          className="ferreteria-carousel__image"
-          src={activeSlide.imagenUrl}
-          alt={activeSlide.titulo}
-        />
-
-        <div
-          key={`${activeSlide.id}-overlay`}
-          className="ferreteria-carousel__overlay"
-        >
-          {activeTag && (
-            <span className="ferreteria-carousel__tag">
-              {activeTag}
-            </span>
-          )}
-
-          <h3 className="ferreteria-carousel__title">
-            {activeSlide.titulo}
-          </h3>
-
-          <p className="ferreteria-carousel__description">
-            {activeSlide.descripcion}
-          </p>
+      {loading ? (
+        <div className="ferreteria-carousel__status">
+          Cargando ofertas...
         </div>
+      ) : error ? (
+        <div className="ferreteria-carousel__status ferreteria-carousel__status--error">
+          {error}
+        </div>
+      ) : carouselSlides.length === 0 ? (
+        <div className="ferreteria-carousel__status">
+          No hay ofertas especiales disponibles.
+        </div>
+      ) : (
+        <div className="ferreteria-carousel__viewport">
+          <img
+            key={activeSlide.producto_id}
+            className="ferreteria-carousel__image"
+            src={resolverImagen(activeSlide.imagen)}
+            alt={activeSlide.nombre}
+          />
 
-        {carouselSlides.length > 1 && (
-          <>
-            <button
-              type="button"
-              className="ferreteria-carousel__control ferreteria-carousel__control--prev"
-              onClick={showPrevious}
-              aria-label="Slide anterior"
-            >
-              ‹
-            </button>
+          <div
+            key={`${activeSlide.producto_id}-overlay`}
+            className="ferreteria-carousel__overlay"
+          >
+            {activeTag && (
+              <span className="ferreteria-carousel__tag">
+                {activeTag}
+              </span>
+            )}
 
-            <button
-              type="button"
-              className="ferreteria-carousel__control ferreteria-carousel__control--next"
-              onClick={showNext}
-              aria-label="Siguiente slide"
-            >
-              ›
-            </button>
-          </>
-        )}
-      </div>
+            <h3 className="ferreteria-carousel__title">
+              {activeSlide.nombre}
+            </h3>
 
-      {carouselSlides.length > 1 && (
+            {activeSlide.descripcion && (
+              <p className="ferreteria-carousel__description">
+                {activeSlide.descripcion}
+              </p>
+            )}
+
+            <div className="ferreteria-carousel__details">
+              <span className="ferreteria-carousel__price">
+                ${activeSlide.precio}
+              </span>
+
+              <span className="ferreteria-carousel__stock">
+                Stock: {activeSlide.stock}
+              </span>
+            </div>
+          </div>
+
+          {carouselSlides.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="ferreteria-carousel__control ferreteria-carousel__control--prev"
+                onClick={showPrevious}
+                aria-label="Slide anterior"
+              >
+                ‹
+              </button>
+
+              <button
+                type="button"
+                className="ferreteria-carousel__control ferreteria-carousel__control--next"
+                onClick={showNext}
+                aria-label="Siguiente slide"
+              >
+                ›
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {!loading && !error && carouselSlides.length > 1 && (
         <div className="ferreteria-carousel__dots">
           {carouselSlides.map((slide, index) => (
             <button
-              key={slide.id}
+              key={slide.producto_id}
               type="button"
               className={`ferreteria-carousel__dot ${
                 index === safeIndex

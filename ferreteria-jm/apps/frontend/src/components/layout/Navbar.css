@@ -18,9 +18,26 @@
     border:none;
     cursor:pointer;
 
-    display:flex;
+    display:none;
     align-items:center;
     justify-content:center;
+}
+
+.navbar__brand{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+}
+
+.navbar__logo-link{
+    display:flex;
+    align-items:center;
+}
+
+.navbar__logo-image{
+    display:block;
+    width:auto;
+    height:44px;
 }
 
 .navbar__logo{
@@ -30,4 +47,50 @@
     font-weight:700;
 
     color:#f97316;
+}
+
+.navbar__links{
+    display:flex;
+    align-items:center;
+    gap:1rem;
+}
+
+.navbar__link,
+.navbar__logout{
+    color:#1f2937;
+    font:inherit;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.navbar__logout{
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+}
+
+.navbar__link:hover,
+.navbar__logout:hover{
+    color:#f97316;
+}
+
+@media (max-width:768px){
+    .navbar{
+        height:auto;
+        min-height:70px;
+        flex-wrap:wrap;
+        gap:1rem;
+        padding:1rem;
+    }
+
+    .navbar__menu{
+        display:flex;
+    }
+
+    .navbar__links{
+        width:100%;
+        flex-wrap:wrap;
+        justify-content:center;
+    }
 }

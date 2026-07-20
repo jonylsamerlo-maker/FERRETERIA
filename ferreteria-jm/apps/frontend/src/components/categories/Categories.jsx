@@ -1,45 +1,50 @@
+import { useEffect, useState } from "react";
+import { getCategorias } from "../../modules/categorias/services/categoriaApi";
 import "./Categories.css";
 
-const categories = [
-  {
-    id: 1,
-    icon: "🔨",
-    title: "Herramientas",
-    description: "Manual y eléctricas",
-  },
-  {
-    id: 2,
-    icon: "⚡",
-    title: "Electricidad",
-    description: "Cables y accesorios",
-  },
-  {
-    id: 3,
-    icon: "🚿",
-    title: "Plomería",
-    description: "Caños y conexiones",
-  },
-  {
-    id: 4,
-    icon: "🎨",
-    title: "Pintura",
-    description: "Pinceles y pinturas",
-  },
-  {
-    id: 5,
-    icon: "🧱",
-    title: "Construcción",
-    description: "Materiales y herramientas",
-  },
-  {
-    id: 6,
-    icon: "🌱",
-    title: "Jardín",
-    description: "Riego y mantenimiento",
-  },
-];
+const iconosPorCategoria = {
+  herramientas: "🔨",
+  electricidad: "⚡",
+  plomeria: "🚿",
+  plomería: "🚿",
+  pintura: "🎨",
+  construccion: "🧱",
+  construcción: "🧱",
+  jardin: "🌱",
+  jardín: "🌱",
+};
+
+function obtenerIcono(nombre) {
+  return iconosPorCategoria[nombre?.trim().toLowerCase()] || "•";
+}
 
 function Categories() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const categoriasVisibles = categories.filter(
+    (category) => category.nombre?.trim().toLowerCase() !== "ofertas especiales"
+  );
+
+  useEffect(() => {
+    const cargarCategorias = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await getCategorias();
+
+        setCategories(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message || "No se pudieron cargar las categorías.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarCategorias();
+  }, []);
+
   return (
     <section className="categories">
 
@@ -53,32 +58,49 @@ function Categories() {
           Encontrá rápidamente lo que necesitás.
         </p>
 
-        <div className="categories__grid">
+        {loading && (
+          <p className="categories__status">
+            Cargando categorías...
+          </p>
+        )}
 
-          {categories.map((category) => (
+        {!loading && error && (
+          <p className="categories__status categories__status--error">
+            {error}
+          </p>
+        )}
 
-            <article
-              key={category.id}
+        {!loading && !error && (
+          <div className="categories__grid">
+
+            {categoriasVisibles.map((category) => (
+
+            <a
+              key={category.categoria_id}
               className="categories__card"
+              href={`/?categoria=${encodeURIComponent(category.nombre)}#productos`}
             >
 
               <span className="categories__icon">
-                {category.icon}
+                {obtenerIcono(category.nombre)}
               </span>
 
               <h3 className="categories__card-title">
-                {category.title}
+                {category.nombre}
               </h3>
 
-              <p className="categories__description">
-                {category.description}
-              </p>
+              {category.descripcion && (
+                <p className="categories__description">
+                  {category.descripcion}
+                </p>
+              )}
 
-            </article>
+            </a>
 
-          ))}
+            ))}
 
-        </div>
+          </div>
+        )}
 
       </div>
 

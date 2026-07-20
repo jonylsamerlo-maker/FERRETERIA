@@ -1,15 +1,8 @@
 ---
+import MainLayout from "../layouts/MainLayout.astro";
 import Home from "../modules/home/vistas/Home.jsx";
 ---
 
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
-    <title>Ferretería JM</title>
-  </head>
-
-  <body>
-    <Home client:load />
-  </body>
-</html>
+<MainLayout title="Ferretería JM">
+  <Home client:load />
+</MainLayout>

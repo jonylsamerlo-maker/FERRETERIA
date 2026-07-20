@@ -126,6 +126,10 @@ export default function Categorias() {
     <section className="categorias">
       <div className="categorias__header">
         <div>
+          <a className="categorias__back-link" href="/dashboard">
+            ← Volver al Dashboard
+          </a>
+
           <p className="categorias__eyebrow">Administración</p>
           <h1>Categorías</h1>
         </div>

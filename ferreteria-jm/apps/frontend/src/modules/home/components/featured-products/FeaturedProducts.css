@@ -1,6 +1,6 @@
 .featured-products {
     width: 100%;
-    padding: 4rem 1rem;
+    padding: 3.5rem 1rem;
     background: #ffffff;
 }
 
@@ -19,7 +19,7 @@
 .featured-products__subtitle {
     text-align: center;
     color: #6b7280;
-    margin-bottom: 3rem;
+    margin-bottom: 2.25rem;
 }
 
 .featured-products__grid {
@@ -84,6 +84,10 @@
 }
 
 @media (max-width: 640px) {
+    .featured-products {
+        padding: 3rem 1rem;
+    }
+
     .featured-products__carousel {
         grid-template-columns: 1fr 1fr;
     }

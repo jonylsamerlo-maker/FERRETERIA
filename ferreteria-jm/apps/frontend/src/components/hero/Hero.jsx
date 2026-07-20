@@ -18,9 +18,9 @@ function Hero() {
                     Todo para la construcción, el hogar y la industria.
                 </p>
 
-                <button className="hero__button">
+                <a className="hero__button" href="/#productos">
                     Ver productos
-                </button>
+                </a>
 
             </div>
 

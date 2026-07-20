@@ -266,9 +266,11 @@ export default function Productos() {
   return (
     <section className="productos">
       <div className="productos__header">
-        <p className="productos__eyebrow">
-          Administración
-        </p>
+        <a className="productos__back-link" href="/dashboard">
+          ← Volver al Dashboard
+        </a>
+
+        <p className="productos__eyebrow">Administración</p>
 
         <h1 className="productos__title">
           Productos

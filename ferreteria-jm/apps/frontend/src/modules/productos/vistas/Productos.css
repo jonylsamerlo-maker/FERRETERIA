@@ -1,6 +1,6 @@
 .productos {
-  min-height: 100vh;
-  padding: 2rem;
+  min-height: 72vh;
+  padding: 2.5rem 1rem;
   background: #f3f4f6;
   color: #1f2937;
 }
@@ -8,6 +8,27 @@
 .productos__header {
   max-width: 1200px;
   margin: 0 auto 1.5rem;
+}
+
+.productos__back-link {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 0.9rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.4rem;
+  background: #111827;
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.productos__back-link:hover {
+  background: #374151;
+}
+
+.productos__back-link:focus-visible {
+  outline: 3px solid rgba(220, 38, 38, 0.25);
+  outline-offset: 2px;
 }
 
 .productos__eyebrow {
@@ -199,7 +220,7 @@ textarea.productos__input {
 
 @media (max-width: 600px) {
   .productos {
-    padding: 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .productos__form,
@@ -225,4 +246,3 @@ textarea.productos__input {
     flex-direction: column;
   }
 }
-

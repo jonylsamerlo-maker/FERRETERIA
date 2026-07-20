@@ -1,6 +1,6 @@
 .categories {
     width: 100%;
-    padding: 4rem 1rem;
+    padding: 3.5rem 1rem;
     background: #f8fafc;
 }
 
@@ -19,7 +19,7 @@
 .categories__subtitle {
     text-align: center;
     color: #6b7280;
-    margin-bottom: 3rem;
+    margin-bottom: 2.25rem;
 }
 
 .categories__grid {
@@ -29,6 +29,7 @@
 }
 
 .categories__card {
+    display: block;
     background: #ffffff;
     border-radius: 16px;
     padding: 2rem;
@@ -42,6 +43,8 @@
     border: 2px solid transparent;
 
     box-shadow: 0 10px 20px rgba(0,0,0,.08);
+
+    text-decoration: none;
 }
 
 .categories__card:hover {
@@ -74,6 +77,16 @@
     line-height: 1.5;
 }
 
+.categories__status {
+    text-align: center;
+    color: #6b7280;
+    margin: 2rem 0 0;
+}
+
+.categories__status--error {
+    color: #b91c1c;
+}
+
 /* ===========================
    TABLET
 =========================== */
@@ -98,6 +111,14 @@
 
         grid-template-columns:repeat(3,1fr);
 
+    }
+
+}
+
+@media (max-width:640px){
+
+    .categories{
+        padding:3rem 1rem;
     }
 
 }

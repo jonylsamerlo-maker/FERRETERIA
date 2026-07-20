@@ -2,12 +2,12 @@
     width:100%;
     background:#1F2937;
     color:#ffffff;
-    padding:2rem 1rem;
+    padding:2.5rem 1rem;
 }
 
 .footer__container{
     max-width:1200px;
-    margin:auto;
+    margin:0 auto;
     text-align:center;
 }
 
@@ -22,6 +22,7 @@
 }
 
 .footer__copyright{
+    display:block;
     font-size:.85rem;
     color:#9ca3af;
 }

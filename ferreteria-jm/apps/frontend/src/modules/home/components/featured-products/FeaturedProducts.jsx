@@ -33,9 +33,17 @@ function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const carouselRef = useRef(null);
+  const categoriaSeleccionada =
+    typeof window === "undefined"
+      ? ""
+      : new URLSearchParams(window.location.search).get("categoria") || "";
 
-  const ofertas = products.filter(
-    (product) => product.categoria?.trim().toLowerCase() === "ofertas especiales"
+  const productosGenerales = products.filter(
+    (product) =>
+      categoriaSeleccionada
+        ? product.categoria?.trim().toLowerCase() ===
+          categoriaSeleccionada.trim().toLowerCase()
+        : product.categoria?.trim().toLowerCase() !== "ofertas especiales"
   );
 
   const moverCarousel = (direction) => {
@@ -69,15 +77,17 @@ function FeaturedProducts() {
   }, []);
 
   return (
-    <section className="featured-products">
+    <section className="featured-products" id="productos">
 
       <h2 className="featured-products__title">
-        Ofertas especiales
+        {categoriaSeleccionada
+          ? `Productos de ${categoriaSeleccionada}`
+          : "Productos disponibles"}
       </h2>
 
       {loading && (
         <p className="featured-products__status">
-          Cargando ofertas...
+          Cargando productos...
         </p>
       )}
 
@@ -87,13 +97,15 @@ function FeaturedProducts() {
         </p>
       )}
 
-      {!loading && !error && ofertas.length === 0 && (
+      {!loading && !error && productosGenerales.length === 0 && (
         <p className="featured-products__status">
-          No hay ofertas especiales disponibles.
+          {categoriaSeleccionada
+            ? "No hay productos disponibles para esta categoría."
+            : "No hay productos disponibles."}
         </p>
       )}
 
-      {!loading && !error && ofertas.length > 0 && (
+      {!loading && !error && productosGenerales.length > 0 && (
         <div className="featured-products__carousel">
           <button
             type="button"
@@ -106,7 +118,7 @@ function FeaturedProducts() {
 
           <div className="featured-products__grid" ref={carouselRef}>
 
-            {ofertas.map((product) => (
+            {productosGenerales.map((product) => (
               <div className="featured-products__item" key={product.producto_id}>
                 <ProductCard
                   image={resolverImagen(product.imagen)}

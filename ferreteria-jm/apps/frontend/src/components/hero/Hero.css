@@ -1,12 +1,12 @@
 .hero{
     width:100%;
-    min-height:80vh;
+    min-height:64vh;
 
     display:flex;
     align-items:center;
     justify-content:center;
 
-    padding:2rem;
+    padding:4rem 1rem;
 
     background:linear-gradient(
         135deg,
@@ -19,6 +19,8 @@
 
 .hero__content{
     max-width:700px;
+    width:100%;
+    margin:0 auto;
     text-align:center;
 }
 
@@ -36,7 +38,7 @@
 
 .hero__title{
 
-    font-size:3rem;
+    font-size:clamp(2.2rem, 6vw, 3rem);
 
     margin-bottom:1rem;
 
@@ -45,7 +47,7 @@
 
 .hero__description{
 
-    font-size:1.2rem;
+    font-size:clamp(1rem, 2.5vw, 1.2rem);
 
     line-height:1.6;
 
@@ -53,6 +55,7 @@
 }
 
 .hero__button{
+    display:inline-block;
 
     background:#ffffff;
 
@@ -70,10 +73,21 @@
 
     font-weight:bold;
 
+    text-decoration:none;
+
     transition:.3s;
 }
 
 .hero__button:hover{
 
     background:#f3f4f6;
+}
+
+@media (max-width:640px){
+
+    .hero{
+        min-height:56vh;
+        padding:3rem 1rem;
+    }
+
 }

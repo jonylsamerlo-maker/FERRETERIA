@@ -1,6 +1,6 @@
 .ferreteria-carousel {
     width: 100%;
-    padding: 2rem 1rem;
+    padding: 3rem 1rem;
     background: #f8fafc;
 }
 
@@ -67,6 +67,49 @@
     font-size: 1rem;
     line-height: 1.6;
     max-width: 600px;
+}
+
+.ferreteria-carousel__details {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.ferreteria-carousel__price {
+    color: #ffffff;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.ferreteria-carousel__stock {
+    background: rgba(255, 255, 255, .16);
+    border: 1px solid rgba(255, 255, 255, .22);
+    border-radius: 999px;
+    color: #ffffff;
+    font-size: .9rem;
+    font-weight: 700;
+    padding: .35rem .75rem;
+}
+
+.ferreteria-carousel__status {
+    display: grid;
+    place-items: center;
+    max-width: 1200px;
+    min-height: 260px;
+    margin: 0 auto;
+    padding: 2rem;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #475569;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.10);
+}
+
+.ferreteria-carousel__status--error {
+    color: #991b1b;
 }
 
 .ferreteria-carousel__control {
@@ -152,6 +195,10 @@
         font-size: 1.15rem;
     }
 
+    .ferreteria-carousel__status {
+        min-height: 420px;
+    }
+
 }
 
 /* ===========================
@@ -161,11 +208,15 @@
 @media (min-width: 1024px) {
 
     .ferreteria-carousel {
-        padding: 4rem 2rem;
+        padding: 3.5rem 2rem;
     }
 
     .ferreteria-carousel__image {
         height: 520px;
+    }
+
+    .ferreteria-carousel__status {
+        min-height: 520px;
     }
 
 }
