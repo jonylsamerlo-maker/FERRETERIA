@@ -77,20 +77,37 @@
 
 @media (max-width:768px){
     .navbar{
-        height:auto;
+        height:70px;
         min-height:70px;
-        flex-wrap:wrap;
-        gap:1rem;
-        padding:1rem;
+        flex-wrap:nowrap;
+        gap:.75rem;
+        padding:.75rem 1rem;
+    }
+
+    .navbar__brand{
+        width:100%;
+        justify-content:space-between;
     }
 
     .navbar__menu{
         display:flex;
     }
 
+    .navbar__logo{
+        display:none;
+    }
+
     .navbar__links{
-        width:100%;
-        flex-wrap:wrap;
-        justify-content:center;
+        display:none;
+    }
+}
+
+@media (max-width:480px){
+    .navbar{
+        padding:.65rem .85rem;
+    }
+
+    .navbar__logo-image{
+        height:40px;
     }
 }

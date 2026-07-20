@@ -8,11 +8,11 @@
 
     padding:4rem 1rem;
 
-    background:linear-gradient(
-        135deg,
-        #f97316,
-        #ea580c
-    );
+    /* Prefer WebP when available, JPG as fallback */
+    background-image: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('/img/hero/hero-background.webp'), url('/img/hero/hero-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
 
     color:#ffffff;
 }

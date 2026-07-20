@@ -116,12 +116,14 @@ function Carousel() {
         </div>
       ) : (
         <div className="ferreteria-carousel__viewport">
-          <img
-            key={activeSlide.producto_id}
-            className="ferreteria-carousel__image"
-            src={resolverImagen(activeSlide.imagen)}
-            alt={activeSlide.nombre}
-          />
+          <div className="ferreteria-carousel__image-frame">
+            <img
+              key={activeSlide.producto_id}
+              className="ferreteria-carousel__image"
+              src={resolverImagen(activeSlide.imagen)}
+              alt={activeSlide.nombre}
+            />
+          </div>
 
           <div
             key={`${activeSlide.producto_id}-overlay`}

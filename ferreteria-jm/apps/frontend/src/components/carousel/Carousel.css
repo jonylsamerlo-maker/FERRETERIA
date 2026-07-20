@@ -11,13 +11,31 @@
     overflow: hidden;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+}
+
+.ferreteria-carousel__image-frame {
+    width: 100%;
+    height: 260px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+    background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
 }
 
 .ferreteria-carousel__image {
-    width: 100%;
-    height: 260px;
-    object-fit: cover;
     display: block;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
 }
 
 .ferreteria-carousel__overlay {
@@ -183,8 +201,9 @@
 
 @media (min-width: 768px) {
 
-    .ferreteria-carousel__image {
+    .ferreteria-carousel__image-frame {
         height: 420px;
+        padding: 1.25rem;
     }
 
     .ferreteria-carousel__title {
@@ -211,8 +230,9 @@
         padding: 3.5rem 2rem;
     }
 
-    .ferreteria-carousel__image {
+    .ferreteria-carousel__image-frame {
         height: 520px;
+        padding: 1.5rem;
     }
 
     .ferreteria-carousel__status {
