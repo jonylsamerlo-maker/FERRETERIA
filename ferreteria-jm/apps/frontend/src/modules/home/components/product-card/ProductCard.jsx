@@ -5,15 +5,19 @@ function ProductCard({
   title,
   description,
   price,
+  stock,
+  category,
 }) {
   return (
     <article className="product-card">
 
-      <img
-        src={image}
-        alt={title}
-        className="product-card__image"
-      />
+      {image && (
+        <img
+          src={image}
+          alt={title}
+          className="product-card__image"
+        />
+      )}
 
       <div className="product-card__content">
 
@@ -21,13 +25,27 @@ function ProductCard({
           {title}
         </h3>
 
-        <p className="product-card__description">
-          {description}
-        </p>
+        {description && (
+          <p className="product-card__description">
+            {description}
+          </p>
+        )}
 
         <span className="product-card__price">
           ${price}
         </span>
+
+        <div className="product-card__meta">
+          {category && (
+            <span className="product-card__category">
+              {category}
+            </span>
+          )}
+
+          <span className="product-card__stock">
+            Stock: {stock}
+          </span>
+        </div>
 
         <button className="product-card__button">
           Ver detalle
