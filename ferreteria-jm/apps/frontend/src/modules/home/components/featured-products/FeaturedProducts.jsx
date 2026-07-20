@@ -32,11 +32,8 @@ function FeaturedProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
   const carouselRef = useRef(null);
-  const categoriaSeleccionada =
-    typeof window === "undefined"
-      ? ""
-      : new URLSearchParams(window.location.search).get("categoria") || "";
 
   const productosGenerales = products.filter(
     (product) =>
@@ -56,6 +53,11 @@ function FeaturedProducts() {
       behavior: "smooth",
     });
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setCategoriaSeleccionada(params.get("categoria") || "");
+  }, []);
 
   useEffect(() => {
     const cargarProductos = async () => {

@@ -70,7 +70,13 @@ function Categories() {
           </p>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && categoriasVisibles.length === 0 && (
+          <p className="categories__status">
+            No hay categorías disponibles.
+          </p>
+        )}
+
+        {!loading && !error && categoriasVisibles.length > 0 && (
           <div className="categories__grid">
 
             {categoriasVisibles.map((category) => (

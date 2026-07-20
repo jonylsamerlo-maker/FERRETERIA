@@ -1,4 +1,7 @@
 .hero{
+    position:relative;
+    overflow:hidden;
+
     width:100%;
     min-height:64vh;
 
@@ -8,16 +11,34 @@
 
     padding:4rem 1rem;
 
-    /* Prefer WebP when available, JPG as fallback */
-    background-image: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)), url('/img/hero/hero-background.webp'), url('/img/hero/hero-background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    background:#111827;
 
     color:#ffffff;
 }
 
+.hero::before,
+.hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+}
+
+.hero::before{
+    background-image:url('/img/hero/hero-background.webp');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    filter:blur(4px);
+    transform:scale(1.03);
+}
+
+.hero::after{
+    background:rgba(0,0,0,0.35);
+}
+
 .hero__content{
+    position:relative;
+    z-index:1;
     max-width:700px;
     width:100%;
     margin:0 auto;

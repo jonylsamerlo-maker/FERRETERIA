@@ -18,6 +18,7 @@ function obtenerUsuarioGuardado() {
 
 function Navbar() {
     const [usuario, setUsuario] = useState(null);
+    const [menuAbierto, setMenuAbierto] = useState(false);
 
     useEffect(() => {
         setUsuario(obtenerUsuarioGuardado());
@@ -28,8 +29,13 @@ function Navbar() {
     const estaAutenticado = Boolean(usuario);
 
     const handleLogout = () => {
+        setMenuAbierto(false);
         localStorage.removeItem("usuario");
         window.location.href = "/login";
+    };
+
+    const cerrarMenu = () => {
+        setMenuAbierto(false);
     };
 
     return (
@@ -46,7 +52,9 @@ function Navbar() {
 
                 <button
                     className="navbar__menu"
-                    aria-label="Abrir menú"
+                    aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+                    aria-expanded={menuAbierto}
+                    onClick={() => setMenuAbierto((abierto) => !abierto)}
                 >
                     <Menu size={28} />
                 </button>
@@ -56,28 +64,30 @@ function Navbar() {
                 Ferretería JM
             </h1>
 
-            <div className="navbar__links">
-                <a className="navbar__link" href="/">
+            <div
+                className={`navbar__links ${menuAbierto ? "navbar__links--open" : ""}`}
+            >
+                <a className="navbar__link" href="/" onClick={cerrarMenu}>
                     Inicio
                 </a>
 
                 {!estaAutenticado && (
-                    <a className="navbar__link" href="/login">
+                    <a className="navbar__link" href="/login" onClick={cerrarMenu}>
                         Iniciar sesión
                     </a>
                 )}
 
                 {estaAutenticado && esAdmin && (
                     <>
-                        <a className="navbar__link" href="/dashboard">
+                        <a className="navbar__link" href="/dashboard" onClick={cerrarMenu}>
                             Dashboard
                         </a>
 
-                        <a className="navbar__link" href="/categorias">
+                        <a className="navbar__link" href="/categorias" onClick={cerrarMenu}>
                             Categorías
                         </a>
 
-                        <a className="navbar__link" href="/productos">
+                        <a className="navbar__link" href="/productos" onClick={cerrarMenu}>
                             Productos
                         </a>
                     </>
