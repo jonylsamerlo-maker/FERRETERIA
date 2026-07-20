@@ -29,4 +29,30 @@ class Usuario
 
         return $stmt->fetchAll();
     }
+    public function buscarPorUsuario(string $usuario): ?array
+{
+    $sql = "
+        SELECT
+            usuario_id,
+            nombre,
+            apellido,
+            usuario,
+            email,
+            password,
+            rol
+        FROM usuarios
+        WHERE usuario = :usuario
+        LIMIT 1
+    ";
+
+    $stmt = $this->conn->prepare($sql);
+
+    $stmt->bindValue(":usuario", $usuario, PDO::PARAM_STR);
+
+    $stmt->execute();
+
+    $resultado = $stmt->fetch();
+
+    return $resultado ?: null;
+}
 }

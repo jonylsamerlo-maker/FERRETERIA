@@ -27,6 +27,108 @@ try {
 
             break;
 
+        case 'POST':
+
+            $datos = json_decode(file_get_contents("php://input"), true);
+
+            if (!is_array($datos) || empty(trim($datos['nombre'] ?? ''))) {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "Debe enviar el nombre de la categoría"
+                ]);
+
+                break;
+            }
+
+            if ($categoria->crear($datos)) {
+                http_response_code(201);
+
+                echo json_encode([
+                    "mensaje" => "Categoría creada correctamente"
+                ]);
+            } else {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "No se pudo crear la categoría"
+                ]);
+            }
+
+            break;
+
+        case 'PUT':
+
+            $id = $_GET['id'] ?? null;
+
+            if (!$id) {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "Debe enviar el ID de la categoría"
+                ]);
+
+                break;
+            }
+
+            $datos = json_decode(file_get_contents("php://input"), true);
+
+            if (!is_array($datos) || empty(trim($datos['nombre'] ?? ''))) {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "Debe enviar el nombre de la categoría"
+                ]);
+
+                break;
+            }
+
+            if ($categoria->actualizar((int)$id, $datos)) {
+                http_response_code(200);
+
+                echo json_encode([
+                    "mensaje" => "Categoría actualizada correctamente"
+                ]);
+            } else {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "No se pudo actualizar la categoría"
+                ]);
+            }
+
+            break;
+
+        case 'DELETE':
+
+            $id = $_GET['id'] ?? null;
+
+            if (!$id) {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "Debe enviar el ID de la categoría"
+                ]);
+
+                break;
+            }
+
+            if ($categoria->eliminar((int)$id)) {
+                http_response_code(200);
+
+                echo json_encode([
+                    "mensaje" => "Categoría eliminada correctamente"
+                ]);
+            } else {
+                http_response_code(400);
+
+                echo json_encode([
+                    "mensaje" => "No se pudo eliminar la categoría"
+                ]);
+            }
+
+            break;
+
         default:
 
             http_response_code(405);
