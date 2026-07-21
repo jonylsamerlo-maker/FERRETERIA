@@ -1,139 +1,148 @@
-.navbar{
-    width:100%;
-    height:70px;
+.navbar {
+    position: relative;
+    z-index: 100;
 
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
+    width: 100%;
+    height: 70px;
 
-    padding:0 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-    background:#ffffff;
+    padding: 0 1rem;
 
-    border-bottom:1px solid #e5e7eb;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.navbar__menu{
-    background:none;
-    border:none;
-    cursor:pointer;
-
-    display:none;
-    align-items:center;
-    justify-content:center;
+.navbar__brand {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
 }
 
-.navbar__brand{
-    display:flex;
-    align-items:center;
-    gap:.75rem;
+.navbar__logo-link {
+    display: flex;
+    align-items: center;
 }
 
-.navbar__logo-link{
-    display:flex;
-    align-items:center;
+.navbar__logo-image {
+    display: block;
+    width: auto;
+    height: 44px;
 }
 
-.navbar__logo-image{
-    display:block;
-    width:auto;
-    height:44px;
+.navbar__logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f97316;
 }
 
-.navbar__logo{
-
-    font-size:1.2rem;
-
-    font-weight:700;
-
-    color:#f97316;
-}
-
-.navbar__links{
-    display:flex;
-    align-items:center;
-    gap:1rem;
+.navbar__links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-left: auto;
 }
 
 .navbar__link,
-.navbar__logout{
-    color:#1f2937;
-    font:inherit;
-    font-weight:600;
-    text-decoration:none;
+.navbar__logout {
+    color: #1f2937;
+    font: inherit;
+    font-weight: 600;
+    text-decoration: none;
 }
 
-.navbar__logout{
-    background:none;
-    border:none;
-    cursor:pointer;
-    padding:0;
+.navbar__logout {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
 }
 
 .navbar__link:hover,
-.navbar__logout:hover{
-    color:#f97316;
+.navbar__logout:hover {
+    color: #f97316;
 }
 
-@media (max-width:768px){
-    .navbar{
-        position:relative;
-        height:auto;
-        min-height:70px;
-        flex-wrap:nowrap;
-        gap:.75rem;
-        padding:.75rem 1rem;
+.navbar__menu {
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 105; /* asegurar que el botón sea clicable por encima de capas */
+}
+
+/* ===========================
+   TABLET Y MÓVIL
+=========================== */
+
+@media (max-width: 768px) {
+
+    .navbar {
+        height: auto;
+        min-height: 70px;
+        padding: .75rem 1rem;
     }
 
-    .navbar__brand{
-        width:100%;
-        justify-content:space-between;
+    .navbar__brand {
+        width: 100%;
+        justify-content: space-between;
     }
 
-    .navbar__menu{
-        display:flex;
+    .navbar__logo {
+        display: none;
     }
 
-    .navbar__logo{
-        display:none;
+    .navbar__menu {
+        display: flex;
     }
 
-    .navbar__links{
-        display:none;
+    .navbar__links {
+        display: none;
     }
 
-    .navbar__links--open{
-        position:absolute;
-        top:100%;
-        left:0;
-        z-index:10;
+    .navbar__links.navbar__links--open {
+        position: absolute;
+        top: 100%;
+        left: 0;
 
-        display:flex;
-        width:100%;
-        flex-direction:column;
-        align-items:stretch;
-        gap:0;
+        z-index: 101;
 
-        padding:.5rem 1rem 1rem;
-        background:#ffffff;
-        border-bottom:1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+
+        width: 100%;
+
+        gap: 0;
+
+        padding: .5rem 1rem 1rem;
+
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
     }
 
-    .navbar__links--open .navbar__link,
-    .navbar__links--open .navbar__logout{
-        display:block;
-        width:100%;
-        padding:.75rem 0;
-        text-align:left;
+    .navbar__links.navbar__links--open .navbar__link,
+    .navbar__links.navbar__links--open .navbar__logout {
+        display: block;
+        width: 100%;
+        padding: .75rem 0;
+        text-align: left;
     }
 }
 
-@media (max-width:480px){
-    .navbar{
-        padding:.65rem .85rem;
+@media (max-width: 480px) {
+
+    .navbar {
+        padding: .65rem .85rem;
     }
 
-    .navbar__logo-image{
-        height:40px;
+    .navbar__logo-image {
+        height: 40px;
     }
+
 }
