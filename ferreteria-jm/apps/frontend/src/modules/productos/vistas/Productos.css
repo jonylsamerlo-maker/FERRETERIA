@@ -90,7 +90,8 @@ textarea.productos__input {
 }
 
 .productos__actions,
-.productos__message {
+.productos__message,
+.productos__image-panel {
   grid-column: 1 / -1;
 }
 
@@ -174,6 +175,84 @@ textarea.productos__input {
   margin: 0;
 }
 
+.productos__image-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.4fr);
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.productos__preview-card,
+.productos__image-info-card {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.productos__preview-title {
+  margin: 0 0 0.75rem;
+  font-weight: 700;
+}
+
+.productos__preview-image {
+  display: block;
+  width: 100%;
+  height: 220px;
+  border-radius: 0.4rem;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.productos__image-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.productos__image-info div {
+  min-width: 0;
+}
+
+.productos__image-info dt {
+  margin-bottom: 0.2rem;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.productos__image-info dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.productos__image-feedback {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.productos__image-feedback-item {
+  margin: 0;
+  padding: 0.7rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.productos__image-feedback-item--success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.productos__image-feedback-item--warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
 .productos__table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -216,6 +295,10 @@ textarea.productos__input {
   .productos__form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .productos__image-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 600px) {
@@ -233,8 +316,17 @@ textarea.productos__input {
   }
 
   .productos__actions,
-  .productos__message {
+  .productos__message,
+  .productos__image-panel {
     grid-column: auto;
+  }
+
+  .productos__preview-image {
+    height: 180px;
+  }
+
+  .productos__image-info {
+    grid-template-columns: 1fr;
   }
 
   .productos__table th,

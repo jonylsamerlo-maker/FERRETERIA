@@ -21,6 +21,12 @@ const formularioInicial = {
   imagenActual: '',
 };
 
+const imagenRecomendada = {
+  ancho: 800,
+  alto: 600,
+  pesoMaximoMb: 2,
+};
+
 export default function Productos() {
   const [formulario, setFormulario] = useState(formularioInicial);
   const [productos, setProductos] = useState([]);
@@ -31,6 +37,7 @@ export default function Productos() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [eliminandoId, setEliminandoId] = useState(null);
+  const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
 
   const cargarDatos = async () => {
     try {
@@ -63,6 +70,59 @@ export default function Productos() {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  useEffect(() => {
+    if (!formulario.imagen) {
+      setImagenVistaPrevia(null);
+      return undefined;
+    }
+
+    let componenteActivo = true;
+    const urlTemporal = URL.createObjectURL(formulario.imagen);
+    const imagen = new Image();
+    const pesoMb =
+      formulario.imagen.size / 1024 / 1024;
+
+    setImagenVistaPrevia({
+      url: urlTemporal,
+      ancho: null,
+      alto: null,
+      pesoMb,
+    });
+
+    imagen.onload = () => {
+      if (!componenteActivo) {
+        return;
+      }
+
+      setImagenVistaPrevia({
+        url: urlTemporal,
+        ancho: imagen.naturalWidth,
+        alto: imagen.naturalHeight,
+        pesoMb,
+      });
+    };
+
+    imagen.onerror = () => {
+      if (!componenteActivo) {
+        return;
+      }
+
+      setImagenVistaPrevia({
+        url: urlTemporal,
+        ancho: null,
+        alto: null,
+        pesoMb,
+      });
+    };
+
+    imagen.src = urlTemporal;
+
+    return () => {
+      componenteActivo = false;
+      URL.revokeObjectURL(urlTemporal);
+    };
+  }, [formulario.imagen]);
 
   const handleChange = (event) => {
     const { name, value, files } = event.target;
@@ -263,6 +323,57 @@ export default function Productos() {
       : `${API_BASE_URL}/${ruta}`;
   };
 
+  const formatearPesoImagen = (pesoMb) =>
+    `${pesoMb.toFixed(2)} MB`;
+
+  const obtenerMensajesImagen = () => {
+    if (!imagenVistaPrevia) {
+      return [];
+    }
+
+    const superaPeso =
+      imagenVistaPrevia.pesoMb >
+      imagenRecomendada.pesoMaximoMb;
+    const superaResolucion =
+      imagenVistaPrevia.ancho !== null &&
+      imagenVistaPrevia.alto !== null &&
+      (imagenVistaPrevia.ancho >
+        imagenRecomendada.ancho ||
+        imagenVistaPrevia.alto >
+          imagenRecomendada.alto);
+
+    if (!superaPeso && !superaResolucion) {
+      return [
+        {
+          tipo: 'success',
+          texto: 'Imagen apta para subir.',
+        },
+      ];
+    }
+
+    const mensajes = [];
+
+    if (superaPeso) {
+      mensajes.push({
+        tipo: 'warning',
+        texto:
+          'La imagen supera el tamaño recomendado de 2 MB. Se recomienda reducirla u optimizarla antes de subirla para mejorar el rendimiento del sitio.',
+      });
+    }
+
+    if (superaResolucion) {
+      mensajes.push({
+        tipo: 'warning',
+        texto:
+          'La resolución es superior a la recomendada. Se aconseja utilizar una imagen cercana a 800 × 600 px para mejorar la velocidad de carga del sitio.',
+      });
+    }
+
+    return mensajes;
+  };
+
+  const mensajesImagen = obtenerMensajesImagen();
+
   return (
     <section className="productos">
       <div className="productos__header">
@@ -447,6 +558,75 @@ export default function Productos() {
               </div>
             )}
         </div>
+
+        {imagenVistaPrevia && (
+          <div className="productos__image-panel">
+            <div className="productos__preview-card">
+              <p className="productos__preview-title">
+                Vista previa
+              </p>
+
+              <img
+                className="productos__preview-image"
+                src={imagenVistaPrevia.url}
+                alt="Vista previa de la imagen seleccionada"
+              />
+            </div>
+
+            <div className="productos__image-info-card">
+              <p className="productos__preview-title">
+                Recomendaciones
+              </p>
+
+              <dl className="productos__image-info">
+                <div>
+                  <dt>Formatos</dt>
+                  <dd>JPG, PNG, WEBP</dd>
+                </div>
+
+                <div>
+                  <dt>Resolución recomendada</dt>
+                  <dd>800 × 600 px</dd>
+                </div>
+
+                <div>
+                  <dt>Tamaño recomendado</dt>
+                  <dd>Hasta 2 MB</dd>
+                </div>
+
+                <div>
+                  <dt>Resolución real</dt>
+                  <dd>
+                    {imagenVistaPrevia.ancho !== null &&
+                    imagenVistaPrevia.alto !== null
+                      ? `${imagenVistaPrevia.ancho} × ${imagenVistaPrevia.alto} px`
+                      : 'Calculando...'}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt>Tamaño del archivo</dt>
+                  <dd>
+                    {formatearPesoImagen(
+                      imagenVistaPrevia.pesoMb
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="productos__image-feedback">
+                {mensajesImagen.map((mensajeImagen) => (
+                  <p
+                    className={`productos__image-feedback-item productos__image-feedback-item--${mensajeImagen.tipo}`}
+                    key={mensajeImagen.texto}
+                  >
+                    {mensajeImagen.texto}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {error && (
           <p className="productos__message productos__message--error">
