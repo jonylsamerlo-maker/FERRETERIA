@@ -1,5 +1,4 @@
 import "./Navbar.css";
-import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function obtenerUsuarioGuardado() {
@@ -97,7 +96,11 @@ function Navbar() {
                 aria-expanded={menuAbierto}
                 onClick={() => setMenuAbierto((abierto) => !abierto)}
             >
-                <Menu size={28} />
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M4 6h16"></path>
+                    <path d="M4 12h16"></path>
+                    <path d="M4 18h16"></path>
+                </svg>
             </button>
         </div>
 
