@@ -1,65 +1,76 @@
- 🔧 Ferretería JM
+ # 🔧 Ferretería JM
 
-Proyecto final de la Tecnicatura Full Stack.
+Sistema web para la administración de productos y categorías de una ferretería.
 
-Ferretería JM es una aplicación web desarrollada con arquitectura **Monorepo**, que permite administrar productos y categorías desde un panel de administración y mostrarlos en un catálogo para los usuarios.
+Desarrollado como proyecto final utilizando una arquitectura Monorepo con Astro, React, PHP, PDO, MySQL y Docker.
 
 ---
 
-# Tecnologías utilizadas
+# 🚀 Tecnologías
 
 ## Frontend
+
 - Astro
 - React
 - JavaScript
-- CSS3
+- CSS
 
 ## Backend
+
 - PHP 8
 - PDO
 - API REST
 
 ## Base de datos
-- MySQL 8
+
+- MySQL
 
 ## Infraestructura
+
 - Docker
 - Docker Compose
 
 ---
 
-# Estructura del proyecto
+# 📂 Arquitectura
 
 ```
 ferreteria-jm/
+
+├── apps/
+│   └── frontend/
 │
 ├── backend/
-│ ├── api/
-│ ├── config/
-│ ├── img/
-│ └── schemas.sql
-│
-├── apps/
-│ └── frontend/
+│   ├── api/
+│   ├── config/
+│   ├── models/
+│   ├── uploads/
+│   └── schemas.sql
 │
 ├── docker/
 │
-└── docker-compose.yml
+├── docker-compose.yml
+│
+└── README.md
 ```
 
 ---
 
-# Instalación
+# ⚙ Instalación
 
-## 1. Clonar el repositorio
+## Clonar el proyecto
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/TU-USUARIO/FERRETERIA.git
 ```
 
----
+Ingresar al proyecto
 
-## 2. Levantar Docker
+```bash
+cd ferreteria-jm
+```
+
+Levantar los contenedores
 
 ```bash
 docker compose up -d
@@ -67,31 +78,15 @@ docker compose up -d
 
 ---
 
-## 3. Importar la base de datos
+# 🌐 URLs
 
-Crear una base de datos llamada:
-
-```
-ferreteria_db
-```
-
-Luego importar:
-
-```
-backend/schemas.sql
-```
-
----
-
-# URLs
-
-## Frontend
+Frontend
 
 ```
 http://localhost:4321
 ```
 
-## Backend
+Backend
 
 ```
 http://localhost:8081
@@ -99,135 +94,133 @@ http://localhost:8081
 
 ---
 
-# Usuario administrador
+# 🗄 Base de datos
 
-Crear un usuario administrador desde la base de datos o utilizar el usuario de prueba configurado.
-
-Ejemplo:
+Motor
 
 ```
-Usuario: admin
+MySQL
+```
 
-Contraseña: Admin123*
+Importar
+
+```
+backend/schemas.sql
+```
+
+Base de datos
+
+```
+ferreteria_db
 ```
 
 ---
 
-# Funcionalidades
+# 👤 Usuario administrador
 
-## Home
+Ejemplo
 
-- Hero principal
-- Carrusel de productos destacados
-- Categorías
-- Productos disponibles
-- Responsive
+Usuario
 
----
+```
+admin
+```
 
-## Login
+Contraseña
 
-- Inicio de sesión
-- Validación de usuarios
+```
+Admin123*
+```
 
----
-
-## Panel de administración
-
-- Gestión de categorías
-- Alta de productos
-- Modificación
-- Eliminación
-- Subida de imágenes
+*(Modificar según la configuración utilizada en la base de datos.)*
 
 ---
 
-## Productos
+# ✅ Funcionalidades
 
-- Listado dinámico
-- Filtro por categoría
-- Carrusel de ofertas
-- Imágenes locales
+- Inicio dinámico.
+- Login de administrador.
+- Dashboard administrativo.
+- CRUD de Categorías.
+- CRUD de Productos.
+- Carga de imágenes.
+- Vista previa de imágenes.
+- Carrusel de Ofertas Especiales.
+- Navbar responsive.
+- Footer responsive.
+- API REST en PHP.
+- Base de datos MySQL.
+- Docker para el entorno de desarrollo.
 
 ---
 
-# Flujo de uso
+# 📸 Capturas
 
-1. Iniciar sesión.
-2. Crear categorías.
-3. Crear productos.
-4. Asignar cada producto a una categoría.
-5. Los productos se muestran automáticamente en el Home y en el carrusel de ofertas.
+Agregar imágenes dentro de:
 
----
+```
+docs/img/
+```
 
-# Capturas
-
-## Home
+Ejemplo
 
 ```
 docs/img/home.png
-```
-
----
-
-## Dashboard
-
-```
+docs/img/login.png
 docs/img/dashboard.png
-```
-
----
-
-## Productos
-
-```
+docs/img/categorias.png
 docs/img/productos.png
 ```
 
 ---
 
-## Categorías
+# 📱 Responsive
 
-```
-docs/img/categorias.png
-```
+El proyecto fue diseñado para:
 
----
-
-## Login
-
-```
-docs/img/login.png
-```
+- Escritorio
+- Tablet
+- Teléfono móvil
 
 ---
 
-# Características
+# 🏗 Arquitectura utilizada
 
-- Arquitectura Monorepo.
-- Docker.
-- API REST en PHP.
-- MySQL con PDO.
-- Frontend en Astro + React.
-- Responsive.<img width="1366" height="768" alt="vista2producto2" src="https://github.com/user-attachments/assets/4a1de91b-8ad8-4db1-b8df-2364a75e9422" />
-<img width="1366" height="768" alt="vistacategoria1" src="https://github.com/user-attachments/assets/4d2a3e47-ba6c-4d73-ba14-6fc7d715172d" />
-<img width="1366" height="768" alt="vistapanel" src="https://github.com/user-attachments/assets/f57c9b14-87ee-4a56-9497-13b0424d6431" />
-<img width="1366" height="768" alt="vistaproducto" src="https://github.com/user-attachments/assets/3e5a6c5a-e37e-44d2-859f-af14dfc79b6b" />
-<img width="1366" height="768" alt="vistaproducto" src="https://github.com/user-attachments/assets/36049c9a-298f-4e46-a471-9cd83449e812" />
-<img width="1366" height="768" alt="vistapanel" src="https://github.com/user-attachments/assets/b680c76d-56ab-4f5f-a74f-0e0543ec2c69" />
-<img width="1366" height="768" alt="vistacategoria1" src="https://github.com/user-attachments/assets/c217a5df-79e4-4155-a4a3-d6f5a97479d7" />
-<img width="1366" height="768" alt="vista2producto2" src="https://github.com/user-attachments/assets/74314e25-07a6-4572-8e60-e4cde768728b" />
-
-- Gestión completa de productos.
-- Gestión completa de categorías.
-- Carrusel dinámico.
-- Navegación adaptable para dispositivos móviles.
+- Monorepo
+- Componentes reutilizables
+- Astro + React
+- Backend desacoplado mediante API REST
+- PHP + PDO
+- Docker
 
 ---
 
-# Estado del proyecto
+# 🔮 Mejoras futuras
 
-Proyecto desarrollado como trabajo final de la Tecnicatura Full Stack.
+- Carrito de compras.<img width="1366" height="768" alt="selec_das" src="https://github.com/user-attachments/assets/ae984e95-49aa-43a9-837b-445de77230bc" />
+<img width="1366" height="768" alt="selec_cate" src="https://github.com/user-attachments/assets/34e025eb-00d4-48df-b581-b0d32c3000fb" />
+<img width="1366" height="768" alt="pruebalogin" src="https://github.com/user-attachments/assets/bb1e0bf7-e7c5-45bf-8eb0-9ae5a6655cae" />
+<img width="1366" height="768" alt="select_footer" src="https://github.com/user-attachments/assets/1e0e1d4d-c64c-4cd8-ad3c-76390bc42c88" />
+<img width="1366" height="768" alt="selec_hero" src="https://github.com/user-attachments/assets/1a4a2295-8208-4286-8775-9fd635cec5a3" />
+<img width="1366" height="768" alt="selec_home" src="https://github.com/user-attachments/assets/c1e21f73-9c21-420f-a324-6c70253c9282" />
 
-Se encuentra listo para ser ejecutado mediante Docker y continuar
+- Pedido mediante WhatsApp.
+- Chatbot asistente.
+- Centro de Ayuda para administradores.
+- Panel de configuración para comercios.
+- Gestión de pedidos.
+
+---
+
+# 👨‍💻 Autor
+
+Proyecto desarrollado por **Jony M.**
+
+Como trabajo final de desarrollo Full Stack.
+
+---
+
+# 📄 Licencia
+
+Proyecto desarrollado con fines educativos y como base para futuras implementaciones comerciales.
+
