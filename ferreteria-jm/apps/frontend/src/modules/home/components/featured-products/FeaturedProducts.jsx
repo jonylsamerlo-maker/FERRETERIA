@@ -123,6 +123,7 @@ function FeaturedProducts() {
             {productosGenerales.map((product) => (
               <div className="featured-products__item" key={product.producto_id}>
                 <ProductCard
+                  id={product.producto_id}
                   image={resolverImagen(product.imagen)}
                   title={product.nombre}
                   description={product.descripcion}

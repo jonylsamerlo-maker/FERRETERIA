@@ -1,0 +1,10 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+import Cart from "../components/carrito/Cart.jsx";
+---
+
+<MainLayout title="Carrito | Ferretería JM">
+  <main>
+    <Cart client:load />
+  </main>
+</MainLayout>

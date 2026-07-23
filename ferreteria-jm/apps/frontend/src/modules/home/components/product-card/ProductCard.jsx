@@ -1,6 +1,11 @@
+import { useState } from "react";
+import {
+  agregarAlCarrito,
+} from "../../../../services/cartStorage";
 import "./ProductCard.css";
 
 function ProductCard({
+  id,
   image,
   title,
   description,
@@ -8,6 +13,22 @@ function ProductCard({
   stock,
   category,
 }) {
+  const [mensaje, setMensaje] = useState("");
+  const stockDisponible = Number(stock) || 0;
+  const sinStock = stockDisponible <= 0;
+
+  const handleAgregarAlCarrito = () => {
+    const resultado = agregarAlCarrito({
+      id,
+      nombre: title,
+      precio: Number(price) || 0,
+      imagen: image,
+      stock: stockDisponible,
+    });
+
+    setMensaje(resultado.mensaje);
+  };
+
   return (
     <article className="product-card">
 
@@ -47,9 +68,23 @@ function ProductCard({
           </span>
         </div>
 
-        <button className="product-card__button">
-          Ver detalle
+        <button
+          className="product-card__button"
+          type="button"
+          onClick={handleAgregarAlCarrito}
+          disabled={sinStock}
+        >
+          {sinStock ? "Sin stock" : "Agregar al carrito"}
         </button>
+
+        {mensaje && (
+          <p
+            className="product-card__message"
+            role="status"
+          >
+            {mensaje}
+          </p>
+        )}
 
       </div>
 

@@ -121,3 +121,15 @@
 
     background: #c2410c;
 }
+
+.product-card__button:disabled {
+    cursor: not-allowed;
+    opacity: .6;
+}
+
+.product-card__message {
+    margin: 0;
+    color: #166534;
+    font-size: .9rem;
+    font-weight: 700;
+}

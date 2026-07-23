@@ -1,5 +1,11 @@
 import "./Navbar.css";
 import { useEffect, useState } from "react";
+import {
+    CART_STORAGE_KEY,
+    CART_UPDATED_EVENT,
+    obtenerCantidadTotal,
+    obtenerCarrito,
+} from "../../services/cartStorage";
 
 function obtenerUsuarioGuardado() {
     // Intenta obtener el usuario desde localStorage primero, luego sessionStorage.
@@ -33,26 +39,51 @@ function obtenerUsuarioGuardado() {
 function Navbar() {
     const [usuario, setUsuario] = useState(null);
     const [menuAbierto, setMenuAbierto] = useState(false);
+    const [cantidadCarrito, setCantidadCarrito] = useState(0);
 
     useEffect(() => {
         setUsuario(obtenerUsuarioGuardado());
+        setCantidadCarrito(
+            Math.max(0, obtenerCantidadTotal(obtenerCarrito()))
+        );
+
+        const actualizarCantidadCarrito = () => {
+            setCantidadCarrito(
+                Math.max(0, obtenerCantidadTotal(obtenerCarrito()))
+            );
+        };
 
         // Actualiza el estado del usuario si cambia en otra pestaña (evento storage)
         const onStorage = (e) => {
             if (e.key === "usuario" || e.key === "user") {
                 setUsuario(obtenerUsuarioGuardado());
             }
+
+            if (e.key === CART_STORAGE_KEY || e.key === null) {
+                actualizarCantidadCarrito();
+            }
         };
 
         // También refrescar al volver foco a la ventana (por si se actualizó en la misma pestaña)
-        const onFocus = () => setUsuario(obtenerUsuarioGuardado());
+        const onFocus = () => {
+            setUsuario(obtenerUsuarioGuardado());
+            actualizarCantidadCarrito();
+        };
 
         window.addEventListener("storage", onStorage);
         window.addEventListener("focus", onFocus);
+        window.addEventListener(
+            CART_UPDATED_EVENT,
+            actualizarCantidadCarrito
+        );
 
         return () => {
             window.removeEventListener("storage", onStorage);
             window.removeEventListener("focus", onFocus);
+            window.removeEventListener(
+                CART_UPDATED_EVENT,
+                actualizarCantidadCarrito
+            );
         };
     }, []);
 
@@ -115,6 +146,20 @@ function Navbar() {
                 onClick={cerrarMenu}
             >
                 Inicio
+            </a>
+
+            <a
+                className="navbar__link navbar__link--cart"
+                href="/carrito"
+                onClick={cerrarMenu}
+            >
+                Carrito
+                <span
+                    className="navbar__cart-count"
+                    aria-label={`${cantidadCarrito} unidades en el carrito`}
+                >
+                    {cantidadCarrito}
+                </span>
             </a>
 
             {!estaAutenticado && (
