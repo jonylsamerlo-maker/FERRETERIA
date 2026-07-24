@@ -8,6 +8,10 @@ import {
 } from "../../services/cartStorage";
 
 function obtenerUsuarioGuardado() {
+    if (typeof window === "undefined") {
+        return null;
+    }
+
     // Intenta obtener el usuario desde localStorage primero, luego sessionStorage.
     const claves = [
         { store: localStorage, key: "usuario" },
@@ -21,11 +25,12 @@ function obtenerUsuarioGuardado() {
             const raw = item.store.getItem(item.key);
             if (!raw) continue;
 
-            // Si ya es un objeto serializado, parsearlo; si no, devolver raw.
+            // El usuario guardado debe ser JSON válido.
             try {
                 return JSON.parse(raw);
             } catch {
-                return raw;
+                item.store.removeItem(item.key);
+                continue;
             }
         } catch (e) {
             // Ignorar y continuar con la siguiente fuente.
@@ -94,6 +99,9 @@ function Navbar() {
     const handleLogout = () => {
         setMenuAbierto(false);
         localStorage.removeItem("usuario");
+        sessionStorage.removeItem("usuario");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
         window.location.href = "/login";
     };
 

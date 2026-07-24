@@ -20,6 +20,7 @@ export default function Categorias() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
+  const [autorizado, setAutorizado] = useState(false);
 
   const cargarCategorias = async () => {
     try {
@@ -35,6 +36,25 @@ export default function Categorias() {
   };
 
   useEffect(() => {
+    try {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      const usuario = usuarioGuardado
+        ? JSON.parse(usuarioGuardado)
+        : null;
+      const rol = usuario?.rol?.trim().toUpperCase();
+
+      if (rol !== 'ADMIN') {
+        window.location.href = '/login';
+        return;
+      }
+
+      setAutorizado(true);
+    } catch {
+      localStorage.removeItem('usuario');
+      window.location.href = '/login';
+      return;
+    }
+
     cargarCategorias();
   }, []);
 
@@ -121,6 +141,10 @@ export default function Categorias() {
       setError(err.message);
     }
   };
+
+  if (!autorizado) {
+    return null;
+  }
 
   return (
     <section className="categorias">

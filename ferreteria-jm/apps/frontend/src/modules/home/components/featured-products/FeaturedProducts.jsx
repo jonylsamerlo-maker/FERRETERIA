@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { API_BASE_URL } from "../../../../config/appConfig";
+import { agregarAlCarrito } from "../../../../services/cartStorage";
 import { getProductos } from "../../../productos/services/productoApi";
+import ChatBot from "../../../chatbot/components/ChatBot.jsx";
 import "./FeaturedProducts.css";
 import ProductCard from "../product-card/ProductCard.index";
 
@@ -54,6 +56,15 @@ function FeaturedProducts() {
     });
   };
 
+  const handleAgregarDesdeChatbot = (producto) =>
+    agregarAlCarrito({
+      id: producto.producto_id,
+      nombre: producto.nombre,
+      precio: Number(producto.precio) || 0,
+      imagen: resolverImagen(producto.imagen),
+      stock: Number(producto.stock) || 0,
+    });
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setCategoriaSeleccionada(params.get("categoria") || "");
@@ -80,6 +91,10 @@ function FeaturedProducts() {
 
   return (
     <section className="featured-products" id="productos">
+      <ChatBot
+        productos={products}
+        addToCart={handleAgregarDesdeChatbot}
+      />
 
       <h2 className="featured-products__title">
         {categoriaSeleccionada

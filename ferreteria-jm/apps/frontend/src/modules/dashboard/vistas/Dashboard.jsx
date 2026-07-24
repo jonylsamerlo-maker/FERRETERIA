@@ -5,17 +5,18 @@ export default function Dashboard() {
   const [usuario, setUsuario] = useState(null);
 
   useEffect(() => {
-    const usuarioGuardado = localStorage.getItem("usuario");
-
-    if (!usuarioGuardado) {
-      window.location.href = "/login";
-      return;
-    }
-
     try {
-      const usuarioParseado = JSON.parse(usuarioGuardado);
+      const usuarioGuardado = localStorage.getItem("usuario");
 
-      if (!usuarioParseado) {
+      if (!usuarioGuardado) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const usuarioParseado = JSON.parse(usuarioGuardado);
+      const rol = usuarioParseado?.rol?.trim().toUpperCase();
+
+      if (!usuarioParseado || rol !== "ADMIN") {
         window.location.href = "/login";
         return;
       }
@@ -29,6 +30,9 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("usuario");
+    sessionStorage.removeItem("usuario");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     window.location.href = "/login";
   };
 

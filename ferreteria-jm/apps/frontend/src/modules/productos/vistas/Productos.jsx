@@ -38,6 +38,7 @@ export default function Productos() {
   const [guardando, setGuardando] = useState(false);
   const [eliminandoId, setEliminandoId] = useState(null);
   const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
+  const [autorizado, setAutorizado] = useState(false);
 
   const cargarDatos = async () => {
     try {
@@ -68,6 +69,25 @@ export default function Productos() {
   };
 
   useEffect(() => {
+    try {
+      const usuarioGuardado = localStorage.getItem('usuario');
+      const usuario = usuarioGuardado
+        ? JSON.parse(usuarioGuardado)
+        : null;
+      const rol = usuario?.rol?.trim().toUpperCase();
+
+      if (rol !== 'ADMIN') {
+        window.location.href = '/login';
+        return;
+      }
+
+      setAutorizado(true);
+    } catch {
+      localStorage.removeItem('usuario');
+      window.location.href = '/login';
+      return;
+    }
+
     cargarDatos();
   }, []);
 
@@ -373,6 +393,10 @@ export default function Productos() {
   };
 
   const mensajesImagen = obtenerMensajesImagen();
+
+  if (!autorizado) {
+    return null;
+  }
 
   return (
     <section className="productos">
