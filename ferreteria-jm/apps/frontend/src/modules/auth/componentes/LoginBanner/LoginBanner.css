@@ -1,0 +1,39 @@
+.login-banner {
+    width: 40%;
+    min-height: 420px;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .10);
+    background: #111827;
+    flex: 0 1 40%;
+}
+
+.login-banner__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .9s ease;
+}
+
+.login-banner__image--active {
+    opacity: 1;
+}
+
+@media (max-width: 900px) {
+    .login-banner {
+        width: 34%;
+        min-height: 390px;
+        flex-basis: 34%;
+    }
+}
+
+@media (max-width: 700px) {
+    .login-banner {
+        display: none;
+    }
+}

@@ -31,8 +31,6 @@ function LoginForm() {
           JSON.stringify(respuesta.usuario)
         );
 
-        alert("¡Login correcto!");
-
         window.location.href = "/dashboard";
       } else {
         alert(respuesta.message);
