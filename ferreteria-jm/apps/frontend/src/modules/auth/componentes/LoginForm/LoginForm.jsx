@@ -20,8 +20,14 @@ function LoginForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    const formValues = new FormData(event.currentTarget);
+    const loginData = {
+      username: formValues.get("username") || "",
+      password: formValues.get("password") || "",
+    };
+
     try {
-      const respuesta = await loginUsuario(formData);
+      const respuesta = await loginUsuario(loginData);
 
       console.log(respuesta);
 
@@ -61,6 +67,7 @@ function LoginForm() {
           type="text"
           className="login-form__input"
           placeholder="Ingrese su usuario"
+          autoComplete="username"
           value={formData.username}
           onChange={handleChange}
         />
@@ -80,6 +87,7 @@ function LoginForm() {
           type="password"
           className="login-form__input"
           placeholder="Ingrese su contraseña"
+          autoComplete="current-password"
           value={formData.password}
           onChange={handleChange}
         />
