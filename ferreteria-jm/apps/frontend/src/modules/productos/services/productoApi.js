@@ -5,14 +5,13 @@ const UPLOAD_URL = `${API_BASE_URL}/api/upload.php`;
 
 async function handleResponse(response) {
   const contentType = response.headers.get('content-type');
+  const texto = await response.text();
 
   let data;
 
-  if (contentType?.includes('application/json')) {
-    data = await response.json();
+  if (contentType?.includes('application/json') && texto) {
+    data = JSON.parse(texto);
   } else {
-    const texto = await response.text();
-
     data = {
       mensaje: texto || 'El servidor devolvió una respuesta inválida',
     };
@@ -28,14 +27,19 @@ async function handleResponse(response) {
 }
 
 export async function getProductos() {
-  const response = await fetch(API_URL);
+  const response = await fetch(API_URL, {
+    cache: 'no-store',
+  });
 
   return handleResponse(response);
 }
 
 export async function getProductoPorId(id) {
   const response = await fetch(
-    `${API_URL}?id=${encodeURIComponent(id)}`
+    `${API_URL}?id=${encodeURIComponent(id)}`,
+    {
+      cache: 'no-store',
+    }
   );
 
   return handleResponse(response);

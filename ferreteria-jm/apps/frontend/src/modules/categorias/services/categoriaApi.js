@@ -3,7 +3,8 @@ import { API_BASE_URL } from '../../../config/appConfig';
 const API_URL = `${API_BASE_URL}/api/categorias.php`;
 
 async function handleResponse(response) {
-  const data = await response.json();
+  const texto = await response.text();
+  const data = texto ? JSON.parse(texto) : {};
 
   if (!response.ok || data.success === false) {
     throw new Error(data.message || 'Ocurrió un error al procesar la categoría');
@@ -13,7 +14,9 @@ async function handleResponse(response) {
 }
 
 export async function getCategorias() {
-  const response = await fetch(API_URL);
+  const response = await fetch(API_URL, {
+    cache: 'no-store',
+  });
   const data = await handleResponse(response);
   return data.data || [];
 }
