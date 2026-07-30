@@ -1,226 +1,271 @@
- # 🔧 Ferretería JM
+# Ferreteria JM
 
-Sistema web para la administración de productos y categorías de una ferretería.
+Sistema web para la gestion de una ferreteria, con catalogo publico, carrito, chatbot, panel administrativo, carga de imagenes y API REST conectada a MySQL.
 
-Desarrollado como proyecto final utilizando una arquitectura Monorepo con Astro, React, PHP, PDO, MySQL y Docker.
+El proyecto esta preparado para ejecutarse con Docker Compose y dejar el frontend, backend y base de datos disponibles desde una instalacion limpia.
 
----
+## Caracteristicas
 
-# 🚀 Tecnologías
+- Administracion de productos.
+- Administracion de categorias.
+- Login de administrador.
+- Dashboard administrativo.
+- Carga de imagenes para productos.
+- Carrito.
+- Chatbot.
+- Interfaz responsive.
+- Entorno con Docker.
+- API REST.
 
-## Frontend
+## Tecnologias
 
-- Astro
-- React
-- JavaScript
-- CSS
+| Capa | Tecnologias |
+| --- | --- |
+| Frontend | Astro, React, JavaScript, CSS |
+| Backend | PHP 8.2, PDO, MySQL |
+| Infraestructura | Docker, Docker Compose |
 
-## Backend
+### Dependencias principales
 
-- PHP 8
-- PDO
-- API REST
+El frontend esta ubicado en `ferreteria-jm/apps/frontend` y utiliza:
 
-## Base de datos
+- `astro`
+- `@astrojs/react`
+- `react`
+- `react-dom`
+- `lucide-react`
 
-- MySQL
+### Scripts disponibles
 
-## Infraestructura
+Los scripts disponibles en `ferreteria-jm/apps/frontend/package.json` son:
 
-- Docker
-- Docker Compose
+| Script | Descripcion |
+| --- | --- |
+| `npm run dev` | Inicia Astro en modo desarrollo con `--host 0.0.0.0`. |
+| `npm run build` | Genera la build de produccion del frontend. |
+| `npm run preview` | Sirve una build de Astro para previsualizacion. |
+| `npm run astro` | Ejecuta comandos de Astro. |
 
----
+## Arquitectura
 
-# 📂 Arquitectura
-
-```
-ferreteria-jm/
-
-├── apps/
-│   └── frontend/
-│
+```text
+.
 ├── backend/
 │   ├── api/
+│   │   ├── categorias.php
+│   │   ├── login.php
+│   │   ├── productos.php
+│   │   ├── upload.php
+│   │   └── usuarios.php
 │   ├── config/
+│   │   └── Database.php
+│   ├── img/
+│   │   └── productos/
 │   ├── models/
-│   ├── uploads/
-│   └── schemas.sql
-│
-├── docker/
-│
+│   │   ├── Categoria.php
+│   │   ├── Producto.php
+│   │   └── Usuario.php
+│   ├── scripts/
+│   │   └── generar_password.php
+│   ├── sql/
+│   │   ├── schema.sql
+│   │   ├── schemas.sql
+│   │   └── seed.sql
+│   ├── index.php
+│   └── test-db.php
+├── ferreteria-jm/
+│   └── apps/
+│       ├── frontend/
+│       │   ├── public/
+│       │   ├── src/
+│       │   │   ├── components/
+│       │   │   ├── config/
+│       │   │   ├── data/
+│       │   │   ├── modules/
+│       │   │   ├── pages/
+│       │   │   ├── routes/
+│       │   │   ├── services/
+│       │   │   └── utils/
+│       │   ├── astro.config.mjs
+│       │   ├── dockerfile
+│       │   └── package.json
+│       └── package.json
 ├── docker-compose.yml
-│
 └── README.md
 ```
 
----
+## Instalacion
 
-# ⚙ Instalación
+### Requisitos
 
-## Clonar el proyecto
+- Docker.
+- Docker Compose.
+
+### Pasos desde cero
+
+1. Clonar el repositorio.
 
 ```bash
-git clone https://github.com/TU-USUARIO/FERRETERIA.git
+git clone <url-del-repositorio>
 ```
 
-Ingresar al proyecto
+2. Entrar a la carpeta del proyecto.
 
 ```bash
-cd ferreteria-jm
+cd PAGINA_WEB
 ```
 
-Levantar los contenedores
+3. Levantar los servicios.
 
 ```bash
 docker compose up -d
 ```
 
----
+4. Esperar la inicializacion de MySQL.
 
-# 🌐 URLs
+En el primer arranque, MySQL crea la base de datos y ejecuta los scripts SQL iniciales. Este proceso puede tardar unos minutos.
 
-Frontend
+5. Abrir la aplicacion.
 
+| Servicio | URL |
+| --- | --- |
+| Frontend | `http://localhost:4321` |
+| Backend | `http://localhost:8081` |
+| MySQL | `localhost:3308` |
+
+### Comandos utiles
+
+```bash
+docker compose ps
+docker compose logs db
+docker compose logs backend
+docker compose logs frontend
+docker compose down
 ```
-http://localhost:4321
+
+Para reiniciar desde una base de datos limpia:
+
+```bash
+docker compose down -v
+docker compose up -d
 ```
 
-Backend
+## Base de datos
 
-```
+El servicio `db` usa MySQL 8.0 y se configura desde `docker-compose.yml`.
+
+| Dato | Valor |
+| --- | --- |
+| Base de datos | `ferreteria_db` |
+| Usuario | `jony_user` |
+| Host interno Docker | `db` |
+| Puerto expuesto | `3308` |
+
+Los scripts de inicializacion se montan en `/docker-entrypoint-initdb.d`:
+
+- `backend/sql/schema.sql`: crea automaticamente la base de datos `ferreteria_db` y las tablas `usuarios`, `categorias` y `productos`.
+- `backend/sql/seed.sql`: carga datos iniciales, incluyendo usuario administrador, categorias, productos de ejemplo y productos en la categoria `Ofertas especiales`.
+
+> Nota: los scripts de inicializacion de MySQL se ejecutan automaticamente cuando el volumen de datos se crea por primera vez. Si el volumen ya existe, MySQL conserva los datos actuales.
+
+## Usuario administrador
+
+Datos existentes en `backend/sql/seed.sql`:
+
+| Campo | Valor |
+| --- | --- |
+| Usuario | `admin` |
+| Email | `admin@ferreteriajm.com` |
+| Rol | `ADMIN` |
+| Password | Hash bcrypt almacenado en `seed.sql`; no hay contrasena en texto plano dentro del seed. |
+
+## API
+
+Base URL local:
+
+```text
 http://localhost:8081
 ```
 
----
+### Endpoints
 
-# 🗄 Base de datos
+| Metodo | Endpoint | Descripcion |
+| --- | --- | --- |
+| `POST` | `/api/login.php` | Autentica un usuario. |
+| `GET` | `/api/productos.php` | Lista productos. |
+| `GET` | `/api/productos.php?id={id}` | Obtiene un producto por ID. |
+| `POST` | `/api/productos.php` | Crea un producto. |
+| `PUT` | `/api/productos.php?id={id}` | Actualiza un producto. |
+| `DELETE` | `/api/productos.php?id={id}` | Elimina un producto. |
+| `GET` | `/api/categorias.php` | Lista categorias. |
+| `POST` | `/api/categorias.php` | Crea una categoria. |
+| `PUT` | `/api/categorias.php?id={id}` | Actualiza una categoria. |
+| `DELETE` | `/api/categorias.php?id={id}` | Elimina una categoria. |
+| `POST` | `/api/upload.php` | Sube una imagen de producto mediante el campo `imagen`. |
+| `GET` | `/api/usuarios.php` | Lista usuarios. |
 
-Motor
+### Endpoint de verificacion
 
+| Metodo | Endpoint | Descripcion |
+| --- | --- | --- |
+| `GET` | `/test-db.php` | Verifica la conexion del backend con la base de datos. |
+
+## Capturas
+
+Seccion preparada para agregar capturas del sistema:
+
+### Home
+
+Pendiente.
+
+### Dashboard
+
+Pendiente.
+
+### Productos
+
+Pendiente.
+
+### Categorias
+
+Pendiente.
+
+### Login
+
+Pendiente.
+
+## Proximas mejoras
+
+- Mejoras de seguridad.
+- Gestion de pedidos.
+- Gestion de clientes.
+- Integracion con pasarela de pagos.
+- Panel de estadisticas.
+
+## Licencia
+
+Este proyecto se distribuye bajo licencia MIT.
+
+```text
+MIT License
+
+Copyright (c) 2026 Ferreteria JM
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
-MySQL
-```
-
-Importar
-
-```
-backend/schemas.sql
-```
-
-Base de datos
-
-```
-ferreteria_db
-```
-
----
-
-# 👤 Usuario administrador
-
-Ejemplo
-
-Usuario
-
-```
-admin
-```
-
-Contraseña
-
-```
-Admin123*
-```
-
-*(Modificar según la configuración utilizada en la base de datos.)*
-
----
-
-# ✅ Funcionalidades
-
-- Inicio dinámico.
-- Login de administrador.
-- Dashboard administrativo.
-- CRUD de Categorías.
-- CRUD de Productos.
-- Carga de imágenes.
-- Vista previa de imágenes.
-- Carrusel de Ofertas Especiales.
-- Navbar responsive.
-- Footer responsive.
-- API REST en PHP.
-- Base de datos MySQL.
-- Docker para el entorno de desarrollo.
-
----
-
-# 📸 Capturas
-
-Agregar imágenes dentro de:
-
-```
-docs/img/
-```
-
-Ejemplo
-
-```
-docs/img/home.png
-docs/img/login.png
-docs/img/dashboard.png
-docs/img/categorias.png
-docs/img/productos.png
-```
-
----
-
-# 📱 Responsive
-
-El proyecto fue diseñado para:
-
-- Escritorio
-- Tablet
-- Teléfono móvil
-
----
-
-# 🏗 Arquitectura utilizada
-
-- Monorepo
-- Componentes reutilizables
-- Astro + React
-- Backend desacoplado mediante API REST
-- PHP + PDO
-- Docker
-
----
-
-# 🔮 Mejoras futuras
-
-- Carrito de compras.<img width="1366" height="768" alt="selec_das" src="https://github.com/user-attachments/assets/ae984e95-49aa-43a9-837b-445de77230bc" />
-<img width="1366" height="768" alt="selec_cate" src="https://github.com/user-attachments/assets/34e025eb-00d4-48df-b581-b0d32c3000fb" />
-<img width="1366" height="768" alt="pruebalogin" src="https://github.com/user-attachments/assets/bb1e0bf7-e7c5-45bf-8eb0-9ae5a6655cae" />
-<img width="1366" height="768" alt="select_footer" src="https://github.com/user-attachments/assets/1e0e1d4d-c64c-4cd8-ad3c-76390bc42c88" />
-<img width="1366" height="768" alt="selec_hero" src="https://github.com/user-attachments/assets/1a4a2295-8208-4286-8775-9fd635cec5a3" />
-<img width="1366" height="768" alt="selec_home" src="https://github.com/user-attachments/assets/c1e21f73-9c21-420f-a324-6c70253c9282" />
-
-- Pedido mediante WhatsApp.
-- Chatbot asistente.
-- Centro de Ayuda para administradores.
-- Panel de configuración para comercios.
-- Gestión de pedidos.
-
----
-
-# 👨‍💻 Autor
-
-Proyecto desarrollado por **Jony M.**
-
-Como trabajo final de desarrollo Full Stack.
-
----
-
-# 📄 Licencia
-
-Proyecto desarrollado con fines educativos y como base para futuras implementaciones comerciales.
-

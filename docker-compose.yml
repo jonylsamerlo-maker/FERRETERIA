@@ -13,6 +13,8 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+    command: >
+      sh -c "npm run astro -- dev stop || true && npm run dev"
 
   # Servidor PHP (Backend)
   backend:
@@ -40,6 +42,8 @@ services:
       - "3308:3306"
     volumes:
       - db_data:/var/lib/mysql
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./backend/sql/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
 
 volumes:
   db_data:
