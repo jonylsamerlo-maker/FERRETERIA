@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/Auth.php';
 require_once __DIR__ . '/../models/Categoria.php';
 
 header("Access-Control-Allow-Origin: http://localhost:4321");
+header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 header("Content-Type: application/json; charset=UTF-8");
@@ -49,6 +51,7 @@ try {
             break;
 
         case 'POST':
+            requerirRolAdmin();
 
             $datos = json_decode(file_get_contents("php://input"), true);
 
@@ -76,6 +79,7 @@ try {
             break;
 
         case 'PUT':
+            requerirRolAdmin();
 
             $id = $_GET['id'] ?? null;
 
@@ -111,6 +115,7 @@ try {
             break;
 
         case 'DELETE':
+            requerirRolAdmin();
 
             $id = $_GET['id'] ?? null;
 
@@ -137,5 +142,5 @@ try {
 
 } catch (Throwable $e) {
 
-    responderJson(false, $e->getMessage(), null, 500);
+    responderJson(false, "Ocurrió un error interno", null, 500);
 }

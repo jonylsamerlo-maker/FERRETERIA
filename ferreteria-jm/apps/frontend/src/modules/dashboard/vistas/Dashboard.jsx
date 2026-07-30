@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import {
+  logoutUsuario,
+  obtenerSesionUsuario,
+} from "../../auth/services/usuarioApi";
 import "./Dashboard.css";
 
 export default function Dashboard() {
@@ -6,30 +10,51 @@ export default function Dashboard() {
   const [mostrarAyuda, setMostrarAyuda] = useState(false);
 
   useEffect(() => {
-    try {
-      const usuarioGuardado = localStorage.getItem("usuario");
+    const validarSesion = async () => {
+      try {
+        const respuesta = await obtenerSesionUsuario();
 
-      if (!usuarioGuardado) {
+        if (!respuesta.success || !respuesta.usuario) {
+          localStorage.removeItem("usuario");
+          sessionStorage.removeItem("usuario");
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("user");
+          window.location.href = "/login";
+          return;
+        }
+
+        const rol = respuesta.usuario?.rol?.trim().toUpperCase();
+
+        if (rol !== "ADMIN") {
+          localStorage.removeItem("usuario");
+          sessionStorage.removeItem("usuario");
+          localStorage.removeItem("user");
+          sessionStorage.removeItem("user");
+          window.location.href = "/login";
+          return;
+        }
+
+        localStorage.setItem("usuario", JSON.stringify(respuesta.usuario));
+        setUsuario(respuesta.usuario);
+      } catch {
+        localStorage.removeItem("usuario");
+        sessionStorage.removeItem("usuario");
+        localStorage.removeItem("user");
+        sessionStorage.removeItem("user");
         window.location.href = "/login";
-        return;
       }
+    };
 
-      const usuarioParseado = JSON.parse(usuarioGuardado);
-      const rol = usuarioParseado?.rol?.trim().toUpperCase();
-
-      if (!usuarioParseado || rol !== "ADMIN") {
-        window.location.href = "/login";
-        return;
-      }
-
-      setUsuario(usuarioParseado);
-    } catch {
-      localStorage.removeItem("usuario");
-      window.location.href = "/login";
-    }
+    validarSesion();
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await logoutUsuario();
+    } catch {
+      // El cierre local se mantiene aunque falle la llamada al backend.
+    }
+
     localStorage.removeItem("usuario");
     sessionStorage.removeItem("usuario");
     localStorage.removeItem("user");

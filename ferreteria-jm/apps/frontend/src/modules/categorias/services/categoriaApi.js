@@ -16,6 +16,7 @@ async function handleResponse(response) {
 export async function getCategorias() {
   const response = await fetch(API_URL, {
     cache: 'no-store',
+    credentials: 'include',
   });
   const data = await handleResponse(response);
   return data.data || [];
@@ -24,6 +25,7 @@ export async function getCategorias() {
 export async function crearCategoria(categoria) {
   const response = await fetch(API_URL, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -36,6 +38,7 @@ export async function crearCategoria(categoria) {
 export async function actualizarCategoria(id, categoria) {
   const response = await fetch(`${API_URL}?id=${id}`, {
     method: 'PUT',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -48,6 +51,7 @@ export async function actualizarCategoria(id, categoria) {
 export async function eliminarCategoria(id) {
   const response = await fetch(`${API_URL}?id=${id}`, {
     method: 'DELETE',
+    credentials: 'include',
   });
 
   return handleResponse(response);

@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
+require_once __DIR__ . '/../config/Auth.php';
 require_once __DIR__ . '/../models/Producto.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=UTF-8');
@@ -147,6 +149,7 @@ try {
             responderJson($producto->listar());
 
         case 'POST':
+            requerirRolAdmin();
             $datos = obtenerDatosJson();
 
             validarProducto($datos);
@@ -162,6 +165,7 @@ try {
             ], 201);
 
         case 'PUT':
+            requerirRolAdmin();
             $productoId = validarId($_GET['id'] ?? null);
             $datos = obtenerDatosJson();
 
@@ -178,6 +182,7 @@ try {
             ]);
 
         case 'DELETE':
+            requerirRolAdmin();
             $productoId = validarId($_GET['id'] ?? null);
 
             if (!$producto->eliminar($productoId)) {
@@ -203,6 +208,6 @@ try {
 } catch (Throwable $e) {
     responderJson([
         'error' => true,
-        'mensaje' => $e->getMessage()
+        'mensaje' => 'Ocurrió un error interno'
     ], 500);
 }

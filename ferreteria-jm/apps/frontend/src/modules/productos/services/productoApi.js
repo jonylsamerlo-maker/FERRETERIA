@@ -29,6 +29,7 @@ async function handleResponse(response) {
 export async function getProductos() {
   const response = await fetch(API_URL, {
     cache: 'no-store',
+    credentials: 'include',
   });
 
   return handleResponse(response);
@@ -39,6 +40,7 @@ export async function getProductoPorId(id) {
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       cache: 'no-store',
+      credentials: 'include',
     }
   );
 
@@ -52,6 +54,7 @@ export async function subirImagen(archivo) {
 
   const response = await fetch(UPLOAD_URL, {
     method: 'POST',
+    credentials: 'include',
     body: formData,
   });
 
@@ -61,6 +64,7 @@ export async function subirImagen(archivo) {
 export async function crearProducto(datos) {
   const response = await fetch(API_URL, {
     method: 'POST',
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
     },
@@ -75,6 +79,7 @@ export async function actualizarProducto(id, datos) {
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       method: 'PUT',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -90,6 +95,7 @@ export async function eliminarProducto(id) {
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
+      credentials: 'include',
     }
   );
 

@@ -1,5 +1,6 @@
 import "./Navbar.css";
 import { useEffect, useState } from "react";
+import { logoutUsuario } from "../../modules/auth/services/usuarioApi";
 import {
     CART_STORAGE_KEY,
     CART_UPDATED_EVENT,
@@ -96,8 +97,15 @@ function Navbar() {
     const esAdmin = rol === "ADMIN";
     const estaAutenticado = Boolean(usuario);
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
         setMenuAbierto(false);
+
+        try {
+            await logoutUsuario();
+        } catch {
+            // Si el backend no responde, igualmente se limpia el estado local.
+        }
+
         localStorage.removeItem("usuario");
         sessionStorage.removeItem("usuario");
         localStorage.removeItem("user");

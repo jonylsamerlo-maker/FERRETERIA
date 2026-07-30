@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { API_BASE_URL } from '../../../config/appConfig';
 import { getCategorias } from '../../categorias/services/categoriaApi';
+import { obtenerSesionUsuario } from '../../auth/services/usuarioApi';
 import {
   actualizarProducto,
   crearProducto,
@@ -69,26 +70,43 @@ export default function Productos() {
   };
 
   useEffect(() => {
-    try {
-      const usuarioGuardado = localStorage.getItem('usuario');
-      const usuario = usuarioGuardado
-        ? JSON.parse(usuarioGuardado)
-        : null;
-      const rol = usuario?.rol?.trim().toUpperCase();
+    const validarSesion = async () => {
+      try {
+        const respuesta = await obtenerSesionUsuario();
 
-      if (rol !== 'ADMIN') {
+        if (!respuesta.success || !respuesta.usuario) {
+          localStorage.removeItem('usuario');
+          sessionStorage.removeItem('usuario');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
+          window.location.href = '/login';
+          return;
+        }
+
+        const rol = respuesta.usuario?.rol?.trim().toUpperCase();
+
+        if (rol !== 'ADMIN') {
+          localStorage.removeItem('usuario');
+          sessionStorage.removeItem('usuario');
+          localStorage.removeItem('user');
+          sessionStorage.removeItem('user');
+          window.location.href = '/login';
+          return;
+        }
+
+        localStorage.setItem('usuario', JSON.stringify(respuesta.usuario));
+        setAutorizado(true);
+        await cargarDatos();
+      } catch {
+        localStorage.removeItem('usuario');
+        sessionStorage.removeItem('usuario');
+        localStorage.removeItem('user');
+        sessionStorage.removeItem('user');
         window.location.href = '/login';
-        return;
       }
+    };
 
-      setAutorizado(true);
-    } catch {
-      localStorage.removeItem('usuario');
-      window.location.href = '/login';
-      return;
-    }
-
-    cargarDatos();
+    validarSesion();
   }, []);
 
   useEffect(() => {
