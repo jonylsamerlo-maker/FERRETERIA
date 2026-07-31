@@ -1,4 +1,4 @@
 header{
     width: 100%;
-    background-color: #ffffff;
+    background-color: var(--color-surface);
 }

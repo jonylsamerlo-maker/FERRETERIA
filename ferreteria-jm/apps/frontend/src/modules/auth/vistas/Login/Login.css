@@ -8,7 +8,7 @@
 
     align-items:center;
 
-    background:#f3f4f6;
+    background:var(--color-page-background);
 
     padding:2rem;
 

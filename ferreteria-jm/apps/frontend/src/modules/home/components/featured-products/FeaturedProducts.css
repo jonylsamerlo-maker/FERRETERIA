@@ -1,7 +1,7 @@
 .featured-products {
     width: 100%;
     padding: 3.5rem 1rem;
-    background: #ffffff;
+    background: var(--color-page-background);
 }
 
 .featured-products__container {
@@ -12,13 +12,13 @@
 .featured-products__title {
     text-align: center;
     font-size: 2rem;
-    color: #1f2937;
+    color: var(--color-text-primary);
     margin-bottom: .5rem;
 }
 
 .featured-products__subtitle {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     margin-bottom: 2.25rem;
 }
 
@@ -51,7 +51,7 @@
 }
 
 .featured-products__control {
-    background: #ea580c;
+    background: var(--color-primary);
     border: none;
     border-radius: 10px;
     color: #ffffff;
@@ -63,7 +63,7 @@
 
 .featured-products__status {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     margin: 2rem 0 0;
 }
 

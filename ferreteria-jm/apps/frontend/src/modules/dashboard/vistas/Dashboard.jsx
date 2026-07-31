@@ -63,7 +63,13 @@ export default function Dashboard() {
   };
 
   if (!usuario) {
-    return null;
+    return (
+      <main className="dashboard">
+        <p className="dashboard__loading" role="status">
+          Validando sesión...
+        </p>
+      </main>
+    );
   }
 
   return (

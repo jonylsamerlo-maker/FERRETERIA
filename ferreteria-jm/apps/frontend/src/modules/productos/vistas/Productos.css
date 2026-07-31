@@ -1,8 +1,8 @@
 .productos {
   min-height: 72vh;
   padding: 2.5rem 1rem;
-  background: #f3f4f6;
-  color: #1f2937;
+  background: var(--color-page-background);
+  color: var(--color-text-primary);
 }
 
 .productos__header {
@@ -48,7 +48,7 @@
   max-width: 1200px;
   margin: 0 auto 1.5rem;
   padding: 1.5rem;
-  background: #ffffff;
+  background: var(--color-surface);
   border-radius: 0.75rem;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
 }
@@ -74,8 +74,10 @@
   max-width: 100%;
   box-sizing: border-box;
   padding: 0.75rem;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--color-border);
   border-radius: 0.4rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
   font: inherit;
 }
 
@@ -85,7 +87,7 @@ textarea.productos__input {
 }
 
 .productos__input:focus {
-  outline: 2px solid #dc2626;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
@@ -122,8 +124,8 @@ textarea.productos__input {
 }
 
 .productos__action-button {
-  background: #e2e8f0;
-  color: #111827;
+  background: var(--color-page-background);
+  color: var(--color-text-primary);
 }
 
 .productos__action-button--danger {
@@ -159,7 +161,7 @@ textarea.productos__input {
 
 .productos__empty {
   margin: 0;
-  color: #64748b;
+  color: var(--color-text-secondary);
 }
 
 .productos__current-image {
@@ -186,9 +188,9 @@ textarea.productos__input {
 .productos__image-info-card {
   min-width: 0;
   padding: 1rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   border-radius: 0.5rem;
-  background: #f8fafc;
+  background: var(--color-page-background);
 }
 
 .productos__preview-title {
@@ -202,8 +204,8 @@ textarea.productos__input {
   height: 220px;
   border-radius: 0.4rem;
   object-fit: contain;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
 }
 
 .productos__image-info {
@@ -219,7 +221,7 @@ textarea.productos__input {
 
 .productos__image-info dt {
   margin-bottom: 0.2rem;
-  color: #64748b;
+  color: var(--color-text-secondary);
   font-size: 0.88rem;
   font-weight: 700;
 }
@@ -262,19 +264,19 @@ textarea.productos__input {
   width: 100%;
   border-collapse: collapse;
   table-layout: auto;
-  background: #ffffff;
+  background: var(--color-surface);
 }
 
 .productos__table th,
 .productos__table td {
   padding: 0.75rem;
   vertical-align: middle;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .productos__table th {
   text-align: left;
-  background: #f8fafc;
+  background: var(--color-page-background);
 }
 
 .productos__image {

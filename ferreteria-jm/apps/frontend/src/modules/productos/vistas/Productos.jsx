@@ -28,6 +28,14 @@ const imagenRecomendada = {
   pesoMaximoMb: 2,
 };
 
+function formatearPrecio(valor) {
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    minimumFractionDigits: 2,
+  }).format(Number(valor) || 0);
+}
+
 export default function Productos() {
   const [formulario, setFormulario] = useState(formularioInicial);
   const [productos, setProductos] = useState([]);
@@ -413,7 +421,13 @@ export default function Productos() {
   const mensajesImagen = obtenerMensajesImagen();
 
   if (!autorizado) {
-    return null;
+    return (
+      <section className="productos">
+        <p className="productos__empty" role="status">
+          Validando sesión...
+        </p>
+      </section>
+    );
   }
 
   return (
@@ -671,13 +685,19 @@ export default function Productos() {
         )}
 
         {error && (
-          <p className="productos__message productos__message--error">
+          <p
+            className="productos__message productos__message--error"
+            role="alert"
+          >
             {error}
           </p>
         )}
 
         {mensaje && (
-          <p className="productos__message productos__message--success">
+          <p
+            className="productos__message productos__message--success"
+            role="status"
+          >
             {mensaje}
           </p>
         )}
@@ -753,7 +773,7 @@ export default function Productos() {
 
                     <td>{producto.codigo}</td>
                     <td>{producto.nombre}</td>
-                    <td>${producto.precio}</td>
+                    <td>{formatearPrecio(producto.precio)}</td>
                     <td>{producto.stock}</td>
                     <td>{producto.categoria}</td>
 

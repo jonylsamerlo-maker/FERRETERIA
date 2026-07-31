@@ -46,7 +46,7 @@ function Categories() {
   }, []);
 
   return (
-    <section className="categories">
+    <section className="categories" id="categorias">
 
       <div className="categories__container">
 

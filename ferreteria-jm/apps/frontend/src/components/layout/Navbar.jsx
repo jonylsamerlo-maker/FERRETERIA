@@ -46,12 +46,18 @@ function Navbar() {
     const [usuario, setUsuario] = useState(null);
     const [menuAbierto, setMenuAbierto] = useState(false);
     const [cantidadCarrito, setCantidadCarrito] = useState(0);
+    const [tema, setTema] = useState("light");
 
     useEffect(() => {
         setUsuario(obtenerUsuarioGuardado());
         setCantidadCarrito(
             Math.max(0, obtenerCantidadTotal(obtenerCarrito()))
         );
+        const temaActual = document.documentElement.getAttribute("data-theme");
+
+        if (temaActual === "dark" || temaActual === "light") {
+            setTema(temaActual);
+        }
 
         const actualizarCantidadCarrito = () => {
             setCantidadCarrito(
@@ -92,6 +98,18 @@ function Navbar() {
             );
         };
     }, []);
+
+    const alternarTema = () => {
+        const nuevoTema = tema === "light" ? "dark" : "light";
+
+        document.documentElement.setAttribute("data-theme", nuevoTema);
+        try {
+            localStorage.setItem("tema", nuevoTema);
+        } catch {
+            // Si el almacenamiento falla, el tema igual cambia en la sesión actual.
+        }
+        setTema(nuevoTema);
+    };
 
     const rol = usuario?.rol?.trim().toUpperCase();
     const esAdmin = rol === "ADMIN";
@@ -177,6 +195,24 @@ function Navbar() {
                     {cantidadCarrito}
                 </span>
             </a>
+
+            <button
+                type="button"
+                className="navbar__theme"
+                aria-label={
+                    tema === "dark"
+                        ? "Activar modo claro"
+                        : "Activar modo oscuro"
+                }
+                title={
+                    tema === "dark"
+                        ? "Activar modo claro"
+                        : "Activar modo oscuro"
+                }
+                onClick={alternarTema}
+            >
+                {tema === "dark" ? "☀️" : "🌙"}
+            </button>
 
             {!estaAutenticado && (
                 <a

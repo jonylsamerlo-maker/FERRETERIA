@@ -27,6 +27,14 @@ function resolverImagen(imagen) {
   return `${API_BASE_URL}/${imagen}`;
 }
 
+function formatearPrecio(valor) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 2,
+  }).format(Number(valor) || 0);
+}
+
 function Carousel() {
   const [carouselSlides, setCarouselSlides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +86,12 @@ function Carousel() {
 
   useEffect(() => {
     if (carouselSlides.length <= 1) return;
+
+    const prefiereMovimientoReducido = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+    if (prefiereMovimientoReducido) return;
 
     const intervalId = setInterval(() => {
       setActiveIndex((current) =>
@@ -147,7 +161,7 @@ function Carousel() {
 
             <div className="ferreteria-carousel__details">
               <span className="ferreteria-carousel__price">
-                ${activeSlide.precio}
+                {formatearPrecio(activeSlide.precio)}
               </span>
 
               <span className="ferreteria-carousel__stock">

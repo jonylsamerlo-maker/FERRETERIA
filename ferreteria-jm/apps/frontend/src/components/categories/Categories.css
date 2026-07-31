@@ -1,7 +1,7 @@
 .categories {
     width: 100%;
     padding: 3.5rem 1rem;
-    background: #f8fafc;
+    background: var(--color-page-background);
 }
 
 .categories__container {
@@ -12,13 +12,13 @@
 .categories__title {
     text-align: center;
     font-size: 2rem;
-    color: #1f2937;
+    color: var(--color-text-primary);
     margin-bottom: .5rem;
 }
 
 .categories__subtitle {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     margin-bottom: 2.25rem;
 }
 
@@ -30,7 +30,7 @@
 
 .categories__card {
     display: block;
-    background: #ffffff;
+    background: var(--color-surface);
     border-radius: 16px;
     padding: 2rem;
 
@@ -50,7 +50,7 @@
 .categories__card:hover {
     transform: translateY(-8px);
 
-    border-color: #f97316;
+    border-color: var(--color-primary);
 
     box-shadow: 0 20px 35px rgba(0,0,0,.12);
 }
@@ -66,20 +66,20 @@
 .categories__card-title {
     font-size: 1.3rem;
 
-    color: #1f2937;
+    color: var(--color-text-primary);
 
     margin-bottom: .6rem;
 }
 
 .categories__description {
-    color: #6b7280;
+    color: var(--color-text-secondary);
 
     line-height: 1.5;
 }
 
 .categories__status {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     margin: 2rem 0 0;
 }
 

@@ -4,6 +4,14 @@ import {
 } from "../../../../services/cartStorage";
 import "./ProductCard.css";
 
+function formatearPrecio(valor) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 2,
+  }).format(Number(valor) || 0);
+}
+
 function ProductCard({
   id,
   image,
@@ -53,7 +61,7 @@ function ProductCard({
         )}
 
         <span className="product-card__price">
-          ${price}
+          {formatearPrecio(price)}
         </span>
 
         <div className="product-card__meta">

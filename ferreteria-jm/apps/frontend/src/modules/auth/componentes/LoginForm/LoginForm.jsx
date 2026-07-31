@@ -7,6 +7,8 @@ function LoginForm() {
     username: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -20,6 +22,10 @@ function LoginForm() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    if (enviando) {
+      return;
+    }
+
     const formValues = new FormData(event.currentTarget);
     const loginData = {
       username: formValues.get("username") || "",
@@ -27,9 +33,10 @@ function LoginForm() {
     };
 
     try {
-      const respuesta = await loginUsuario(loginData);
+      setEnviando(true);
+      setError("");
 
-      console.log(respuesta);
+      const respuesta = await loginUsuario(loginData);
 
       if (respuesta.success) {
         localStorage.setItem(
@@ -39,11 +46,13 @@ function LoginForm() {
 
         window.location.href = "/dashboard";
       } else {
-        alert(respuesta.message);
+        setError(respuesta.message);
       }
     } catch (error) {
       console.error("Error de conexión:", error);
-      alert("No se pudo conectar con el servidor.");
+      setError("No se pudo conectar con el servidor.");
+    } finally {
+      setEnviando(false);
     }
   };
 
@@ -93,11 +102,18 @@ function LoginForm() {
         />
       </div>
 
+      {error && (
+        <p className="login-form__message" role="alert">
+          {error}
+        </p>
+      )}
+
       <button
         type="submit"
         className="login-form__button"
+        disabled={enviando}
       >
-        Ingresar
+        {enviando ? "Ingresando..." : "Ingresar"}
       </button>
     </form>
   );

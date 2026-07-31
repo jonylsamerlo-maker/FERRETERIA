@@ -161,7 +161,13 @@ export default function Categorias() {
   };
 
   if (!autorizado) {
-    return null;
+    return (
+      <section className="categorias">
+        <p className="categorias__empty" role="status">
+          Validando sesión...
+        </p>
+      </section>
+    );
   }
 
   return (
@@ -203,8 +209,22 @@ export default function Categorias() {
             />
           </label>
 
-          {error && <p className="categorias__alert categorias__alert--error">{error}</p>}
-          {mensaje && <p className="categorias__alert categorias__alert--success">{mensaje}</p>}
+          {error && (
+            <p
+              className="categorias__alert categorias__alert--error"
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+          {mensaje && (
+            <p
+              className="categorias__alert categorias__alert--success"
+              role="status"
+            >
+              {mensaje}
+            </p>
+          )}
 
           <div className="categorias__actions">
             <button type="submit" disabled={guardando}>
