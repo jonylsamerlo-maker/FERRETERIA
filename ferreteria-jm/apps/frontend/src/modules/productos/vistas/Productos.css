@@ -43,10 +43,21 @@
   font-size: 2rem;
 }
 
-.productos__form,
-.productos__list {
+.productos__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.productos__list,
+.productos__message--page {
   max-width: 1200px;
   margin: 0 auto 1.5rem;
+}
+
+.productos__list {
   padding: 1.5rem;
   background: var(--color-surface);
   border-radius: 0.75rem;
@@ -57,6 +68,60 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.productos__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.68);
+}
+
+.productos__modal {
+  width: min(100%, 960px);
+  max-height: min(92vh, 920px);
+  overflow-y: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.productos__modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.productos__modal-title {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.productos__modal-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-page-background);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
 .productos__field {
@@ -118,6 +183,10 @@ textarea.productos__input {
   color: #ffffff;
 }
 
+.productos__button--add {
+  flex: 0 0 auto;
+}
+
 .productos__button--secondary {
   background: #64748b;
   color: #ffffff;
@@ -137,6 +206,13 @@ textarea.productos__input {
 .productos__action-button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.productos__button:focus-visible,
+.productos__action-button:focus-visible,
+.productos__modal-close:focus-visible {
+  outline: 3px solid rgba(220, 38, 38, 0.28);
+  outline-offset: 2px;
 }
 
 .productos__message {

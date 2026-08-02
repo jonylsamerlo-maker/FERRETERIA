@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../../../config/appConfig';
 import { getCategorias } from '../../categorias/services/categoriaApi';
 import { obtenerSesionUsuario } from '../../auth/services/usuarioApi';
@@ -48,6 +48,11 @@ export default function Productos() {
   const [eliminandoId, setEliminandoId] = useState(null);
   const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const botonAgregarRef = useRef(null);
+  const disparadorModalRef = useRef(null);
+  const modalRef = useRef(null);
+  const primerCampoRef = useRef(null);
 
   const cargarDatos = async () => {
     try {
@@ -170,6 +175,65 @@ export default function Productos() {
     };
   }, [formulario.imagen]);
 
+  useEffect(() => {
+    if (!modalAbierto) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    primerCampoRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        cerrarModal();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento =
+        elementos[elementos.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === primerElemento
+      ) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === ultimoElemento
+      ) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [modalAbierto]);
+
   const handleChange = (event) => {
     const { name, value, files } = event.target;
 
@@ -184,6 +248,23 @@ export default function Productos() {
     setProductoEditandoId(null);
     setError('');
     formularioHtml?.reset();
+  };
+
+  const cerrarModal = () => {
+    limpiarFormulario();
+    setModalAbierto(false);
+    window.setTimeout(() => {
+      disparadorModalRef.current?.focus();
+    }, 0);
+  };
+
+  const handleAbrirNuevoProducto = () => {
+    disparadorModalRef.current = botonAgregarRef.current;
+    setFormulario(formularioInicial);
+    setProductoEditandoId(null);
+    setMensaje('');
+    setError('');
+    setModalAbierto(true);
   };
 
   const validarFormulario = () => {
@@ -282,6 +363,10 @@ export default function Productos() {
       }
 
       limpiarFormulario(event.currentTarget);
+      setModalAbierto(false);
+      window.setTimeout(() => {
+        disparadorModalRef.current?.focus();
+      }, 0);
       await cargarDatos();
     } catch (err) {
       setError(
@@ -294,7 +379,9 @@ export default function Productos() {
     }
   };
 
-  const handleEditar = (producto) => {
+  const handleEditar = (producto, event) => {
+    disparadorModalRef.current =
+      event?.currentTarget ?? botonAgregarRef.current;
     setProductoEditandoId(producto.producto_id);
 
     setFormulario({
@@ -312,16 +399,11 @@ export default function Productos() {
 
     setMensaje('');
     setError('');
-
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
+    setModalAbierto(true);
   };
 
   const handleCancelarEdicion = () => {
-    limpiarFormulario();
-    setMensaje('Edición cancelada.');
+    cerrarModal();
   };
 
   const handleEliminar = async (producto) => {
@@ -439,15 +521,80 @@ export default function Productos() {
 
         <p className="productos__eyebrow">Administración</p>
 
-        <h1 className="productos__title">
-          Productos
-        </h1>
+        <div className="productos__title-row">
+          <h1 className="productos__title">
+            Productos
+          </h1>
+
+          <button
+            className="productos__button productos__button--add"
+            type="button"
+            onClick={handleAbrirNuevoProducto}
+            ref={botonAgregarRef}
+          >
+            Agregar producto
+          </button>
+        </div>
       </div>
 
-      <form
-        className="productos__form"
-        onSubmit={handleSubmit}
-      >
+      {!modalAbierto && error && (
+        <p
+          className="productos__message productos__message--error productos__message--page"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      {mensaje && (
+        <p
+          className="productos__message productos__message--success productos__message--page"
+          role="status"
+        >
+          {mensaje}
+        </p>
+      )}
+
+      {modalAbierto && (
+        <div
+          className="productos__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModal();
+            }
+          }}
+        >
+          <div
+            className="productos__modal"
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productos-modal-title"
+          >
+            <div className="productos__modal-header">
+              <h2
+                className="productos__modal-title"
+                id="productos-modal-title"
+              >
+                {productoEditandoId !== null
+                  ? 'Editar producto'
+                  : 'Nuevo producto'}
+              </h2>
+
+              <button
+                className="productos__modal-close"
+                type="button"
+                aria-label="Cerrar modal"
+                onClick={cerrarModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <form
+              className="productos__form"
+              onSubmit={handleSubmit}
+            >
         <div className="productos__field">
           <label
             className="productos__label"
@@ -463,6 +610,7 @@ export default function Productos() {
             name="codigo"
             value={formulario.codigo}
             onChange={handleChange}
+            ref={primerCampoRef}
             required
           />
         </div>
@@ -693,15 +841,6 @@ export default function Productos() {
           </p>
         )}
 
-        {mensaje && (
-          <p
-            className="productos__message productos__message--success"
-            role="status"
-          >
-            {mensaje}
-          </p>
-        )}
-
         <div className="productos__actions">
           <button
             className="productos__button"
@@ -715,18 +854,19 @@ export default function Productos() {
                 : 'Crear producto'}
           </button>
 
-          {productoEditandoId !== null && (
-            <button
-              className="productos__button productos__button--secondary"
-              type="button"
-              onClick={handleCancelarEdicion}
-              disabled={guardando}
-            >
-              Cancelar edición
-            </button>
-          )}
+          <button
+            className="productos__button productos__button--secondary"
+            type="button"
+            onClick={handleCancelarEdicion}
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
         </div>
-      </form>
+            </form>
+          </div>
+        </div>
+      )}
 
       <div className="productos__list">
         <h2 className="productos__subtitle">
@@ -782,15 +922,15 @@ export default function Productos() {
                         <button
                           className="productos__action-button"
                           type="button"
-                          onClick={() =>
-                            handleEditar(producto)
+                          onClick={(event) =>
+                            handleEditar(producto, event)
                           }
                           disabled={
                             eliminandoId ===
                             producto.producto_id
                           }
                         >
-                          Modificar
+                          Editar
                         </button>
 
                         <button
