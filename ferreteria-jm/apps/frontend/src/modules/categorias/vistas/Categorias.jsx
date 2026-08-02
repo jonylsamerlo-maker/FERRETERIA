@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { obtenerSesionUsuario } from '../../auth/services/usuarioApi';
 import {
   actualizarCategoria,
@@ -22,6 +22,11 @@ export default function Categorias() {
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [autorizado, setAutorizado] = useState(false);
+  const [modalAbierto, setModalAbierto] = useState(false);
+  const botonAgregarRef = useRef(null);
+  const disparadorModalRef = useRef(null);
+  const modalRef = useRef(null);
+  const primerCampoRef = useRef(null);
 
   const cargarCategorias = async () => {
     try {
@@ -76,6 +81,65 @@ export default function Categorias() {
     validarSesion();
   }, []);
 
+  useEffect(() => {
+    if (!modalAbierto) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    primerCampoRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        cerrarModal();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables = modalRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento =
+        elementos[elementos.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === primerElemento
+      ) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === ultimoElemento
+      ) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [modalAbierto]);
+
   const handleChange = (event) => {
     const { name, value } = event.target;
 
@@ -88,6 +152,24 @@ export default function Categorias() {
   const limpiarFormulario = () => {
     setFormulario(formularioInicial);
     setCategoriaEditando(null);
+  };
+
+  const cerrarModal = () => {
+    limpiarFormulario();
+    setError('');
+    setModalAbierto(false);
+    window.setTimeout(() => {
+      disparadorModalRef.current?.focus();
+    }, 0);
+  };
+
+  const handleAbrirNuevaCategoria = () => {
+    disparadorModalRef.current = botonAgregarRef.current;
+    setFormulario(formularioInicial);
+    setCategoriaEditando(null);
+    setMensaje('');
+    setError('');
+    setModalAbierto(true);
   };
 
   const handleSubmit = async (event) => {
@@ -117,6 +199,10 @@ export default function Categorias() {
       }
 
       limpiarFormulario();
+      setModalAbierto(false);
+      window.setTimeout(() => {
+        disparadorModalRef.current?.focus();
+      }, 0);
       await cargarCategorias();
     } catch (err) {
       setError(err.message);
@@ -125,7 +211,9 @@ export default function Categorias() {
     }
   };
 
-  const handleEditar = (categoria) => {
+  const handleEditar = (categoria, event) => {
+    disparadorModalRef.current =
+      event?.currentTarget ?? botonAgregarRef.current;
     setCategoriaEditando(categoria);
     setFormulario({
       nombre: categoria.nombre || '',
@@ -133,6 +221,7 @@ export default function Categorias() {
     });
     setMensaje('');
     setError('');
+    setModalAbierto(true);
   };
 
   const handleEliminar = async (categoria) => {
@@ -152,6 +241,7 @@ export default function Categorias() {
 
       if (categoriaEditando?.categoria_id === categoria.categoria_id) {
         limpiarFormulario();
+        setModalAbierto(false);
       }
 
       await cargarCategorias();
@@ -173,19 +263,81 @@ export default function Categorias() {
   return (
     <section className="categorias">
       <div className="categorias__header">
-        <div>
-          <a className="categorias__back-link" href="/dashboard">
-            ← Volver al Dashboard
-          </a>
+        <a className="categorias__back-link" href="/dashboard">
+          ← Volver al Dashboard
+        </a>
 
-          <p className="categorias__eyebrow">Administración</p>
+        <p className="categorias__eyebrow">Administración</p>
+
+        <div className="categorias__title-row">
           <h1>Categorías</h1>
+
+          <button
+            type="button"
+            className="categorias__button categorias__button--add"
+            onClick={handleAbrirNuevaCategoria}
+            ref={botonAgregarRef}
+          >
+            Agregar categoría
+          </button>
         </div>
       </div>
 
-      <div className="categorias__grid">
-        <form className="categorias__form" onSubmit={handleSubmit}>
-          <h2>{categoriaEditando ? 'Editar categoría' : 'Nueva categoría'}</h2>
+      {!modalAbierto && error && (
+        <p
+          className="categorias__alert categorias__alert--error categorias__alert--page"
+          role="alert"
+        >
+          {error}
+        </p>
+      )}
+
+      {mensaje && (
+        <p
+          className="categorias__alert categorias__alert--success categorias__alert--page"
+          role="status"
+        >
+          {mensaje}
+        </p>
+      )}
+
+      {modalAbierto && (
+        <div
+          className="categorias__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModal();
+            }
+          }}
+        >
+          <div
+            className="categorias__modal"
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="categorias-modal-title"
+          >
+            <div className="categorias__modal-header">
+              <h2
+                className="categorias__modal-title"
+                id="categorias-modal-title"
+              >
+                {categoriaEditando
+                  ? 'Editar categoría'
+                  : 'Nueva categoría'}
+              </h2>
+
+              <button
+                className="categorias__modal-close"
+                type="button"
+                aria-label="Cerrar modal"
+                onClick={cerrarModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="categorias__form" onSubmit={handleSubmit}>
 
           <label>
             Nombre
@@ -195,6 +347,7 @@ export default function Categorias() {
               value={formulario.nombre}
               onChange={handleChange}
               placeholder="Ej: Herramientas"
+              ref={primerCampoRef}
             />
           </label>
 
@@ -231,13 +384,19 @@ export default function Categorias() {
               {guardando ? 'Guardando...' : 'Guardar'}
             </button>
 
-            {categoriaEditando && (
-              <button type="button" className="categorias__button--secondary" onClick={limpiarFormulario}>
-                Cancelar
-              </button>
-            )}
+            <button
+              type="button"
+              className="categorias__button--secondary"
+              onClick={cerrarModal}
+              disabled={guardando}
+            >
+              Cancelar
+            </button>
           </div>
-        </form>
+            </form>
+          </div>
+        </div>
+      )}
 
         <div className="categorias__list">
           <div className="categorias__list-header">
@@ -270,7 +429,12 @@ export default function Categorias() {
                       <td>{categoria.descripcion || 'Sin descripción'}</td>
                       <td>{categoria.fecha_creacion || '-'}</td>
                       <td>
-                        <button type="button" onClick={() => handleEditar(categoria)}>
+                        <button
+                          type="button"
+                          onClick={(event) =>
+                            handleEditar(categoria, event)
+                          }
+                        >
                           Editar
                         </button>
                       </td>
@@ -290,7 +454,6 @@ export default function Categorias() {
             </div>
           )}
         </div>
-      </div>
     </section>
   );
 }
