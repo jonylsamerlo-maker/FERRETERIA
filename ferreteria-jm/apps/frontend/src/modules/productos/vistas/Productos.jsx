@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { API_BASE_URL } from '../../../config/appConfig';
 import { getCategorias } from '../../categorias/services/categoriaApi';
 import { obtenerSesionUsuario } from '../../auth/services/usuarioApi';
@@ -36,6 +36,10 @@ function formatearPrecio(valor) {
   }).format(Number(valor) || 0);
 }
 
+function normalizarTexto(valor) {
+  return String(valor ?? '').trim().toLowerCase();
+}
+
 export default function Productos() {
   const [formulario, setFormulario] = useState(formularioInicial);
   const [productos, setProductos] = useState([]);
@@ -50,10 +54,12 @@ export default function Productos() {
   const [autorizado, setAutorizado] = useState(false);
   const [esAdmin, setEsAdmin] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
   const botonAgregarRef = useRef(null);
   const disparadorModalRef = useRef(null);
   const modalRef = useRef(null);
   const primerCampoRef = useRef(null);
+  const busquedaRef = useRef(null);
 
   const cargarDatos = async () => {
     try {
@@ -519,6 +525,39 @@ export default function Productos() {
   };
 
   const mensajesImagen = obtenerMensajesImagen();
+  const busquedaNormalizada = normalizarTexto(busqueda);
+  const productosFiltrados = useMemo(() => {
+    if (!busquedaNormalizada) {
+      return productos;
+    }
+
+    return productos.filter((producto) => {
+      const campos = [
+        producto.codigo,
+        producto.nombre,
+        producto.descripcion,
+        producto.categoria,
+      ];
+
+      return campos.some((campo) =>
+        normalizarTexto(campo).includes(busquedaNormalizada)
+      );
+    });
+  }, [productos, busquedaNormalizada]);
+  const textoResultados = busquedaNormalizada
+    ? `${productosFiltrados.length} ${
+        productosFiltrados.length === 1 ? 'resultado' : 'resultados'
+      }`
+    : `${productos.length} ${
+        productos.length === 1 ? 'producto' : 'productos'
+      }`;
+
+  const handleLimpiarBusqueda = () => {
+    setBusqueda('');
+    window.setTimeout(() => {
+      busquedaRef.current?.focus();
+    }, 0);
+  };
 
   if (!autorizado) {
     return (
@@ -893,6 +932,50 @@ export default function Productos() {
           Listado de productos
         </h2>
 
+        <div className="productos__search">
+          <label
+            className="productos__search-label"
+            htmlFor="productos-busqueda"
+          >
+            Buscar productos
+          </label>
+
+          <div className="productos__search-row">
+            <input
+              id="productos-busqueda"
+              className="productos__search-input"
+              type="search"
+              value={busqueda}
+              onChange={(event) =>
+                setBusqueda(event.target.value)
+              }
+              placeholder="Buscar por código, nombre o categoría"
+              ref={busquedaRef}
+              autoComplete="off"
+            />
+
+            <button
+              className="productos__search-clear"
+              type="button"
+              onClick={handleLimpiarBusqueda}
+              disabled={!busqueda}
+              aria-label="Limpiar búsqueda de productos"
+            >
+              Limpiar
+            </button>
+          </div>
+
+          {!cargando && productos.length > 0 && (
+            <p
+              className="productos__search-count"
+              role="status"
+              aria-live="polite"
+            >
+              {textoResultados}
+            </p>
+          )}
+        </div>
+
         {cargando ? (
           <p className="productos__empty">
             Cargando productos...
@@ -900,6 +983,10 @@ export default function Productos() {
         ) : productos.length === 0 ? (
           <p className="productos__empty">
             No hay productos cargados.
+          </p>
+        ) : productosFiltrados.length === 0 ? (
+          <p className="productos__empty">
+            No se encontraron productos para esta búsqueda.
           </p>
         ) : (
           <div className="productos__table-wrap">
@@ -917,7 +1004,7 @@ export default function Productos() {
               </thead>
 
               <tbody>
-                {productos.map((producto) => (
+                {productosFiltrados.map((producto) => (
                   <tr key={producto.producto_id}>
                     <td>
                       {producto.imagen && (
