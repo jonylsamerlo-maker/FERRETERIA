@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+header_remove('X-Powered-By');
+
 function iniciarSesionSegura(): void
 {
     if (session_status() === PHP_SESSION_ACTIVE) {

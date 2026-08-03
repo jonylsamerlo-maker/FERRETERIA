@@ -25,6 +25,29 @@ ON DUPLICATE KEY UPDATE
     password = VALUES(password),
     rol = VALUES(rol);
 
+INSERT INTO usuarios (
+    nombre,
+    apellido,
+    usuario,
+    email,
+    password,
+    rol
+)
+VALUES (
+    'Usuario',
+    'Empleado',
+    'empleado',
+    'empleado@ferreteriajm.com',
+    '$2y$10$5pkj5vPHRf95lqEZQGSy/./8iky3oXJYy6tIaUbCUoTUZfVACZosW',
+    'EMPLEADO'
+)
+ON DUPLICATE KEY UPDATE
+    nombre = VALUES(nombre),
+    apellido = VALUES(apellido),
+    email = VALUES(email),
+    password = VALUES(password),
+    rol = VALUES(rol);
+
 INSERT INTO categorias (
     nombre,
     descripcion

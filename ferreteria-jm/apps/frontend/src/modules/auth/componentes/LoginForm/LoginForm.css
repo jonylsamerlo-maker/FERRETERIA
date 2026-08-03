@@ -51,9 +51,18 @@
 
     border-radius: 10px;
 
+    background: var(--color-surface);
+
+    color: var(--color-text-primary);
+
     font-size: 1rem;
 
     transition: .3s;
+}
+
+.login-form__input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: .85;
 }
 
 .login-form__input:focus {
@@ -89,6 +98,11 @@
 .login-form__button:hover {
 
     background: #9a3412;
+}
+
+.login-form__button:focus-visible {
+    outline: 3px solid rgba(194, 65, 12, .32);
+    outline-offset: 2px;
 }
 
 .login-form__button:disabled {

@@ -80,7 +80,7 @@ export default function Dashboard() {
 
         const rol = respuesta.usuario?.rol?.trim().toUpperCase();
 
-        if (rol !== "ADMIN") {
+        if (!["ADMIN", "EMPLEADO"].includes(rol)) {
           localStorage.removeItem("usuario");
           sessionStorage.removeItem("usuario");
           localStorage.removeItem("user");
@@ -96,17 +96,24 @@ export default function Dashboard() {
           setCargandoDatos(true);
           setErrorDatos("");
 
-          const [productosData, categoriasData, featureFlagsData] = await Promise.all([
+          const consultas = [
             getProductos(),
             getCategorias(),
-            obtenerFeatureFlags(),
-          ]);
+          ];
+
+          if (rol === "ADMIN") {
+            consultas.push(obtenerFeatureFlags());
+          }
+
+          const [productosData, categoriasData, featureFlagsData] = await Promise.all(
+            consultas
+          );
 
           setProductos(Array.isArray(productosData) ? productosData : []);
           setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
           setFeatureFlags({
-            exportar_excel: Boolean(featureFlagsData.exportar_excel),
-            exportar_pdf: Boolean(featureFlagsData.exportar_pdf),
+            exportar_excel: Boolean(featureFlagsData?.exportar_excel),
+            exportar_pdf: Boolean(featureFlagsData?.exportar_pdf),
           });
         } catch (err) {
           setErrorDatos(
@@ -148,6 +155,7 @@ export default function Dashboard() {
   );
   const productosRecientes = productos.slice(0, 5);
   const fechaActual = formatearFechaActual();
+  const esAdmin = usuario?.rol?.trim().toUpperCase() === "ADMIN";
 
   const tarjetasResumen = [
     {
@@ -342,8 +350,8 @@ export default function Dashboard() {
                     <PackagePlus size={22} />
                   </span>
                   <span>
-                    <strong>Nuevo Producto</strong>
-                    <small>Gestionar inventario</small>
+                    <strong>{esAdmin ? "Nuevo Producto" : "Productos"}</strong>
+                    <small>{esAdmin ? "Gestionar inventario" : "Consultar inventario"}</small>
                   </span>
                   <ArrowUpRight aria-hidden="true" size={18} />
                 </a>
@@ -353,55 +361,59 @@ export default function Dashboard() {
                     <FolderTree size={22} />
                   </span>
                   <span>
-                    <strong>Nueva Categoría</strong>
-                    <small>Organizar rubros</small>
+                    <strong>{esAdmin ? "Nueva Categoría" : "Categorías"}</strong>
+                    <small>{esAdmin ? "Organizar rubros" : "Consultar rubros"}</small>
                   </span>
                   <ArrowUpRight aria-hidden="true" size={18} />
                 </a>
 
-                <button
-                  className="dashboard__quick-action"
-                  type="button"
-                  onClick={handleExportarExcel}
-                  disabled={!featureFlags.exportar_excel || descargandoExcel}
-                >
-                  <span className="dashboard__quick-icon" aria-hidden="true">
-                    <FileSpreadsheet size={22} />
-                  </span>
-                  <span>
-                    <strong>Exportar Excel</strong>
-                    <small>
-                      {descargandoExcel
-                        ? "Descargando..."
-                        : featureFlags.exportar_excel
-                          ? "Descargar inventario CSV"
-                          : "Desactivado"}
-                    </small>
-                  </span>
-                </button>
+                {esAdmin && (
+                  <button
+                    className="dashboard__quick-action"
+                    type="button"
+                    onClick={handleExportarExcel}
+                    disabled={!featureFlags.exportar_excel || descargandoExcel}
+                  >
+                    <span className="dashboard__quick-icon" aria-hidden="true">
+                      <FileSpreadsheet size={22} />
+                    </span>
+                    <span>
+                      <strong>Exportar Excel</strong>
+                      <small>
+                        {descargandoExcel
+                          ? "Descargando..."
+                          : featureFlags.exportar_excel
+                            ? "Descargar inventario CSV"
+                            : "Desactivado"}
+                      </small>
+                    </span>
+                  </button>
+                )}
 
-                <button className="dashboard__quick-action" type="button" disabled>
-                  <span className="dashboard__quick-icon" aria-hidden="true">
-                    <FileDown size={22} />
-                  </span>
-                  <span>
-                    <strong>Exportar PDF</strong>
-                    <small>
-                      {featureFlags.exportar_pdf
-                        ? "Flag activo, implementación pendiente"
-                        : "Próximamente"}
-                    </small>
-                  </span>
-                </button>
+                {esAdmin && (
+                  <button className="dashboard__quick-action" type="button" disabled>
+                    <span className="dashboard__quick-icon" aria-hidden="true">
+                      <FileDown size={22} />
+                    </span>
+                    <span>
+                      <strong>Exportar PDF</strong>
+                      <small>
+                        {featureFlags.exportar_pdf
+                          ? "Flag activo, implementación pendiente"
+                          : "Próximamente"}
+                      </small>
+                    </span>
+                  </button>
+                )}
               </div>
 
-              {mensajeExportacion && (
+              {esAdmin && mensajeExportacion && (
                 <p className="dashboard__export-message" role="status">
                   {mensajeExportacion}
                 </p>
               )}
 
-              {errorExportacion && (
+              {esAdmin && errorExportacion && (
                 <p
                   className="dashboard__export-message dashboard__export-message--error"
                   role="alert"
@@ -469,74 +481,76 @@ export default function Dashboard() {
           </div>
 
           <aside className="dashboard__side-column">
-            <section
-              className="dashboard__section dashboard__feature-flags"
-              aria-labelledby="feature-flags-title"
-            >
-              <div className="dashboard__section-header">
-                <div>
-                  <p className="dashboard__section-kicker">Configuración</p>
-                  <h2 id="feature-flags-title">Funciones disponibles</h2>
+            {esAdmin && (
+              <section
+                className="dashboard__section dashboard__feature-flags"
+                aria-labelledby="feature-flags-title"
+              >
+                <div className="dashboard__section-header">
+                  <div>
+                    <p className="dashboard__section-kicker">Configuración</p>
+                    <h2 id="feature-flags-title">Funciones disponibles</h2>
+                  </div>
                 </div>
-              </div>
 
-              <div className="dashboard__feature-list">
-                {configuracionesFunciones.map((featureFlag) => {
-                  const estaActivo = Boolean(featureFlags[featureFlag.clave]);
-                  const estaGuardando = guardandoFlag === featureFlag.clave;
+                <div className="dashboard__feature-list">
+                  {configuracionesFunciones.map((featureFlag) => {
+                    const estaActivo = Boolean(featureFlags[featureFlag.clave]);
+                    const estaGuardando = guardandoFlag === featureFlag.clave;
 
-                  return (
-                    <article
-                      className="dashboard__feature-item"
-                      key={featureFlag.clave}
-                    >
-                      <div className="dashboard__feature-copy">
-                        <h3>{featureFlag.nombre}</h3>
-                        <p>{featureFlag.descripcion}</p>
-                        <span className="dashboard__feature-status">
-                          {estaGuardando
-                            ? "Guardando..."
-                            : estaActivo
-                              ? "Activa"
-                              : "Desactivada"}
-                        </span>
-                      </div>
-
-                      <button
-                        className="dashboard__switch"
-                        type="button"
-                        role="switch"
-                        aria-checked={estaActivo}
-                        aria-label={`${featureFlag.nombre}: ${
-                          estaActivo ? "activa" : "desactivada"
-                        }`}
-                        disabled={Boolean(guardandoFlag)}
-                        onClick={() =>
-                          handleCambiarFeatureFlag(featureFlag.clave)
-                        }
+                    return (
+                      <article
+                        className="dashboard__feature-item"
+                        key={featureFlag.clave}
                       >
-                        <span aria-hidden="true" />
-                      </button>
-                    </article>
-                  );
-                })}
-              </div>
+                        <div className="dashboard__feature-copy">
+                          <h3>{featureFlag.nombre}</h3>
+                          <p>{featureFlag.descripcion}</p>
+                          <span className="dashboard__feature-status">
+                            {estaGuardando
+                              ? "Guardando..."
+                              : estaActivo
+                                ? "Activa"
+                                : "Desactivada"}
+                          </span>
+                        </div>
 
-              {mensajeFlags && (
-                <p className="dashboard__flag-message" role="status">
-                  {mensajeFlags}
-                </p>
-              )}
+                        <button
+                          className="dashboard__switch"
+                          type="button"
+                          role="switch"
+                          aria-checked={estaActivo}
+                          aria-label={`${featureFlag.nombre}: ${
+                            estaActivo ? "activa" : "desactivada"
+                          }`}
+                          disabled={Boolean(guardandoFlag)}
+                          onClick={() =>
+                            handleCambiarFeatureFlag(featureFlag.clave)
+                          }
+                        >
+                          <span aria-hidden="true" />
+                        </button>
+                      </article>
+                    );
+                  })}
+                </div>
 
-              {errorFlags && (
-                <p
-                  className="dashboard__flag-message dashboard__flag-message--error"
-                  role="alert"
-                >
-                  {errorFlags}
-                </p>
-              )}
-            </section>
+                {mensajeFlags && (
+                  <p className="dashboard__flag-message" role="status">
+                    {mensajeFlags}
+                  </p>
+                )}
+
+                {errorFlags && (
+                  <p
+                    className="dashboard__flag-message dashboard__flag-message--error"
+                    role="alert"
+                  >
+                    {errorFlags}
+                  </p>
+                )}
+              </section>
+            )}
 
             <section
               className="dashboard__section dashboard__tips"

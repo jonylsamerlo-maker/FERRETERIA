@@ -48,6 +48,7 @@ export default function Productos() {
   const [eliminandoId, setEliminandoId] = useState(null);
   const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
+  const [esAdmin, setEsAdmin] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const botonAgregarRef = useRef(null);
   const disparadorModalRef = useRef(null);
@@ -98,7 +99,7 @@ export default function Productos() {
 
         const rol = respuesta.usuario?.rol?.trim().toUpperCase();
 
-        if (rol !== 'ADMIN') {
+        if (!['ADMIN', 'EMPLEADO'].includes(rol)) {
           localStorage.removeItem('usuario');
           sessionStorage.removeItem('usuario');
           localStorage.removeItem('user');
@@ -108,6 +109,7 @@ export default function Productos() {
         }
 
         localStorage.setItem('usuario', JSON.stringify(respuesta.usuario));
+        setEsAdmin(rol === 'ADMIN');
         setAutorizado(true);
         await cargarDatos();
       } catch {
@@ -259,6 +261,10 @@ export default function Productos() {
   };
 
   const handleAbrirNuevoProducto = () => {
+    if (!esAdmin) {
+      return;
+    }
+
     disparadorModalRef.current = botonAgregarRef.current;
     setFormulario(formularioInicial);
     setProductoEditandoId(null);
@@ -308,6 +314,10 @@ export default function Productos() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!esAdmin) {
+      return;
+    }
 
     const errorValidacion = validarFormulario();
 
@@ -380,6 +390,10 @@ export default function Productos() {
   };
 
   const handleEditar = (producto, event) => {
+    if (!esAdmin) {
+      return;
+    }
+
     disparadorModalRef.current =
       event?.currentTarget ?? botonAgregarRef.current;
     setProductoEditandoId(producto.producto_id);
@@ -407,6 +421,10 @@ export default function Productos() {
   };
 
   const handleEliminar = async (producto) => {
+    if (!esAdmin) {
+      return;
+    }
+
     const confirmar = window.confirm(
       `¿Seguro que querés eliminar el producto "${producto.nombre}"?`
     );
@@ -526,14 +544,16 @@ export default function Productos() {
             Productos
           </h1>
 
-          <button
-            className="productos__button productos__button--add"
-            type="button"
-            onClick={handleAbrirNuevoProducto}
-            ref={botonAgregarRef}
-          >
-            Agregar producto
-          </button>
+          {esAdmin && (
+            <button
+              className="productos__button productos__button--add"
+              type="button"
+              onClick={handleAbrirNuevoProducto}
+              ref={botonAgregarRef}
+            >
+              Agregar producto
+            </button>
+          )}
         </div>
       </div>
 
@@ -555,7 +575,7 @@ export default function Productos() {
         </p>
       )}
 
-      {modalAbierto && (
+      {esAdmin && modalAbierto && (
         <div
           className="productos__modal-overlay"
           onMouseDown={(event) => {
@@ -892,7 +912,7 @@ export default function Productos() {
                   <th>Precio</th>
                   <th>Stock</th>
                   <th>Categoría</th>
-                  <th>Acciones</th>
+                  {esAdmin && <th>Acciones</th>}
                 </tr>
               </thead>
 
@@ -917,40 +937,42 @@ export default function Productos() {
                     <td>{producto.stock}</td>
                     <td>{producto.categoria}</td>
 
-                    <td>
-                      <div className="productos__row-actions">
-                        <button
-                          className="productos__action-button"
-                          type="button"
-                          onClick={(event) =>
-                            handleEditar(producto, event)
-                          }
-                          disabled={
-                            eliminandoId ===
-                            producto.producto_id
-                          }
-                        >
-                          Editar
-                        </button>
+                    {esAdmin && (
+                      <td>
+                        <div className="productos__row-actions">
+                          <button
+                            className="productos__action-button"
+                            type="button"
+                            onClick={(event) =>
+                              handleEditar(producto, event)
+                            }
+                            disabled={
+                              eliminandoId ===
+                              producto.producto_id
+                            }
+                          >
+                            Editar
+                          </button>
 
-                        <button
-                          className="productos__action-button productos__action-button--danger"
-                          type="button"
-                          onClick={() =>
-                            handleEliminar(producto)
-                          }
-                          disabled={
-                            eliminandoId ===
+                          <button
+                            className="productos__action-button productos__action-button--danger"
+                            type="button"
+                            onClick={() =>
+                              handleEliminar(producto)
+                            }
+                            disabled={
+                              eliminandoId ===
+                              producto.producto_id
+                            }
+                          >
+                            {eliminandoId ===
                             producto.producto_id
-                          }
-                        >
-                          {eliminandoId ===
-                          producto.producto_id
-                            ? 'Eliminando...'
-                            : 'Eliminar'}
-                        </button>
-                      </div>
-                    </td>
+                              ? 'Eliminando...'
+                              : 'Eliminar'}
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

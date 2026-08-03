@@ -22,6 +22,7 @@ export default function Categorias() {
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
   const [autorizado, setAutorizado] = useState(false);
+  const [esAdmin, setEsAdmin] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
   const botonAgregarRef = useRef(null);
   const disparadorModalRef = useRef(null);
@@ -57,7 +58,7 @@ export default function Categorias() {
 
         const rol = respuesta.usuario?.rol?.trim().toUpperCase();
 
-        if (rol !== 'ADMIN') {
+        if (!['ADMIN', 'EMPLEADO'].includes(rol)) {
           localStorage.removeItem('usuario');
           sessionStorage.removeItem('usuario');
           localStorage.removeItem('user');
@@ -67,6 +68,7 @@ export default function Categorias() {
         }
 
         localStorage.setItem('usuario', JSON.stringify(respuesta.usuario));
+        setEsAdmin(rol === 'ADMIN');
         setAutorizado(true);
         await cargarCategorias();
       } catch {
@@ -164,6 +166,10 @@ export default function Categorias() {
   };
 
   const handleAbrirNuevaCategoria = () => {
+    if (!esAdmin) {
+      return;
+    }
+
     disparadorModalRef.current = botonAgregarRef.current;
     setFormulario(formularioInicial);
     setCategoriaEditando(null);
@@ -174,6 +180,10 @@ export default function Categorias() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (!esAdmin) {
+      return;
+    }
 
     const datos = {
       nombre: formulario.nombre.trim(),
@@ -212,6 +222,10 @@ export default function Categorias() {
   };
 
   const handleEditar = (categoria, event) => {
+    if (!esAdmin) {
+      return;
+    }
+
     disparadorModalRef.current =
       event?.currentTarget ?? botonAgregarRef.current;
     setCategoriaEditando(categoria);
@@ -225,6 +239,10 @@ export default function Categorias() {
   };
 
   const handleEliminar = async (categoria) => {
+    if (!esAdmin) {
+      return;
+    }
+
     const confirmado = window.confirm(
       `¿Eliminar la categoría "${categoria.nombre}"?`
     );
@@ -272,14 +290,16 @@ export default function Categorias() {
         <div className="categorias__title-row">
           <h1>Categorías</h1>
 
-          <button
-            type="button"
-            className="categorias__button categorias__button--add"
-            onClick={handleAbrirNuevaCategoria}
-            ref={botonAgregarRef}
-          >
-            Agregar categoría
-          </button>
+          {esAdmin && (
+            <button
+              type="button"
+              className="categorias__button categorias__button--add"
+              onClick={handleAbrirNuevaCategoria}
+              ref={botonAgregarRef}
+            >
+              Agregar categoría
+            </button>
+          )}
         </div>
       </div>
 
@@ -301,7 +321,7 @@ export default function Categorias() {
         </p>
       )}
 
-      {modalAbierto && (
+      {esAdmin && modalAbierto && (
         <div
           className="categorias__modal-overlay"
           onMouseDown={(event) => {
@@ -417,8 +437,8 @@ export default function Categorias() {
                     <th>Nombre</th>
                     <th>Descripción</th>
                     <th>Fecha</th>
-                    <th>Editar</th>
-                    <th>Eliminar</th>
+                    {esAdmin && <th>Editar</th>}
+                    {esAdmin && <th>Eliminar</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -428,25 +448,29 @@ export default function Categorias() {
                       <td>{categoria.nombre}</td>
                       <td>{categoria.descripcion || 'Sin descripción'}</td>
                       <td>{categoria.fecha_creacion || '-'}</td>
-                      <td>
-                        <button
-                          type="button"
-                          onClick={(event) =>
-                            handleEditar(categoria, event)
-                          }
-                        >
-                          Editar
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="categorias__button--danger"
-                          onClick={() => handleEliminar(categoria)}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+                      {esAdmin && (
+                        <td>
+                          <button
+                            type="button"
+                            onClick={(event) =>
+                              handleEditar(categoria, event)
+                            }
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      )}
+                      {esAdmin && (
+                        <td>
+                          <button
+                            type="button"
+                            className="categorias__button--danger"
+                            onClick={() => handleEliminar(categoria)}
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

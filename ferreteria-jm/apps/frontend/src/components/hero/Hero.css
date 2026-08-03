@@ -80,9 +80,9 @@
 
     background:#ffffff;
 
-    color:var(--color-primary);
+    color:#9a3412;
 
-    border:none;
+    border:1px solid rgba(255,255,255,.7);
 
     padding:1rem 2rem;
 
@@ -101,7 +101,16 @@
 
 .hero__button:hover{
 
-    background:#f3f4f6;
+    background:#fff7ed;
+
+    color:#7c2d12;
+}
+
+.hero__button:focus-visible{
+
+    outline:3px solid rgba(255,255,255,.85);
+
+    outline-offset:3px;
 }
 
 @media (max-width:640px){

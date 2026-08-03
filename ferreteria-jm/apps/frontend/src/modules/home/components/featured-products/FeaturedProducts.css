@@ -61,6 +61,15 @@
     padding: .9rem 1rem;
 }
 
+.featured-products__control:hover {
+    background: #9a3412;
+}
+
+.featured-products__control:focus-visible {
+    outline: 3px solid rgba(194, 65, 12, .32);
+    outline-offset: 2px;
+}
+
 .featured-products__status {
     text-align: center;
     color: var(--color-text-secondary);
