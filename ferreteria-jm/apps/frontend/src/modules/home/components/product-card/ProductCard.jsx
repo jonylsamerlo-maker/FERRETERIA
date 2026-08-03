@@ -71,9 +71,11 @@ function ProductCard({
             </span>
           )}
 
-          <span className="product-card__stock">
-            Stock: {stock}
-          </span>
+          {sinStock && (
+            <span className="product-card__stock">
+              Sin stock
+            </span>
+          )}
         </div>
 
         <button
