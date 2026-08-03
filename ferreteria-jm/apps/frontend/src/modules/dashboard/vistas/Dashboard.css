@@ -314,6 +314,105 @@
   margin-bottom: 0;
 }
 
+.dashboard__feature-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard__feature-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  background: var(--color-page-background);
+}
+
+.dashboard__feature-copy {
+  min-width: 0;
+}
+
+.dashboard__feature-copy h3,
+.dashboard__feature-copy p {
+  margin: 0;
+}
+
+.dashboard__feature-copy h3 {
+  color: var(--color-text-primary);
+  font-size: 1rem;
+}
+
+.dashboard__feature-copy p {
+  margin-top: 0.35rem;
+  color: var(--color-text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.dashboard__feature-status {
+  display: inline-flex;
+  margin-top: 0.65rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.dashboard__switch {
+  position: relative;
+  width: 3.1rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: #64748b;
+  cursor: pointer;
+}
+
+.dashboard__switch[aria-checked="true"] {
+  background: #dc2626;
+}
+
+.dashboard__switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.dashboard__switch span {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: transform 0.2s ease;
+}
+
+.dashboard__switch[aria-checked="true"] span {
+  transform: translateX(1.35rem);
+}
+
+.dashboard__flag-message,
+.dashboard__export-message {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border-radius: 0.4rem;
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 800;
+}
+
+.dashboard__flag-message--error,
+.dashboard__export-message--error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .dashboard__help {
   display: grid;
   gap: 1rem;
@@ -353,7 +452,8 @@
 .dashboard__logout:focus-visible,
 .dashboard__quick-action:focus-visible,
 .dashboard__section-link:focus-visible,
-.dashboard__help-toggle:focus-visible {
+.dashboard__help-toggle:focus-visible,
+.dashboard__switch:focus-visible {
   outline: 3px solid rgba(220, 38, 38, 0.28);
   outline-offset: 2px;
 }
@@ -400,6 +500,14 @@
 
   .dashboard__quick-action > svg {
     display: none;
+  }
+
+  .dashboard__feature-item {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard__switch {
+    justify-self: start;
   }
 
   .dashboard__table th,

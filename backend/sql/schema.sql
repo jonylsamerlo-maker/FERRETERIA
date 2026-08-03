@@ -54,3 +54,16 @@ CREATE TABLE IF NOT EXISTS productos (
 ) ENGINE=InnoDB
 DEFAULT CHARSET=utf8mb4
 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS feature_flags (
+    feature_flag_id INT NOT NULL AUTO_INCREMENT,
+    clave VARCHAR(80) NOT NULL,
+    habilitado TINYINT(1) NOT NULL DEFAULT 0,
+    descripcion VARCHAR(255) DEFAULT NULL,
+    fecha_actualizacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (feature_flag_id),
+    UNIQUE KEY clave (clave)
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_0900_ai_ci;

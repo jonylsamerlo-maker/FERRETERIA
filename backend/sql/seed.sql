@@ -109,3 +109,22 @@ ON DUPLICATE KEY UPDATE
     stock = VALUES(stock),
     imagen = VALUES(imagen),
     categoria_id = VALUES(categoria_id);
+
+INSERT INTO feature_flags (
+    clave,
+    habilitado,
+    descripcion
+)
+VALUES
+    (
+        'exportar_excel',
+        0,
+        'Permite descargar el inventario en un formato compatible con Excel.'
+    ),
+    (
+        'exportar_pdf',
+        0,
+        'Permite generar un informe imprimible del inventario.'
+    )
+ON DUPLICATE KEY UPDATE
+    descripcion = VALUES(descripcion);

@@ -17,11 +17,20 @@ import {
   logoutUsuario,
   obtenerSesionUsuario,
 } from "../../auth/services/usuarioApi";
+import {
+  actualizarFeatureFlag,
+  obtenerFeatureFlags,
+} from "../../../config/featureFlagsApi";
+import { descargarProductosCsv } from "../../../config/exportacionesApi";
 import { getCategorias } from "../../categorias/services/categoriaApi";
 import { getProductos } from "../../productos/services/productoApi";
 import "./Dashboard.css";
 
 const UMBRAL_STOCK_BAJO = 5;
+const FEATURE_FLAGS_INICIALES = {
+  exportar_excel: false,
+  exportar_pdf: false,
+};
 
 function formatearPrecio(valor) {
   return new Intl.NumberFormat("es-AR", {
@@ -47,6 +56,13 @@ export default function Dashboard() {
   const [categorias, setCategorias] = useState([]);
   const [cargandoDatos, setCargandoDatos] = useState(true);
   const [errorDatos, setErrorDatos] = useState("");
+  const [featureFlags, setFeatureFlags] = useState(FEATURE_FLAGS_INICIALES);
+  const [guardandoFlag, setGuardandoFlag] = useState("");
+  const [mensajeFlags, setMensajeFlags] = useState("");
+  const [errorFlags, setErrorFlags] = useState("");
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [mensajeExportacion, setMensajeExportacion] = useState("");
+  const [errorExportacion, setErrorExportacion] = useState("");
 
   useEffect(() => {
     const validarSesion = async () => {
@@ -80,13 +96,18 @@ export default function Dashboard() {
           setCargandoDatos(true);
           setErrorDatos("");
 
-          const [productosData, categoriasData] = await Promise.all([
+          const [productosData, categoriasData, featureFlagsData] = await Promise.all([
             getProductos(),
             getCategorias(),
+            obtenerFeatureFlags(),
           ]);
 
           setProductos(Array.isArray(productosData) ? productosData : []);
           setCategorias(Array.isArray(categoriasData) ? categoriasData : []);
+          setFeatureFlags({
+            exportar_excel: Boolean(featureFlagsData.exportar_excel),
+            exportar_pdf: Boolean(featureFlagsData.exportar_pdf),
+          });
         } catch (err) {
           setErrorDatos(
             err instanceof Error
@@ -148,6 +169,85 @@ export default function Dashboard() {
       icono: AlertTriangle,
     },
   ];
+
+  const configuracionesFunciones = [
+    {
+      clave: "exportar_excel",
+      nombre: "Exportar a Excel",
+      descripcion:
+        "Permite descargar el inventario en un formato compatible con Excel.",
+    },
+    {
+      clave: "exportar_pdf",
+      nombre: "Exportar a PDF",
+      descripcion: "Permite generar un informe imprimible del inventario.",
+    },
+  ];
+
+  const handleCambiarFeatureFlag = async (clave) => {
+    if (guardandoFlag) {
+      return;
+    }
+
+    const estadoActual = Boolean(featureFlags[clave]);
+    const nuevoEstado = !estadoActual;
+
+    try {
+      setGuardandoFlag(clave);
+      setMensajeFlags("");
+      setErrorFlags("");
+
+      await actualizarFeatureFlag(clave, nuevoEstado);
+
+      setFeatureFlags((flagsActuales) => ({
+        ...flagsActuales,
+        [clave]: nuevoEstado,
+      }));
+
+      setMensajeFlags("Configuración actualizada correctamente.");
+    } catch (err) {
+      setErrorFlags(
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar la configuración."
+      );
+    } finally {
+      setGuardandoFlag("");
+    }
+  };
+
+  const handleExportarExcel = async () => {
+    if (!featureFlags.exportar_excel || descargandoExcel) {
+      return;
+    }
+
+    try {
+      setDescargandoExcel(true);
+      setMensajeExportacion("");
+      setErrorExportacion("");
+
+      const { blob, filename } = await descargarProductosCsv();
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+
+      enlace.href = url;
+      enlace.download = filename;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+
+      setMensajeExportacion("Inventario descargado correctamente.");
+    } catch (err) {
+      setErrorExportacion(
+        err instanceof Error
+          ? err.message
+          : "No se pudo descargar el inventario."
+      );
+    } finally {
+      setDescargandoExcel(false);
+    }
+  };
 
   if (!usuario) {
     return (
@@ -259,13 +359,24 @@ export default function Dashboard() {
                   <ArrowUpRight aria-hidden="true" size={18} />
                 </a>
 
-                <button className="dashboard__quick-action" type="button" disabled>
+                <button
+                  className="dashboard__quick-action"
+                  type="button"
+                  onClick={handleExportarExcel}
+                  disabled={!featureFlags.exportar_excel || descargandoExcel}
+                >
                   <span className="dashboard__quick-icon" aria-hidden="true">
                     <FileSpreadsheet size={22} />
                   </span>
                   <span>
                     <strong>Exportar Excel</strong>
-                    <small>Próximamente</small>
+                    <small>
+                      {descargandoExcel
+                        ? "Descargando..."
+                        : featureFlags.exportar_excel
+                          ? "Descargar inventario CSV"
+                          : "Desactivado"}
+                    </small>
                   </span>
                 </button>
 
@@ -275,10 +386,29 @@ export default function Dashboard() {
                   </span>
                   <span>
                     <strong>Exportar PDF</strong>
-                    <small>Próximamente</small>
+                    <small>
+                      {featureFlags.exportar_pdf
+                        ? "Flag activo, implementación pendiente"
+                        : "Próximamente"}
+                    </small>
                   </span>
                 </button>
               </div>
+
+              {mensajeExportacion && (
+                <p className="dashboard__export-message" role="status">
+                  {mensajeExportacion}
+                </p>
+              )}
+
+              {errorExportacion && (
+                <p
+                  className="dashboard__export-message dashboard__export-message--error"
+                  role="alert"
+                >
+                  {errorExportacion}
+                </p>
+              )}
             </section>
 
             <section
@@ -339,6 +469,75 @@ export default function Dashboard() {
           </div>
 
           <aside className="dashboard__side-column">
+            <section
+              className="dashboard__section dashboard__feature-flags"
+              aria-labelledby="feature-flags-title"
+            >
+              <div className="dashboard__section-header">
+                <div>
+                  <p className="dashboard__section-kicker">Configuración</p>
+                  <h2 id="feature-flags-title">Funciones disponibles</h2>
+                </div>
+              </div>
+
+              <div className="dashboard__feature-list">
+                {configuracionesFunciones.map((featureFlag) => {
+                  const estaActivo = Boolean(featureFlags[featureFlag.clave]);
+                  const estaGuardando = guardandoFlag === featureFlag.clave;
+
+                  return (
+                    <article
+                      className="dashboard__feature-item"
+                      key={featureFlag.clave}
+                    >
+                      <div className="dashboard__feature-copy">
+                        <h3>{featureFlag.nombre}</h3>
+                        <p>{featureFlag.descripcion}</p>
+                        <span className="dashboard__feature-status">
+                          {estaGuardando
+                            ? "Guardando..."
+                            : estaActivo
+                              ? "Activa"
+                              : "Desactivada"}
+                        </span>
+                      </div>
+
+                      <button
+                        className="dashboard__switch"
+                        type="button"
+                        role="switch"
+                        aria-checked={estaActivo}
+                        aria-label={`${featureFlag.nombre}: ${
+                          estaActivo ? "activa" : "desactivada"
+                        }`}
+                        disabled={Boolean(guardandoFlag)}
+                        onClick={() =>
+                          handleCambiarFeatureFlag(featureFlag.clave)
+                        }
+                      >
+                        <span aria-hidden="true" />
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {mensajeFlags && (
+                <p className="dashboard__flag-message" role="status">
+                  {mensajeFlags}
+                </p>
+              )}
+
+              {errorFlags && (
+                <p
+                  className="dashboard__flag-message dashboard__flag-message--error"
+                  role="alert"
+                >
+                  {errorFlags}
+                </p>
+              )}
+            </section>
+
             <section
               className="dashboard__section dashboard__tips"
               aria-labelledby="tips-title"
