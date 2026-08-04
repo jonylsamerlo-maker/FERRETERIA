@@ -719,6 +719,7 @@ export default function Dashboard() {
                   key={seccion.id}
                   onClick={() => setSeccionActiva(seccion.id)}
                   aria-current={estaActiva ? "page" : undefined}
+                  aria-pressed={estaActiva}
                 >
                   <Icono aria-hidden="true" size={20} />
                   <span>{seccion.nombre}</span>

@@ -13,13 +13,92 @@
     text-align: center;
     font-size: 2rem;
     color: var(--color-text-primary);
-    margin-bottom: .5rem;
+    margin-bottom: 1.15rem;
 }
 
 .featured-products__subtitle {
     text-align: center;
     color: var(--color-text-secondary);
     margin-bottom: 2.25rem;
+}
+
+.featured-products__search {
+    display: grid;
+    gap: .7rem;
+    width: min(100%, 760px);
+    margin: 0 auto 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-surface);
+    box-shadow: 0 10px 24px var(--color-shadow);
+}
+
+.featured-products__search-label {
+    color: var(--color-text-primary);
+    font-weight: 800;
+}
+
+.featured-products__search-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .75rem;
+    align-items: center;
+}
+
+.featured-products__search-input {
+    width: 100%;
+    min-width: 0;
+    padding: .85rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-page-background);
+    color: var(--color-text-primary);
+    font: inherit;
+}
+
+.featured-products__search-input::placeholder {
+    color: var(--color-text-secondary);
+    opacity: .85;
+}
+
+.featured-products__search-input:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.featured-products__search-clear {
+    min-height: 44px;
+    padding: .75rem .9rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--color-primary);
+    color: #ffffff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+}
+
+.featured-products__search-clear:hover:not(:disabled) {
+    background: #9a3412;
+}
+
+.featured-products__search-clear:focus-visible {
+    outline: 3px solid rgba(194, 65, 12, .32);
+    outline-offset: 2px;
+}
+
+.featured-products__search-clear:disabled {
+    cursor: not-allowed;
+    opacity: .62;
+}
+
+.featured-products__search-count {
+    margin: .05rem 0 0;
+    color: var(--color-text-secondary);
+    font-size: .95rem;
+    font-weight: 700;
+    text-align: left;
 }
 
 .featured-products__grid {
@@ -99,6 +178,14 @@
 
     .featured-products__carousel {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .featured-products__search {
+        padding: .9rem;
+    }
+
+    .featured-products__search-row {
+        grid-template-columns: 1fr;
     }
 
     .featured-products__grid {

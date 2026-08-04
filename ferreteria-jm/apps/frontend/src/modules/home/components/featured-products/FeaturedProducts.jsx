@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { API_BASE_URL } from "../../../../config/appConfig";
 import { agregarAlCarrito } from "../../../../services/cartStorage";
 import { getProductos } from "../../../productos/services/productoApi";
@@ -30,20 +30,57 @@ function resolverImagen(imagen) {
   return `${API_BASE_URL}/${imagen}`;
 }
 
+function normalizarTexto(valor) {
+  return String(valor ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function FeaturedProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("");
+  const [busqueda, setBusqueda] = useState("");
   const carouselRef = useRef(null);
+  const busquedaRef = useRef(null);
 
-  const productosGenerales = products.filter(
-    (product) =>
-      categoriaSeleccionada
-        ? product.categoria?.trim().toLowerCase() ===
-          categoriaSeleccionada.trim().toLowerCase()
-        : product.categoria?.trim().toLowerCase() !== "ofertas especiales"
+  const productosGenerales = useMemo(
+    () =>
+      products.filter((product) =>
+        categoriaSeleccionada
+          ? normalizarTexto(product.categoria) ===
+            normalizarTexto(categoriaSeleccionada)
+          : normalizarTexto(product.categoria) !== "ofertas especiales"
+      ),
+    [products, categoriaSeleccionada]
   );
+  const busquedaNormalizada = normalizarTexto(busqueda);
+  const productosFiltrados = useMemo(() => {
+    if (!busquedaNormalizada) {
+      return productosGenerales;
+    }
+
+    return productosGenerales.filter((product) => {
+      const campos = [
+        product.nombre,
+        product.descripcion,
+        product.categoria,
+        product.codigo,
+      ];
+
+      return campos.some((campo) =>
+        normalizarTexto(campo).includes(busquedaNormalizada)
+      );
+    });
+  }, [productosGenerales, busquedaNormalizada]);
+  const textoResultados = `${productosFiltrados.length} ${
+    productosFiltrados.length === 1
+      ? "producto encontrado"
+      : "productos encontrados"
+  }`;
 
   const moverCarousel = (direction) => {
     if (!carouselRef.current) {
@@ -64,6 +101,13 @@ function FeaturedProducts() {
       imagen: resolverImagen(producto.imagen),
       stock: Number(producto.stock) || 0,
     });
+
+  const handleLimpiarBusqueda = () => {
+    setBusqueda("");
+    window.setTimeout(() => {
+      busquedaRef.current?.focus();
+    }, 0);
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -102,6 +146,50 @@ function FeaturedProducts() {
           : "Productos disponibles"}
       </h2>
 
+      {!loading && !error && products.length > 0 && (
+        <div className="featured-products__search">
+          <label
+            className="featured-products__search-label"
+            htmlFor="home-busqueda-productos"
+          >
+            Encontrá lo que necesitás
+          </label>
+
+          <div className="featured-products__search-row">
+            <input
+              id="home-busqueda-productos"
+              className="featured-products__search-input"
+              type="search"
+              value={busqueda}
+              onChange={(event) =>
+                setBusqueda(event.target.value)
+              }
+              placeholder="Buscar por nombre, código o categoría..."
+              ref={busquedaRef}
+              autoComplete="off"
+            />
+
+            <button
+              className="featured-products__search-clear"
+              type="button"
+              onClick={handleLimpiarBusqueda}
+              disabled={!busqueda}
+              aria-label="Limpiar búsqueda de productos"
+            >
+              Limpiar
+            </button>
+          </div>
+
+          <p
+            className="featured-products__search-count"
+            role="status"
+            aria-live="polite"
+          >
+            {textoResultados}
+          </p>
+        </div>
+      )}
+
       {loading && (
         <p className="featured-products__status">
           Cargando productos...
@@ -122,7 +210,16 @@ function FeaturedProducts() {
         </p>
       )}
 
-      {!loading && !error && productosGenerales.length > 0 && (
+      {!loading &&
+        !error &&
+        productosGenerales.length > 0 &&
+        productosFiltrados.length === 0 && (
+          <p className="featured-products__status">
+            No encontramos productos para tu búsqueda. Probá con otro nombre o categoría.
+          </p>
+        )}
+
+      {!loading && !error && productosFiltrados.length > 0 && (
         <div className="featured-products__carousel">
           <button
             type="button"
@@ -135,7 +232,7 @@ function FeaturedProducts() {
 
           <div className="featured-products__grid" ref={carouselRef}>
 
-            {productosGenerales.map((product) => (
+            {productosFiltrados.map((product) => (
               <div className="featured-products__item" key={product.producto_id}>
                 <ProductCard
                   id={product.producto_id}
