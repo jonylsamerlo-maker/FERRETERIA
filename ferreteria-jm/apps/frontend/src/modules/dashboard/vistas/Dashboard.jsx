@@ -22,7 +22,10 @@ import {
   actualizarFeatureFlag,
   obtenerFeatureFlags,
 } from "../../../config/featureFlagsApi";
-import { descargarProductosCsv } from "../../../config/exportacionesApi";
+import {
+  descargarProductosCsv,
+  descargarProductosPdf,
+} from "../../../config/exportacionesApi";
 import { getCategorias } from "../../categorias/services/categoriaApi";
 import { getProductos } from "../../productos/services/productoApi";
 import "./Dashboard.css";
@@ -62,6 +65,7 @@ export default function Dashboard() {
   const [mensajeFlags, setMensajeFlags] = useState("");
   const [errorFlags, setErrorFlags] = useState("");
   const [descargandoExcel, setDescargandoExcel] = useState(false);
+  const [descargandoPdf, setDescargandoPdf] = useState(false);
   const [mensajeExportacion, setMensajeExportacion] = useState("");
   const [errorExportacion, setErrorExportacion] = useState("");
 
@@ -292,6 +296,39 @@ export default function Dashboard() {
     }
   };
 
+  const handleExportarPdf = async () => {
+    if (!featureFlags.exportar_pdf || descargandoPdf) {
+      return;
+    }
+
+    try {
+      setDescargandoPdf(true);
+      setMensajeExportacion("");
+      setErrorExportacion("");
+
+      const { blob, filename } = await descargarProductosPdf();
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+
+      enlace.href = url;
+      enlace.download = filename;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      URL.revokeObjectURL(url);
+
+      setMensajeExportacion("PDF descargado correctamente.");
+    } catch (err) {
+      setErrorExportacion(
+        err instanceof Error
+          ? err.message
+          : "No se pudo descargar el inventario PDF."
+      );
+    } finally {
+      setDescargandoPdf(false);
+    }
+  };
+
   const renderTarjetasResumen = () => (
     <section
       className="dashboard__summary"
@@ -477,16 +514,23 @@ export default function Dashboard() {
           </span>
         </button>
 
-        <button className="dashboard__quick-action" type="button" disabled>
+        <button
+          className="dashboard__quick-action"
+          type="button"
+          onClick={handleExportarPdf}
+          disabled={!featureFlags.exportar_pdf || descargandoPdf}
+        >
           <span className="dashboard__quick-icon" aria-hidden="true">
             <FileDown size={22} />
           </span>
           <span>
             <strong>Exportar PDF</strong>
             <small>
-              {featureFlags.exportar_pdf
-                ? "Flag activo, implementación pendiente"
-                : "Próximamente"}
+              {descargandoPdf
+                ? "Generando PDF..."
+                : featureFlags.exportar_pdf
+                  ? "Descargar inventario PDF"
+                  : "Desactivado"}
             </small>
           </span>
         </button>
