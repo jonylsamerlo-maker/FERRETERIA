@@ -6,6 +6,7 @@ import {
   CalendarDays,
   FileDown,
   FileSpreadsheet,
+  FileUp,
   FolderTree,
   HelpCircle,
   Home,
@@ -34,7 +35,110 @@ const UMBRAL_STOCK_BAJO = 5;
 const FEATURE_FLAGS_INICIALES = {
   exportar_excel: false,
   exportar_pdf: false,
+  importar_productos: true,
 };
+const CABECERA_IMPORTACION_PRODUCTOS = [
+  "codigo",
+  "nombre",
+  "descripcion",
+  "precio",
+  "stock",
+  "categoria",
+];
+
+function normalizarComparacion(valor) {
+  return String(valor ?? "").trim().toLowerCase();
+}
+
+function normalizarCodigo(valor) {
+  return String(valor ?? "").trim();
+}
+
+function crearFilaCsv(celdas, numeroFila) {
+  return {
+    numeroFila,
+    codigo: celdas[0]?.trim() ?? "",
+    nombre: celdas[1]?.trim() ?? "",
+    descripcion: celdas[2]?.trim() ?? "",
+    precio: celdas[3]?.trim() ?? "",
+    stock: celdas[4]?.trim() ?? "",
+    categoria: celdas[5]?.trim() ?? "",
+  };
+}
+
+function parsearCsvPuntoYComa(contenido) {
+  const filas = [];
+  let fila = [];
+  let celda = "";
+  let entreComillas = false;
+  let numeroFila = 1;
+
+  for (let i = 0; i < contenido.length; i += 1) {
+    const caracter = contenido[i];
+    const siguiente = contenido[i + 1];
+
+    if (caracter === '"') {
+      if (entreComillas && siguiente === '"') {
+        celda += '"';
+        i += 1;
+      } else {
+        entreComillas = !entreComillas;
+      }
+      continue;
+    }
+
+    if (caracter === ";" && !entreComillas) {
+      fila.push(celda);
+      celda = "";
+      continue;
+    }
+
+    if ((caracter === "\n" || caracter === "\r") && !entreComillas) {
+      if (caracter === "\r" && siguiente === "\n") {
+        i += 1;
+      }
+
+      fila.push(celda);
+      filas.push({ celdas: fila, numeroFila });
+      numeroFila += 1;
+      fila = [];
+      celda = "";
+      continue;
+    }
+
+    celda += caracter;
+  }
+
+  if (entreComillas) {
+    throw new Error("El CSV contiene comillas sin cerrar.");
+  }
+
+  if (celda !== "" || fila.length > 0) {
+    fila.push(celda);
+    filas.push({ celdas: fila, numeroFila });
+  }
+
+  return filas.filter(({ celdas }) =>
+    celdas.some((valor) => String(valor ?? "").trim() !== "")
+  );
+}
+
+function validarCabecera(celdas) {
+  const cabecera = [...celdas];
+
+  if (cabecera.length > 0) {
+    cabecera[0] = cabecera[0].replace(/^\uFEFF/, "");
+  }
+
+  const columnas = cabecera.map(normalizarComparacion);
+  const columnasValidas =
+    columnas.length === CABECERA_IMPORTACION_PRODUCTOS.length &&
+    CABECERA_IMPORTACION_PRODUCTOS.every(
+      (columna, indice) => columnas[indice] === columna
+    );
+
+  return columnasValidas;
+}
 
 function formatearPrecio(valor) {
   return new Intl.NumberFormat("es-AR", {
@@ -68,6 +172,10 @@ export default function Dashboard() {
   const [descargandoPdf, setDescargandoPdf] = useState(false);
   const [mensajeExportacion, setMensajeExportacion] = useState("");
   const [errorExportacion, setErrorExportacion] = useState("");
+  const [archivoImportacion, setArchivoImportacion] = useState(null);
+  const [procesandoImportacion, setProcesandoImportacion] = useState(false);
+  const [errorImportacion, setErrorImportacion] = useState("");
+  const [filasImportacion, setFilasImportacion] = useState([]);
 
   useEffect(() => {
     const validarSesion = async () => {
@@ -119,6 +227,7 @@ export default function Dashboard() {
           setFeatureFlags({
             exportar_excel: Boolean(featureFlagsData?.exportar_excel),
             exportar_pdf: Boolean(featureFlagsData?.exportar_pdf),
+            importar_productos: featureFlagsData?.importar_productos !== false,
           });
         } catch (err) {
           setErrorDatos(
@@ -161,6 +270,13 @@ export default function Dashboard() {
   const productosRecientes = productos.slice(0, 5);
   const fechaActual = formatearFechaActual();
   const esAdmin = usuario?.rol?.trim().toUpperCase() === "ADMIN";
+  const resumenImportacion = {
+    total: filasImportacion.length,
+    validos: filasImportacion.filter((fila) => fila.estado === "VÁLIDO").length,
+    errores: filasImportacion.filter((fila) => fila.estado === "ERROR").length,
+    conflictos: filasImportacion.filter((fila) => fila.estado === "CONFLICTO").length,
+  };
+  const importacionDisponible = Boolean(featureFlags.importar_productos);
   const seccionesMenu = [
     {
       id: "inicio",
@@ -327,6 +443,172 @@ export default function Dashboard() {
     } finally {
       setDescargandoPdf(false);
     }
+  };
+
+  const validarFilasImportacion = (filasCsv) => {
+    const categoriasPorNombre = new Map(
+      categorias.map((categoria) => [
+        normalizarComparacion(categoria.nombre),
+        categoria,
+      ])
+    );
+    const codigosExistentes = new Set(
+      productos
+        .map((producto) => normalizarCodigo(producto.codigo))
+        .filter(Boolean)
+    );
+    const conteoCodigosCsv = new Map();
+    const filasNormalizadas = filasCsv.map(({ celdas, numeroFila }) => {
+      const fila = crearFilaCsv(celdas, numeroFila);
+      const codigoNormalizado = normalizarCodigo(fila.codigo);
+
+      if (codigoNormalizado) {
+        conteoCodigosCsv.set(
+          codigoNormalizado,
+          (conteoCodigosCsv.get(codigoNormalizado) ?? 0) + 1
+        );
+      }
+
+      return fila;
+    });
+
+    return filasNormalizadas.map((fila) => {
+      const mensajes = [];
+      const conflictos = [];
+      const codigoNormalizado = normalizarCodigo(fila.codigo);
+      const categoriaNormalizada = normalizarComparacion(fila.categoria);
+      const categoriaExistente = categoriasPorNombre.get(categoriaNormalizada);
+      const precioNumero = Number(fila.precio);
+      const stockNumero = Number(fila.stock);
+
+      if (!fila.codigo) {
+        mensajes.push("Código obligatorio");
+      }
+
+      if (!fila.nombre) {
+        mensajes.push("Nombre obligatorio");
+      }
+
+      if (!fila.precio || !Number.isFinite(precioNumero) || precioNumero < 0) {
+        mensajes.push("Precio inválido");
+      }
+
+      if (
+        !fila.stock ||
+        !Number.isInteger(stockNumero) ||
+        stockNumero < 0
+      ) {
+        mensajes.push("Stock inválido");
+      }
+
+      if (!fila.categoria || !categoriaExistente) {
+        mensajes.push("Categoría inexistente");
+      }
+
+      if (codigoNormalizado && (conteoCodigosCsv.get(codigoNormalizado) ?? 0) > 1) {
+        conflictos.push("Código duplicado en CSV");
+      }
+
+      if (codigoNormalizado && codigosExistentes.has(codigoNormalizado)) {
+        conflictos.push("El código ya existe");
+      }
+
+      const estado =
+        mensajes.length > 0
+          ? "ERROR"
+          : conflictos.length > 0
+            ? "CONFLICTO"
+            : "VÁLIDO";
+
+      return {
+        ...fila,
+        precio: fila.precio,
+        stock: fila.stock,
+        categoria: categoriaExistente?.nombre ?? fila.categoria,
+        estado,
+        estadoClase:
+          estado === "VÁLIDO"
+            ? "valido"
+            : estado === "ERROR"
+              ? "error"
+              : "conflicto",
+        mensajes: [...mensajes, ...conflictos],
+      };
+    });
+  };
+
+  const procesarArchivoImportacion = async (archivo) => {
+    setArchivoImportacion(archivo ?? null);
+    setFilasImportacion([]);
+    setErrorImportacion("");
+
+    if (!archivo) {
+      setErrorImportacion("Seleccioná un archivo CSV.");
+      return;
+    }
+
+    const nombreArchivo = archivo.name.toLowerCase();
+    const esCsv =
+      nombreArchivo.endsWith(".csv") ||
+      archivo.type === "text/csv" ||
+      archivo.type === "application/vnd.ms-excel";
+
+    if (!esCsv) {
+      setErrorImportacion("El archivo debe tener formato CSV.");
+      return;
+    }
+
+    if (archivo.size === 0) {
+      setErrorImportacion("El archivo CSV está vacío.");
+      return;
+    }
+
+    try {
+      setProcesandoImportacion(true);
+      const contenido = await archivo.text();
+      const contenidoSinBom = contenido.replace(/^\uFEFF/, "");
+
+      if (!contenidoSinBom.trim()) {
+        setErrorImportacion("El archivo CSV está vacío.");
+        return;
+      }
+
+      const filasCsv = parsearCsvPuntoYComa(contenidoSinBom);
+
+      if (filasCsv.length === 0) {
+        setErrorImportacion("El archivo CSV está vacío.");
+        return;
+      }
+
+      const [cabecera, ...filasDatos] = filasCsv;
+
+      if (!cabecera || !validarCabecera(cabecera.celdas)) {
+        setErrorImportacion(
+          "El encabezado debe ser: codigo;nombre;descripcion;precio;stock;categoria"
+        );
+        return;
+      }
+
+      if (filasDatos.length === 0) {
+        setErrorImportacion("El CSV no contiene filas de productos.");
+        return;
+      }
+
+      setFilasImportacion(validarFilasImportacion(filasDatos));
+    } catch (err) {
+      setFilasImportacion([]);
+      setErrorImportacion(
+        err instanceof Error
+          ? err.message
+          : "No se pudo leer el archivo CSV."
+      );
+    } finally {
+      setProcesandoImportacion(false);
+    }
+  };
+
+  const handleSeleccionarArchivoImportacion = (event) => {
+    procesarArchivoImportacion(event.target.files?.[0] ?? null);
   };
 
   const renderTarjetasResumen = () => (
@@ -550,6 +832,131 @@ export default function Dashboard() {
           {errorExportacion}
         </p>
       )}
+
+      <section
+        className="dashboard__section dashboard__section--plain dashboard__import"
+        aria-labelledby="importacion-productos-title"
+      >
+        <div className="dashboard__section-header">
+          <div>
+            <p className="dashboard__section-kicker">Importación</p>
+            <h3 id="importacion-productos-title">Vista previa CSV</h3>
+          </div>
+        </div>
+
+        {!importacionDisponible && (
+          <p className="dashboard__import-note" role="status">
+            La importación de productos está desactivada.
+          </p>
+        )}
+
+        <div className="dashboard__import-controls">
+          <label className="dashboard__file-label" htmlFor="productos-csv">
+            <FileUp aria-hidden="true" size={20} />
+            Seleccionar CSV
+          </label>
+          <input
+            id="productos-csv"
+            className="dashboard__file-input"
+            type="file"
+            accept=".csv,text/csv"
+            disabled={!importacionDisponible || cargandoDatos || procesandoImportacion}
+            onChange={handleSeleccionarArchivoImportacion}
+          />
+
+          <button
+            className="dashboard__import-button"
+            type="button"
+            disabled
+            aria-disabled="true"
+          >
+            Importar productos
+          </button>
+        </div>
+
+        {archivoImportacion && (
+          <p className="dashboard__import-filename">
+            Archivo: <strong>{archivoImportacion.name}</strong>
+          </p>
+        )}
+
+        {procesandoImportacion && (
+          <p className="dashboard__empty" role="status">
+            Procesando CSV...
+          </p>
+        )}
+
+        {errorImportacion && (
+          <p
+            className="dashboard__export-message dashboard__export-message--error"
+            role="alert"
+          >
+            {errorImportacion}
+          </p>
+        )}
+
+        {filasImportacion.length > 0 && (
+          <>
+            <div
+              className="dashboard__import-summary"
+              aria-label="Resumen de validación"
+            >
+              <span>Total: <strong>{resumenImportacion.total}</strong></span>
+              <span>Válidos: <strong>{resumenImportacion.validos}</strong></span>
+              <span>Errores: <strong>{resumenImportacion.errores}</strong></span>
+              <span>Conflictos: <strong>{resumenImportacion.conflictos}</strong></span>
+            </div>
+
+            {resumenImportacion.validos === 0 && (
+              <p className="dashboard__import-note" role="status">
+                No existen productos válidos para importar.
+              </p>
+            )}
+
+            <div className="dashboard__table-wrap">
+              <table className="dashboard__table dashboard__import-table">
+                <thead>
+                  <tr>
+                    <th>Nº fila</th>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Categoría</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filasImportacion.map((fila) => (
+                    <tr
+                      className={`dashboard__import-row dashboard__import-row--${fila.estadoClase}`}
+                      key={`${fila.numeroFila}-${fila.codigo}-${fila.nombre}`}
+                    >
+                      <td>{fila.numeroFila}</td>
+                      <td>{fila.codigo || "-"}</td>
+                      <td>{fila.nombre || "-"}</td>
+                      <td>{fila.precio || "-"}</td>
+                      <td>{fila.stock || "-"}</td>
+                      <td>{fila.categoria || "-"}</td>
+                      <td>
+                        <span className="dashboard__import-state">
+                          {fila.estado}
+                        </span>
+                        <span className="dashboard__import-messages">
+                          {fila.mensajes.length > 0
+                            ? fila.mensajes.join("; ")
+                            : "Fila válida"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </section>
     </div>
   );
 
@@ -658,6 +1065,96 @@ export default function Dashboard() {
               <li>Mostrar el producto completo.</li>
               <li>Usar buena iluminación.</li>
               <li>Evitar textos o marcas de agua.</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section className="dashboard__section dashboard__section--plain">
+        <div className="dashboard__section-header">
+          <div>
+            <p className="dashboard__section-kicker">CSV</p>
+            <h3>Importar productos desde Excel</h3>
+          </div>
+        </div>
+
+        <div className="dashboard__ayuda">
+          <article className="dashboard__ayuda-bloque">
+            <h4>Preparar el archivo</h4>
+            <p>
+              Podés preparar muchos productos en Excel o LibreOffice y
+              guardarlos como CSV para revisar la importación en el Dashboard.
+            </p>
+
+            <ul>
+              <li>codigo</li>
+              <li>nombre</li>
+              <li>descripcion</li>
+              <li>precio</li>
+              <li>stock</li>
+              <li>categoria</li>
+            </ul>
+          </article>
+
+          <article className="dashboard__ayuda-bloque">
+            <h4>Ejemplo</h4>
+            <div className="dashboard__table-wrap">
+              <table className="dashboard__table">
+                <thead>
+                  <tr>
+                    <th>codigo</th>
+                    <th>nombre</th>
+                    <th>descripcion</th>
+                    <th>precio</th>
+                    <th>stock</th>
+                    <th>categoria</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>HM-100</td>
+                    <td>Martillo</td>
+                    <td>Martillo mango de madera</td>
+                    <td>12500</td>
+                    <td>10</td>
+                    <td>Herramientas</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article className="dashboard__ayuda-bloque">
+            <h4>Pasos</h4>
+            <ol className="dashboard__tips-list">
+              <li>Crear o abrir el archivo con Excel o LibreOffice.</li>
+              <li>Mantener exactamente las columnas indicadas.</li>
+              <li>Elegir Guardar como.</li>
+              <li>Seleccionar formato CSV.</li>
+              <li>Utilizar punto y coma (;) como separador.</li>
+              <li>Guardar en UTF-8.</li>
+              <li>Entrar al Dashboard y seleccionar Importar productos.</li>
+              <li>Seleccionar el archivo.</li>
+              <li>
+                Revisar la vista previa y corregir errores antes de importar.
+              </li>
+            </ol>
+          </article>
+
+          <article className="dashboard__ayuda-bloque">
+            <h4>Validaciones</h4>
+            <p>
+              Las categorías utilizadas en el archivo deben existir previamente
+              en Ferretería JM.
+            </p>
+            <p>La vista previa puede detectar:</p>
+            <ul>
+              <li>precio inválido</li>
+              <li>stock inválido</li>
+              <li>categoría inexistente</li>
+              <li>código repetido dentro del archivo</li>
+              <li>código de producto ya existente</li>
             </ul>
           </article>
         </div>
