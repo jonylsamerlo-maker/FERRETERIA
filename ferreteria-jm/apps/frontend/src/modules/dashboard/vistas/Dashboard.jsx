@@ -51,7 +51,7 @@ function normalizarComparacion(valor) {
 }
 
 function normalizarCodigo(valor) {
-  return String(valor ?? "").trim();
+  return String(valor ?? "").trim().toLowerCase();
 }
 
 function crearFilaCsv(celdas, numeroFila) {
