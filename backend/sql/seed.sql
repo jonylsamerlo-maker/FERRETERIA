@@ -68,6 +68,7 @@ INSERT INTO productos (
     precio,
     stock,
     imagen,
+    publicado,
     categoria_id
 )
 VALUES
@@ -78,6 +79,7 @@ VALUES
         12500.00,
         18,
         'img/productos/img_6a67f30a642af1.30390572_llave_francesa.webp',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Herramientas manuales')
     ),
     (
@@ -87,6 +89,7 @@ VALUES
         9800.00,
         25,
         'img/productos/img_6a67c313b0f671.37275654_juego-destornilladores-800x600.webp',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Herramientas manuales')
     ),
     (
@@ -96,6 +99,7 @@ VALUES
         45900.00,
         10,
         'img/productos/img_6a5e23c281cc65.59579180_taladroE.jpg',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Herramientas electricas')
     ),
     (
@@ -105,6 +109,7 @@ VALUES
         18900.00,
         12,
         'img/productos/img_6a6762494dd458.43196921_conjunto-lluvia-800x600.webp',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Seguridad industrial')
     ),
     (
@@ -114,6 +119,7 @@ VALUES
         185000.00,
         4,
         'img/productos/img_6a675b7ce0c619.29055386_oferta-hormigonera-800x600.webp',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Ofertas especiales')
     ),
     (
@@ -123,6 +129,7 @@ VALUES
         132000.00,
         6,
         'img/productos/img_6a675c168d8826.22883869_oferta-hidrolavadora-800x600.webp',
+        1,
         (SELECT categoria_id FROM categorias WHERE nombre = 'Ofertas especiales')
     )
 ON DUPLICATE KEY UPDATE
