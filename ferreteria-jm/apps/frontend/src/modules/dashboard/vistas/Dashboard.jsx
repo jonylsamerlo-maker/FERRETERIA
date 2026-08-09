@@ -391,7 +391,18 @@ export default function Dashboard() {
 
     return errorDatos ? "—" : valor;
   };
-  const productosRecientes = productos.slice(0, 5);
+  const productosRecientes = [...productos]
+    .sort((productoA, productoB) => {
+      const fechaA = String(productoA.fecha_creacion ?? "").trim();
+      const fechaB = String(productoB.fecha_creacion ?? "").trim();
+
+      if (fechaA && fechaB && fechaA !== fechaB) {
+        return fechaB.localeCompare(fechaA);
+      }
+
+      return Number(productoB.producto_id) - Number(productoA.producto_id);
+    })
+    .slice(0, 5);
   const fechaActual = formatearFechaActual();
   const esAdmin = usuario?.rol?.trim().toUpperCase() === "ADMIN";
   const resumenImportacion = {
