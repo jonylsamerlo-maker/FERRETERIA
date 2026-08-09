@@ -42,6 +42,10 @@ function normalizarTexto(valor) {
   return String(valor ?? '').trim().toLowerCase();
 }
 
+function tieneImagen(valor) {
+  return valor != null && String(valor).trim() !== '';
+}
+
 export default function Productos() {
   const [formulario, setFormulario] = useState(formularioInicial);
   const [productos, setProductos] = useState([]);
@@ -1192,39 +1196,58 @@ export default function Productos() {
             onChange={handleChange}
           />
 
-          {productoEditandoId !== null &&
-            formulario.imagenActual && (
-              <div className="productos__current-image">
-                <p>Imagen actual:</p>
+          {productoEditandoId !== null && (
+            <div className="productos__current-image">
+              <p>Imagen actual</p>
 
+              {tieneImagen(formulario.imagenActual) ? (
                 <img
                   className="productos__image"
                   src={obtenerImagen(
                     formulario.imagenActual
                   )}
-                  alt="Imagen actual del producto"
+                  alt={`Imagen actual de ${formulario.nombre || 'producto'}`}
                 />
+              ) : (
+                <span className="productos__image-missing">
+                  Sin imagen
+                </span>
+              )}
 
+              {tieneImagen(formulario.imagenActual) && (
                 <small>
-                  Seleccioná otra imagen únicamente si
-                  querés reemplazarla.
+                  Seleccioná otra imagen solo si querés reemplazarla.
                 </small>
-              </div>
-            )}
+              )}
+            </div>
+          )}
         </div>
 
         {imagenVistaPrevia && (
           <div className="productos__image-panel">
             <div className="productos__preview-card">
               <p className="productos__preview-title">
-                Vista previa
+                {productoEditandoId !== null
+                  ? 'Nueva imagen'
+                  : 'Vista previa'}
               </p>
 
               <img
                 className="productos__preview-image"
                 src={imagenVistaPrevia.url}
-                alt="Vista previa de la imagen seleccionada"
+                alt={
+                  productoEditandoId !== null
+                    ? `Nueva imagen de ${formulario.nombre || 'producto'}`
+                    : `Vista previa de ${formulario.nombre || 'producto'}`
+                }
               />
+
+              {productoEditandoId !== null &&
+                tieneImagen(formulario.imagenActual) && (
+                  <p className="productos__preview-note">
+                    Reemplazará la imagen actual al guardar.
+                  </p>
+                )}
             </div>
 
             <div className="productos__image-info-card">
@@ -1461,14 +1484,18 @@ export default function Productos() {
                 {productosFiltrados.map((producto) => (
                   <tr key={producto.producto_id}>
                     <td>
-                      {producto.imagen && (
+                      {tieneImagen(producto.imagen) ? (
                         <img
                           className="productos__image"
                           src={obtenerImagen(
                             producto.imagen
                           )}
-                          alt={producto.nombre}
+                          alt={`Imagen de ${producto.nombre}`}
                         />
+                      ) : (
+                        <span className="productos__image-missing">
+                          Sin imagen
+                        </span>
                       )}
                     </td>
 
