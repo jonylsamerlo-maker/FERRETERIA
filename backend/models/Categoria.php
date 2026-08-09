@@ -149,8 +149,10 @@ class Categoria
 
         $stmt = $this->conn->prepare($sql);
 
-        return $stmt->execute([
+        $stmt->execute([
             ':id' => $id
         ]);
+
+        return $stmt->rowCount() > 0;
     }
 }

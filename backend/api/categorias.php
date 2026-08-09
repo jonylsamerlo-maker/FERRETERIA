@@ -119,7 +119,7 @@ try {
 
             $id = $_GET['id'] ?? null;
 
-            if (!$id) {
+            if ($id === null || !ctype_digit((string)$id) || (int)$id <= 0) {
                 responderJson(false, "Debe enviar el ID de la categoría", null, 400);
 
                 break;
