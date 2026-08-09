@@ -106,6 +106,38 @@
     padding: .35rem .7rem;
 }
 
+.product-card__stock {
+    border: 1px solid var(--color-border);
+}
+
+.product-card__stock--available {
+    color: var(--color-text-secondary);
+}
+
+.product-card__stock--low {
+    border-color: #fcd34d;
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.product-card__stock--empty {
+    border-color: #fca5a5;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+html[data-theme="dark"] .product-card__stock--low {
+    border-color: #d97706;
+    background: #78350f;
+    color: #fef3c7;
+}
+
+html[data-theme="dark"] .product-card__stock--empty {
+    border-color: #ef4444;
+    background: #7f1d1d;
+    color: #fee2e2;
+}
+
 .product-card__button {
 
     background: var(--color-primary);

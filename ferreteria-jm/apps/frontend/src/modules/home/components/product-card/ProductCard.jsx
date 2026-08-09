@@ -4,12 +4,37 @@ import {
 } from "../../../../services/cartStorage";
 import "./ProductCard.css";
 
+const UMBRAL_STOCK_BAJO = 5;
+
 function formatearPrecio(valor) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
     currency: "ARS",
     minimumFractionDigits: 2,
   }).format(Number(valor) || 0);
+}
+
+function obtenerEstadoStock(valor) {
+  const numero = Number(valor);
+  const stock = Number.isFinite(numero) ? numero : 0;
+
+  if (stock <= 0) {
+    return { stock, texto: "Sin stock", tipo: "empty" };
+  }
+
+  if (stock === 1) {
+    return { stock, texto: "Última unidad", tipo: "low" };
+  }
+
+  if (stock < UMBRAL_STOCK_BAJO) {
+    return {
+      stock,
+      texto: `Últimas ${stock} unidades`,
+      tipo: "low",
+    };
+  }
+
+  return { stock, texto: "Disponible", tipo: "available" };
 }
 
 function ProductCard({
@@ -22,7 +47,8 @@ function ProductCard({
   category,
 }) {
   const [mensaje, setMensaje] = useState("");
-  const stockDisponible = Number(stock) || 0;
+  const estadoStock = obtenerEstadoStock(stock);
+  const stockDisponible = estadoStock.stock;
   const sinStock = stockDisponible <= 0;
 
   const handleAgregarAlCarrito = () => {
@@ -71,11 +97,11 @@ function ProductCard({
             </span>
           )}
 
-          {sinStock && (
-            <span className="product-card__stock">
-              Sin stock
-            </span>
-          )}
+          <span
+            className={`product-card__stock product-card__stock--${estadoStock.tipo}`}
+          >
+            {estadoStock.texto}
+          </span>
         </div>
 
         <button

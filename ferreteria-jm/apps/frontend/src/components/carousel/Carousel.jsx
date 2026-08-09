@@ -3,6 +3,8 @@ import { API_BASE_URL } from "../../config/appConfig";
 import { getProductosPublicos } from "../../modules/productos/services/productoApi";
 import "./Carousel.css";
 
+const UMBRAL_STOCK_BAJO = 5;
+
 function obtenerProductos(data) {
   if (Array.isArray(data)) {
     return data;
@@ -35,6 +37,28 @@ function formatearPrecio(valor) {
   }).format(Number(valor) || 0);
 }
 
+function obtenerEstadoStock(valor) {
+  const numero = Number(valor);
+  const stock = Number.isFinite(numero) ? numero : 0;
+
+  if (stock <= 0) {
+    return { texto: "Sin stock", tipo: "empty" };
+  }
+
+  if (stock === 1) {
+    return { texto: "Última unidad", tipo: "low" };
+  }
+
+  if (stock < UMBRAL_STOCK_BAJO) {
+    return {
+      texto: `Últimas ${stock} unidades`,
+      tipo: "low",
+    };
+  }
+
+  return { texto: "Disponible", tipo: "available" };
+}
+
 function Carousel() {
   const [carouselSlides, setCarouselSlides] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,6 +70,7 @@ function Carousel() {
     activeIndex >= carouselSlides.length ? 0 : activeIndex;
 
   const activeSlide = carouselSlides[safeIndex];
+  const estadoStockActivo = obtenerEstadoStock(activeSlide?.stock);
 
   const activeTag =
     activeSlide?.categoria &&
@@ -164,8 +189,10 @@ function Carousel() {
                 {formatearPrecio(activeSlide.precio)}
               </span>
 
-              <span className="ferreteria-carousel__stock">
-                Stock: {activeSlide.stock}
+              <span
+                className={`ferreteria-carousel__stock ferreteria-carousel__stock--${estadoStockActivo.tipo}`}
+              >
+                {estadoStockActivo.texto}
               </span>
             </div>
           </div>
