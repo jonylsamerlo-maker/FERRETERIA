@@ -100,6 +100,10 @@
   overflow: visible;
 }
 
+.productos__modal--image {
+  width: min(100%, 900px);
+}
+
 .productos__modal-header {
   display: flex;
   align-items: center;
@@ -523,6 +527,37 @@ textarea.productos__input {
   height: 64px;
   object-fit: cover;
   border-radius: 0.4rem;
+}
+
+.productos__image-trigger {
+  display: block;
+  padding: 0;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.productos__image-trigger:focus-visible {
+  outline: 3px solid rgba(220, 38, 38, 0.28);
+  outline-offset: 3px;
+}
+
+.productos__expanded-image-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.productos__expanded-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: calc(92vh - 7rem);
+  border-radius: 0.5rem;
+  object-fit: contain;
 }
 
 .productos__publication-state {

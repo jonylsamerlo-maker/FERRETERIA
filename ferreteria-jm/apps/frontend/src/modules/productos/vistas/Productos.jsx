@@ -67,6 +67,7 @@ export default function Productos() {
     mensaje: '',
   });
   const [productoAEliminar, setProductoAEliminar] = useState(null);
+  const [imagenAmpliada, setImagenAmpliada] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroPublicacion, setFiltroPublicacion] = useState('todos');
   const [filtroImagen, setFiltroImagen] = useState('todas');
@@ -83,6 +84,9 @@ export default function Productos() {
   const modalEliminacionRef = useRef(null);
   const botonCancelarEliminacionRef = useRef(null);
   const disparadorEliminacionRef = useRef(null);
+  const modalImagenRef = useRef(null);
+  const botonCerrarImagenRef = useRef(null);
+  const disparadorImagenRef = useRef(null);
 
   const cargarDatos = async () => {
     try {
@@ -404,6 +408,72 @@ export default function Productos() {
     };
   }, [productoAEliminar, eliminandoId]);
 
+  const cerrarImagenAmpliada = () => {
+    setImagenAmpliada(null);
+    window.setTimeout(() => {
+      disparadorImagenRef.current?.focus();
+    }, 0);
+  };
+
+  useEffect(() => {
+    if (!imagenAmpliada) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    botonCerrarImagenRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        cerrarImagenAmpliada();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables =
+        modalImagenRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === primerElemento
+      ) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === ultimoElemento
+      ) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [imagenAmpliada]);
+
   const handleChange = (event) => {
     const { name, value, files } = event.target;
 
@@ -700,6 +770,18 @@ export default function Productos() {
     return ruta.startsWith('http')
       ? ruta
       : `${API_BASE_URL}/${ruta}`;
+  };
+
+  const abrirImagenAmpliada = (producto, event) => {
+    if (!tieneImagen(producto.imagen)) {
+      return;
+    }
+
+    disparadorImagenRef.current = event.currentTarget;
+    setImagenAmpliada({
+      src: obtenerImagen(producto.imagen),
+      nombre: producto.nombre || 'Producto',
+    });
   };
 
   const formatearPesoImagen = (pesoMb) =>
@@ -1004,6 +1086,52 @@ export default function Productos() {
               >
                 {eliminandoId !== null ? 'Eliminando...' : 'Eliminar'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {imagenAmpliada && (
+        <div
+          className="productos__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarImagenAmpliada();
+            }
+          }}
+        >
+          <div
+            className="productos__modal productos__modal--image"
+            ref={modalImagenRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productos-image-title"
+          >
+            <div className="productos__modal-header">
+              <h2
+                className="productos__modal-title"
+                id="productos-image-title"
+              >
+                {imagenAmpliada.nombre}
+              </h2>
+
+              <button
+                className="productos__modal-close"
+                type="button"
+                ref={botonCerrarImagenRef}
+                aria-label="Cerrar imagen ampliada"
+                onClick={cerrarImagenAmpliada}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="productos__expanded-image-wrap">
+              <img
+                className="productos__expanded-image"
+                src={imagenAmpliada.src}
+                alt={`Imagen ampliada de ${imagenAmpliada.nombre}`}
+              />
             </div>
           </div>
         </div>
@@ -1485,13 +1613,22 @@ export default function Productos() {
                   <tr key={producto.producto_id}>
                     <td>
                       {tieneImagen(producto.imagen) ? (
-                        <img
-                          className="productos__image"
-                          src={obtenerImagen(
-                            producto.imagen
-                          )}
-                          alt={`Imagen de ${producto.nombre}`}
-                        />
+                        <button
+                          className="productos__image-trigger"
+                          type="button"
+                          aria-label={`Ampliar imagen de ${producto.nombre}`}
+                          onClick={(event) =>
+                            abrirImagenAmpliada(producto, event)
+                          }
+                        >
+                          <img
+                            className="productos__image"
+                            src={obtenerImagen(
+                              producto.imagen
+                            )}
+                            alt={`Imagen de ${producto.nombre}`}
+                          />
+                        </button>
                       ) : (
                         <span className="productos__image-missing">
                           Sin imagen
