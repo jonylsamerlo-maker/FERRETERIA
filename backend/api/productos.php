@@ -8,7 +8,7 @@ require_once __DIR__ . '/../models/Producto.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
 header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -77,8 +77,7 @@ function validarProducto(array $datos): void
         'nombre',
         'precio',
         'stock',
-        'categoria_id',
-        'imagen'
+        'categoria_id'
     ];
 
     foreach ($camposObligatorios as $campo) {
@@ -119,6 +118,65 @@ function validarProducto(array $datos): void
             'mensaje' => 'La categoría seleccionada no es válida'
         ], 400);
     }
+
+    if (
+        array_key_exists('imagen', $datos) &&
+        $datos['imagen'] !== null &&
+        !is_string($datos['imagen'])
+    ) {
+        responderJson([
+            'mensaje' => 'La imagen del producto no es válida'
+        ], 400);
+    }
+}
+
+/**
+ * Comprueba que la imagen sea un archivo generado por el endpoint de subida.
+ */
+function imagenProductoEsValida(mixed $imagen): bool
+{
+    if (!is_string($imagen)) {
+        return false;
+    }
+
+    $rutaImagen = trim($imagen);
+
+    if (
+        $rutaImagen === '' ||
+        preg_match('#^img/productos/[^/\\\\]+$#D', $rutaImagen) !== 1
+    ) {
+        return false;
+    }
+
+    $directorioImagenes = realpath(__DIR__ . '/../img/productos');
+    $archivoImagen = realpath(__DIR__ . '/../' . $rutaImagen);
+
+    if (
+        $directorioImagenes === false ||
+        $archivoImagen === false ||
+        !is_file($archivoImagen) ||
+        !str_starts_with(
+            $archivoImagen,
+            $directorioImagenes . DIRECTORY_SEPARATOR
+        )
+    ) {
+        return false;
+    }
+
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+    if ($finfo === false) {
+        return false;
+    }
+
+    $mime = finfo_file($finfo, $archivoImagen);
+    finfo_close($finfo);
+
+    return in_array($mime, [
+        'image/jpeg',
+        'image/png',
+        'image/webp'
+    ], true);
 }
 
 try {
@@ -131,11 +189,29 @@ try {
 
     switch ($metodo) {
         case 'GET':
+            $scope = $_GET['scope'] ?? null;
+
+            if (
+                $scope !== null &&
+                !in_array($scope, ['public', 'admin'], true)
+            ) {
+                responderJson([
+                    'mensaje' => 'El scope solicitado no es válido'
+                ], 400);
+            }
+
+            if ($scope === 'admin') {
+                requerirUsuarioAutenticado();
+            }
+
             $id = $_GET['id'] ?? null;
 
             if ($id !== null) {
                 $productoId = validarId($id);
-                $productoEncontrado = $producto->obtenerPorId($productoId);
+                $productoEncontrado = $producto->obtenerPorId(
+                    $productoId,
+                    $scope === 'public'
+                );
 
                 if ($productoEncontrado === null) {
                     responderJson([
@@ -146,11 +222,16 @@ try {
                 responderJson($productoEncontrado);
             }
 
-            responderJson($producto->listar());
+            responderJson(
+                $scope === 'public'
+                    ? $producto->listarPublicados()
+                    : $producto->listar()
+            );
 
         case 'POST':
             requerirRolAdmin();
             $datos = obtenerDatosJson();
+            unset($datos['publicado']);
 
             validarProducto($datos);
 
@@ -168,6 +249,7 @@ try {
             requerirRolAdmin();
             $productoId = validarId($_GET['id'] ?? null);
             $datos = obtenerDatosJson();
+            unset($datos['publicado']);
 
             validarProducto($datos);
 
@@ -179,6 +261,55 @@ try {
 
             responderJson([
                 'mensaje' => 'Producto actualizado correctamente'
+            ]);
+
+        case 'PATCH':
+            requerirRolAdmin();
+            $productoId = validarId($_GET['id'] ?? null);
+            $datos = obtenerDatosJson();
+
+            if (
+                count($datos) !== 1 ||
+                !array_key_exists('publicado', $datos) ||
+                !is_int($datos['publicado']) ||
+                !in_array($datos['publicado'], [0, 1], true)
+            ) {
+                responderJson([
+                    'mensaje' => 'PATCH solo acepta publicado con valor 0 o 1'
+                ], 400);
+            }
+
+            $productoEncontrado = $producto->obtenerPorId($productoId);
+
+            if ($productoEncontrado === null) {
+                responderJson([
+                    'mensaje' => 'Producto no encontrado'
+                ], 404);
+            }
+
+            if (
+                $datos['publicado'] === 1 &&
+                !imagenProductoEsValida($productoEncontrado['imagen'] ?? null)
+            ) {
+                responderJson([
+                    'mensaje' => 'Agregá una imagen antes de publicar este producto.'
+                ], 422);
+            }
+
+            if (!$producto->actualizarPublicado(
+                $productoId,
+                $datos['publicado']
+            )) {
+                responderJson([
+                    'mensaje' => 'No se pudo actualizar la publicación del producto'
+                ], 500);
+            }
+
+            responderJson([
+                'mensaje' => $datos['publicado'] === 1
+                    ? 'Producto publicado correctamente'
+                    : 'Producto ocultado correctamente',
+                'publicado' => $datos['publicado']
             ]);
 
         case 'DELETE':

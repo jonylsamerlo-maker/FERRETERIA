@@ -11,8 +11,30 @@ class Producto
         $this->conn = $conn;
     }
 
-    public function listar(): array
+    private function normalizarProducto(array $producto): array
     {
+        $producto['publicado'] = (int)$producto['publicado'];
+
+        return $producto;
+    }
+
+    private function normalizarImagen(mixed $imagen): ?string
+    {
+        if ($imagen === null) {
+            return null;
+        }
+
+        $imagenNormalizada = trim((string)$imagen);
+
+        return $imagenNormalizada !== '' ? $imagenNormalizada : null;
+    }
+
+    private function listarSegunPublicacion(bool $soloPublicados): array
+    {
+        $filtroPublicacion = $soloPublicados
+            ? 'WHERE p.publicado = 1'
+            : '';
+
         $sql = "
             SELECT
                 p.producto_id,
@@ -22,23 +44,42 @@ class Producto
                 p.precio,
                 p.stock,
                 p.imagen,
+                p.publicado,
                 p.categoria_id,
                 c.nombre AS categoria,
                 p.fecha_creacion
             FROM productos p
             INNER JOIN categorias c
                 ON p.categoria_id = c.categoria_id
+            {$filtroPublicacion}
             ORDER BY p.producto_id ASC
         ";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return array_map(
+            fn(array $producto): array => $this->normalizarProducto($producto),
+            $stmt->fetchAll(PDO::FETCH_ASSOC)
+        );
     }
 
-    public function obtenerPorId(int $id): ?array
+    public function listar(): array
     {
+        return $this->listarSegunPublicacion(false);
+    }
+
+    public function listarPublicados(): array
+    {
+        return $this->listarSegunPublicacion(true);
+    }
+
+    public function obtenerPorId(int $id, bool $soloPublicado = false): ?array
+    {
+        $filtroPublicacion = $soloPublicado
+            ? 'AND p.publicado = 1'
+            : '';
+
         $sql = "
             SELECT
                 p.producto_id,
@@ -48,6 +89,7 @@ class Producto
                 p.precio,
                 p.stock,
                 p.imagen,
+                p.publicado,
                 p.categoria_id,
                 c.nombre AS categoria,
                 p.fecha_creacion
@@ -55,6 +97,7 @@ class Producto
             INNER JOIN categorias c
                 ON p.categoria_id = c.categoria_id
             WHERE p.producto_id = :id
+            {$filtroPublicacion}
             LIMIT 1
         ";
 
@@ -65,7 +108,9 @@ class Producto
 
         $producto = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        return $producto ?: null;
+        return $producto
+            ? $this->normalizarProducto($producto)
+            : null;
     }
 
     public function crear(array $datos): bool
@@ -79,6 +124,7 @@ class Producto
                 precio,
                 stock,
                 imagen,
+                publicado,
                 categoria_id
             )
             VALUES
@@ -89,6 +135,7 @@ class Producto
                 :precio,
                 :stock,
                 :imagen,
+                0,
                 :categoria_id
             )
         ";
@@ -101,16 +148,22 @@ class Producto
             ':descripcion' => $datos['descripcion'] ?? null,
             ':precio' => $datos['precio'],
             ':stock' => $datos['stock'],
-            ':imagen' => $datos['imagen'],
+            ':imagen' => $this->normalizarImagen($datos['imagen'] ?? null),
             ':categoria_id' => $datos['categoria_id']
         ]);
     }
 
     public function actualizar(int $id, array $datos): bool
     {
-        if ($this->obtenerPorId($id) === null) {
+        $productoExistente = $this->obtenerPorId($id);
+
+        if ($productoExistente === null) {
             return false;
         }
+
+        $imagen = array_key_exists('imagen', $datos)
+            ? $this->normalizarImagen($datos['imagen'])
+            : $productoExistente['imagen'];
 
         $sql = "
             UPDATE productos
@@ -133,10 +186,25 @@ class Producto
             ':descripcion' => $datos['descripcion'] ?? null,
             ':precio' => $datos['precio'],
             ':stock' => $datos['stock'],
-            ':imagen' => $datos['imagen'],
+            ':imagen' => $imagen,
             ':categoria_id' => $datos['categoria_id'],
             ':id' => $id
         ]);
+    }
+
+    public function actualizarPublicado(int $id, int $publicado): bool
+    {
+        $sql = "
+            UPDATE productos
+            SET publicado = :publicado
+            WHERE producto_id = :id
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':publicado', $publicado, PDO::PARAM_INT);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $stmt->execute();
     }
 
     public function eliminar(int $id): bool
