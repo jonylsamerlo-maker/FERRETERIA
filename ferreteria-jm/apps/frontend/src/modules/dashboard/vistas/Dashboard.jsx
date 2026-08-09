@@ -59,6 +59,28 @@ function normalizarCodigo(valor) {
   return String(valor ?? "").trim().toLowerCase();
 }
 
+function StockActividad({ valor }) {
+  const stock = Number(valor);
+
+  if (stock === 0) {
+    return (
+      <span className="dashboard__stock dashboard__stock--empty">
+        Sin stock
+      </span>
+    );
+  }
+
+  if (stock > 0 && stock < UMBRAL_STOCK_BAJO) {
+    return (
+      <span className="dashboard__stock dashboard__stock--low">
+        {stock} · Stock bajo
+      </span>
+    );
+  }
+
+  return <span className="dashboard__stock">{valor}</span>;
+}
+
 function crearFilaCsv(celdas, numeroFila) {
   return {
     numeroFila,
@@ -365,8 +387,13 @@ export default function Dashboard() {
     window.location.href = "/login";
   };
 
+  const productosSinStock = productos.filter(
+    (producto) => Number(producto.stock) === 0
+  );
   const productosStockBajo = productos.filter(
-    (producto) => Number(producto.stock) < UMBRAL_STOCK_BAJO
+    (producto) =>
+      Number(producto.stock) > 0 &&
+      Number(producto.stock) < UMBRAL_STOCK_BAJO
   );
   const totalProductos = productos.length;
   const productosPublicados = productos.filter(
@@ -906,15 +933,7 @@ export default function Dashboard() {
                   <td>{producto.categoria || "Sin categoría"}</td>
                   <td>{formatearPrecio(producto.precio)}</td>
                   <td>
-                    <span
-                      className={
-                        Number(producto.stock) < UMBRAL_STOCK_BAJO
-                          ? "dashboard__stock dashboard__stock--low"
-                          : "dashboard__stock"
-                      }
-                    >
-                      {producto.stock}
-                    </span>
+                    <StockActividad valor={producto.stock} />
                   </td>
                 </tr>
               ))}
@@ -958,6 +977,11 @@ export default function Dashboard() {
         <article className="dashboard__info-card">
           <p>Total de productos</p>
           <strong>{cargandoDatos ? "..." : productos.length}</strong>
+        </article>
+
+        <article className="dashboard__info-card">
+          <p>Sin stock</p>
+          <strong>{cargandoDatos ? "..." : productosSinStock.length}</strong>
         </article>
 
         <article className="dashboard__info-card">

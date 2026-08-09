@@ -46,6 +46,31 @@ function tieneImagen(valor) {
   return valor != null && String(valor).trim() !== '';
 }
 
+function StockAdministrativo({ valor }) {
+  const stock = Number(valor);
+
+  if (stock === 0) {
+    return (
+      <span className="productos__stock-badge productos__stock-badge--empty">
+        Sin stock
+      </span>
+    );
+  }
+
+  if (stock > 0 && stock < UMBRAL_STOCK_BAJO) {
+    return (
+      <span className="productos__stock-cell">
+        <span className="productos__stock-quantity">{stock}</span>
+        <span className="productos__stock-badge productos__stock-badge--low">
+          Stock bajo
+        </span>
+      </span>
+    );
+  }
+
+  return valor;
+}
+
 export default function Productos() {
   const [formulario, setFormulario] = useState(formularioInicial);
   const [productos, setProductos] = useState([]);
@@ -863,7 +888,10 @@ export default function Productos() {
         (filtroImagen === 'sin-imagen' && sinImagen);
       const coincideStock =
         filtroStock === 'todos' ||
+        (filtroStock === 'sin-stock' &&
+          Number(producto.stock) === 0) ||
         (filtroStock === 'stock-bajo' &&
+          Number(producto.stock) > 0 &&
           Number(producto.stock) < UMBRAL_STOCK_BAJO);
       const coincideCategoria =
         filtroCategoria === '' ||
@@ -1544,6 +1572,7 @@ export default function Productos() {
                 onChange={(event) => setFiltroStock(event.target.value)}
               >
                 <option value="todos">Todos</option>
+                <option value="sin-stock">Sin stock</option>
                 <option value="stock-bajo">Stock bajo</option>
               </select>
             </label>
@@ -1639,7 +1668,9 @@ export default function Productos() {
                     <td>{producto.codigo}</td>
                     <td>{producto.nombre}</td>
                     <td>{formatearPrecio(producto.precio)}</td>
-                    <td>{producto.stock}</td>
+                    <td>
+                      <StockAdministrativo valor={producto.stock} />
+                    </td>
                     <td>{producto.categoria}</td>
                     <td>
                       <span

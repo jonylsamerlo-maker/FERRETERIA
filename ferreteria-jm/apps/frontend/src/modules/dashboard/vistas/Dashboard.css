@@ -241,8 +241,9 @@
 
 .dashboard__info-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 210px));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+  max-width: 660px;
 }
 
 .dashboard__info-card {
@@ -485,8 +486,23 @@
 }
 
 .dashboard__stock--low {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dashboard__stock--empty {
   background: #fee2e2;
   color: #991b1b;
+}
+
+html[data-theme="dark"] .dashboard__stock--low {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+html[data-theme="dark"] .dashboard__stock--empty {
+  background: #7f1d1d;
+  color: #fee2e2;
 }
 
 .dashboard__tips-list,
