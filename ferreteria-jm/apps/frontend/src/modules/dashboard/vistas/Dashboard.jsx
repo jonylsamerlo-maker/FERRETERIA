@@ -10,8 +10,12 @@ import {
   FolderTree,
   HelpCircle,
   Home,
+  Eye,
+  EyeOff,
+  ImageOff,
   LogOut,
   PackagePlus,
+  Percent,
   Settings,
   Tags,
 } from "lucide-react";
@@ -364,6 +368,29 @@ export default function Dashboard() {
   const productosStockBajo = productos.filter(
     (producto) => Number(producto.stock) < UMBRAL_STOCK_BAJO
   );
+  const totalProductos = productos.length;
+  const productosPublicados = productos.filter(
+    (producto) => Number(producto.publicado) === 1
+  ).length;
+  const productosNoPublicados = productos.filter(
+    (producto) => Number(producto.publicado) === 0
+  ).length;
+  const productosSinImagen = productos.filter(
+    (producto) =>
+      producto.imagen == null || String(producto.imagen).trim() === ""
+  ).length;
+  const totalCategorias = categorias.length;
+  const porcentajePublicados =
+    totalProductos > 0
+      ? Math.round((productosPublicados / totalProductos) * 100)
+      : 0;
+  const obtenerValorMetrica = (valor) => {
+    if (cargandoDatos) {
+      return "...";
+    }
+
+    return errorDatos ? "—" : valor;
+  };
   const productosRecientes = productos.slice(0, 5);
   const fechaActual = formatearFechaActual();
   const esAdmin = usuario?.rol?.trim().toUpperCase() === "ADMIN";
@@ -422,21 +449,39 @@ export default function Dashboard() {
   const tarjetasResumen = [
     {
       titulo: "Productos",
-      valor: cargandoDatos ? "..." : productos.length,
-      detalle: "Total cargado",
+      valor: obtenerValorMetrica(totalProductos),
+      detalle: "Total del catálogo",
       icono: Boxes,
     },
     {
+      titulo: "Publicados",
+      valor: obtenerValorMetrica(productosPublicados),
+      detalle: "Visibles en la tienda",
+      icono: Eye,
+    },
+    {
+      titulo: "No publicados",
+      valor: obtenerValorMetrica(productosNoPublicados),
+      detalle: "Pendientes u ocultos",
+      icono: EyeOff,
+    },
+    {
+      titulo: "Sin imagen",
+      valor: obtenerValorMetrica(productosSinImagen),
+      detalle: "Requieren una imagen",
+      icono: ImageOff,
+    },
+    {
       titulo: "Categorías",
-      valor: cargandoDatos ? "..." : categorias.length,
+      valor: obtenerValorMetrica(totalCategorias),
       detalle: "Rubros disponibles",
       icono: Tags,
     },
     {
-      titulo: "Stock bajo",
-      valor: cargandoDatos ? "..." : productosStockBajo.length,
-      detalle: `Menor a ${UMBRAL_STOCK_BAJO} unidades`,
-      icono: AlertTriangle,
+      titulo: "Publicados %",
+      valor: obtenerValorMetrica(`${porcentajePublicados}%`),
+      detalle: "Catálogo visible",
+      icono: Percent,
     },
   ];
 
