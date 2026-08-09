@@ -210,7 +210,7 @@ try {
                 $productoId = validarId($id);
                 $productoEncontrado = $producto->obtenerPorId(
                     $productoId,
-                    $scope === 'public'
+                    $scope !== 'admin'
                 );
 
                 if ($productoEncontrado === null) {
@@ -223,7 +223,7 @@ try {
             }
 
             responderJson(
-                $scope === 'public'
+                $scope !== 'admin'
                     ? $producto->listarPublicados()
                     : $producto->listar()
             );

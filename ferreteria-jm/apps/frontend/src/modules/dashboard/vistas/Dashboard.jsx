@@ -28,7 +28,7 @@ import {
   descargarProductosPdf,
 } from "../../../config/exportacionesApi";
 import { getCategorias } from "../../categorias/services/categoriaApi";
-import { getProductos } from "../../productos/services/productoApi";
+import { getProductosAdmin } from "../../productos/services/productoApi";
 import "./Dashboard.css";
 
 const UMBRAL_STOCK_BAJO = 5;
@@ -210,7 +210,7 @@ export default function Dashboard() {
           setErrorDatos("");
 
           const consultas = [
-            getProductos(),
+            getProductosAdmin(),
             getCategorias(),
           ];
 
