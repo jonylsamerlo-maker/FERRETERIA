@@ -155,6 +155,11 @@ VALUES
         'exportar_pdf',
         0,
         'Permite generar un informe imprimible del inventario.'
+    ),
+    (
+        'importar_productos',
+        1,
+        'Permite preparar y validar productos para su importacion desde archivos CSV.'
     )
 ON DUPLICATE KEY UPDATE
     descripcion = VALUES(descripcion);

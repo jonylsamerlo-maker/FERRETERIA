@@ -15,6 +15,7 @@ header('Content-Type: application/json; charset=UTF-8');
 const FEATURE_FLAGS_PERMITIDOS = [
     'exportar_excel',
     'exportar_pdf',
+    'importar_productos',
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
