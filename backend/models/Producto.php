@@ -153,6 +153,120 @@ class Producto
         ]);
     }
 
+    public function analizarCodigosImportacion(array $codigos): array
+    {
+        if ($codigos === []) {
+            return [
+                'duplicados' => [],
+                'existentes' => [],
+            ];
+        }
+
+        $codigosJson = json_encode(
+            array_values($codigos),
+            JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE
+        );
+
+        $jsonTable = "
+            JSON_TABLE(
+                :codigos,
+                '$[*]' COLUMNS (
+                    fila INT PATH '$.fila',
+                    codigo VARCHAR(30) PATH '$.codigo'
+                )
+            )
+        ";
+
+        $sqlDuplicados = "
+            SELECT
+                analisis.fila,
+                analisis.codigo
+            FROM (
+                SELECT
+                    lote.fila,
+                    lote.codigo,
+                    COUNT(*) OVER (
+                        PARTITION BY CONVERT(lote.codigo USING utf8mb4)
+                            COLLATE utf8mb4_0900_ai_ci
+                    ) AS cantidad
+                FROM {$jsonTable} AS lote
+            ) AS analisis
+            WHERE analisis.cantidad > 1
+            ORDER BY analisis.fila ASC
+        ";
+
+        $stmtDuplicados = $this->conn->prepare($sqlDuplicados);
+        $stmtDuplicados->bindValue(':codigos', $codigosJson, PDO::PARAM_STR);
+        $stmtDuplicados->execute();
+
+        $sqlExistentes = "
+            SELECT
+                lote.fila,
+                lote.codigo,
+                p.codigo AS codigo_existente
+            FROM {$jsonTable} AS lote
+            INNER JOIN productos p
+                ON p.codigo = CONVERT(lote.codigo USING utf8mb4)
+                    COLLATE utf8mb4_0900_ai_ci
+            ORDER BY lote.fila ASC
+        ";
+
+        $stmtExistentes = $this->conn->prepare($sqlExistentes);
+        $stmtExistentes->bindValue(':codigos', $codigosJson, PDO::PARAM_STR);
+        $stmtExistentes->execute();
+
+        return [
+            'duplicados' => $stmtDuplicados->fetchAll(PDO::FETCH_ASSOC),
+            'existentes' => $stmtExistentes->fetchAll(PDO::FETCH_ASSOC),
+        ];
+    }
+
+    public function importarLote(array $productos): int
+    {
+        $sql = "
+            INSERT INTO productos
+            (
+                codigo,
+                nombre,
+                descripcion,
+                precio,
+                stock,
+                imagen,
+                publicado,
+                categoria_id
+            )
+            VALUES
+            (
+                :codigo,
+                :nombre,
+                :descripcion,
+                :precio,
+                :stock,
+                NULL,
+                0,
+                :categoria_id
+            )
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $importados = 0;
+
+        foreach ($productos as $producto) {
+            $stmt->execute([
+                ':codigo' => $producto['codigo'],
+                ':nombre' => $producto['nombre'],
+                ':descripcion' => $producto['descripcion'],
+                ':precio' => $producto['precio'],
+                ':stock' => $producto['stock'],
+                ':categoria_id' => $producto['categoria_id'],
+            ]);
+
+            $importados++;
+        }
+
+        return $importados;
+    }
+
     public function actualizar(int $id, array $datos): bool
     {
         $productoExistente = $this->obtenerPorId($id);
