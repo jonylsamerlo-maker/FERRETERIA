@@ -18,11 +18,14 @@ async function handleResponse(response) {
   }
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       data.mensaje ||
         data.message ||
         'Ocurrió un error al procesar el producto'
     );
+
+    error.status = response.status;
+    throw error;
   }
 
   return data;
