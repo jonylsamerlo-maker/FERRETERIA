@@ -15,9 +15,14 @@ function CartItem({
   onAumentar,
   onDisminuir,
   onEliminar,
+  sincronizando,
 }) {
   const sinStockDisponible =
-    producto.cantidad >= producto.stock;
+    producto.disponible === false ||
+    producto.stock <= 0 ||
+    producto.cantidad >= producto.stock ||
+    sincronizando;
+  const productoNoDisponible = producto.disponible === false;
 
   return (
     <article className="cart-item">
@@ -48,9 +53,27 @@ function CartItem({
             {formatearPrecio(producto.precio)}
           </p>
 
-          <p className="cart-item__stock">
-            Stock disponible: {producto.stock}
-          </p>
+          {productoNoDisponible ? (
+            <p className="cart-item__availability cart-item__availability--unavailable">
+              Producto no disponible
+            </p>
+          ) : producto.stock <= 0 ? (
+            <p className="cart-item__availability cart-item__availability--empty">
+              Sin stock
+            </p>
+          ) : (
+            <p className="cart-item__stock">
+              Stock disponible: {producto.stock}
+            </p>
+          )}
+
+          {producto.avisos?.length > 0 && (
+            <ul className="cart-item__notices" aria-label="Cambios en el producto">
+              {producto.avisos.map((aviso) => (
+                <li key={aviso}>{aviso}</li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div className="cart-item__controls">
@@ -63,6 +86,11 @@ function CartItem({
               className="cart-item__quantity-button"
               onClick={() =>
                 onDisminuir(producto.id)
+              }
+              disabled={
+                producto.stock <= 0 ||
+                producto.disponible === false ||
+                sincronizando
               }
               aria-label={`Disminuir cantidad de ${producto.nombre}`}
             >

@@ -6,9 +6,12 @@ import {
   calcularTotal,
   disminuirCantidad,
   eliminarDelCarrito,
+  guardarCarrito,
   obtenerCarrito,
+  reconciliarCarrito,
   vaciarCarrito,
 } from "../../services/cartStorage";
+import { getProductosPublicos } from "../../modules/productos/services/productoApi";
 import {
   abrirPedidoEnWhatsApp,
 } from "../../utils/whatsapp";
@@ -26,13 +29,59 @@ function formatearPrecio(valor) {
 function Cart() {
   const [carrito, setCarrito] = useState([]);
   const [mensaje, setMensaje] = useState("");
+  const [sincronizando, setSincronizando] = useState(true);
+  const [catalogoVerificado, setCatalogoVerificado] = useState(false);
 
   const actualizarCarrito = () => {
     setCarrito(obtenerCarrito());
   };
 
   useEffect(() => {
-    actualizarCarrito();
+    let efectoActivo = true;
+    const carritoLocal = obtenerCarrito();
+
+    setCarrito(carritoLocal);
+
+    const sincronizarCarrito = async () => {
+      try {
+        const respuesta = await getProductosPublicos();
+        const catalogo = Array.isArray(respuesta)
+          ? respuesta
+          : Array.isArray(respuesta?.data)
+            ? respuesta.data
+            : [];
+        const resultado = reconciliarCarrito(
+          obtenerCarrito(),
+          catalogo
+        );
+
+        if (!efectoActivo) {
+          return;
+        }
+
+        const carritoActual = resultado.huboCambios
+          ? guardarCarrito(resultado.carrito)
+          : resultado.carrito;
+
+        setCarrito(carritoActual);
+        setCatalogoVerificado(true);
+      } catch (error) {
+        if (!efectoActivo) {
+          return;
+        }
+
+        setMensaje(
+          error.message ||
+            "No se pudo verificar la disponibilidad del carrito."
+        );
+      } finally {
+        if (efectoActivo) {
+          setSincronizando(false);
+        }
+      }
+    };
+
+    sincronizarCarrito();
 
     const manejarActualizacion = () => {
       actualizarCarrito();
@@ -58,6 +107,8 @@ function Cart() {
     );
 
     return () => {
+      efectoActivo = false;
+
       window.removeEventListener(
         CART_UPDATED_EVENT,
         manejarActualizacion
@@ -110,6 +161,20 @@ function Cart() {
   };
 
   const handleWhatsApp = () => {
+    const tieneProductosNoDisponibles = carrito.some(
+      (producto) =>
+        producto.disponible === false || producto.stock <= 0
+    );
+
+    if (!catalogoVerificado || tieneProductosNoDisponibles) {
+      setMensaje(
+        !catalogoVerificado
+          ? "No se pudo verificar la disponibilidad del pedido."
+          : "Eliminá los productos sin stock o no disponibles antes de continuar."
+      );
+      return;
+    }
+
     const resultado =
       abrirPedidoEnWhatsApp(carrito);
 
@@ -117,6 +182,14 @@ function Cart() {
   };
 
   const total = calcularTotal(carrito);
+  const tieneProductosNoDisponibles = carrito.some(
+    (producto) =>
+      producto.disponible === false || producto.stock <= 0
+  );
+  const whatsappBloqueado =
+    sincronizando ||
+    !catalogoVerificado ||
+    tieneProductosNoDisponibles;
 
   if (carrito.length === 0) {
     return (
@@ -198,6 +271,7 @@ function Cart() {
               onAumentar={handleAumentar}
               onDisminuir={handleDisminuir}
               onEliminar={handleEliminar}
+              sincronizando={sincronizando}
             />
           ))}
         </div>
@@ -223,9 +297,18 @@ function Cart() {
             type="button"
             className="cart__whatsapp-button"
             onClick={handleWhatsApp}
+            disabled={whatsappBloqueado}
           >
-            Finalizar pedido por WhatsApp
+            {sincronizando
+              ? "Verificando disponibilidad..."
+              : "Finalizar pedido por WhatsApp"}
           </button>
+
+          {tieneProductosNoDisponibles && (
+            <p className="cart__availability-warning" role="alert">
+              Eliminá los productos sin stock o no disponibles para enviar el pedido.
+            </p>
+          )}
 
           <a className="cart__continue-link" href="/">
             Seguir comprando

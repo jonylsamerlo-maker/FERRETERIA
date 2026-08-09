@@ -26,6 +26,13 @@ function normalizarProducto(producto) {
     return null;
   }
 
+  const stock = Math.max(
+    0,
+    normalizarNumero(producto.stock)
+  );
+  const disponible = producto.disponible !== false;
+  const cantidadMinima = stock <= 0 || !disponible ? 0 : 1;
+
   return {
     id: String(id),
     nombre:
@@ -42,14 +49,17 @@ function normalizarProducto(producto) {
       producto.imagen ??
       producto.image ??
       "",
-    stock: Math.max(
-      0,
-      normalizarNumero(producto.stock)
-    ),
+    stock,
     cantidad: Math.max(
-      1,
+      cantidadMinima,
       Math.trunc(normalizarNumero(producto.cantidad, 1))
     ),
+    disponible,
+    avisos: Array.isArray(producto.avisos)
+      ? producto.avisos.filter(
+          (aviso) => typeof aviso === "string" && aviso.trim()
+        )
+      : [],
   };
 }
 
@@ -90,20 +100,7 @@ export function obtenerCarrito() {
       return [];
     }
 
-    return datos
-      .map(normalizarProducto)
-      .filter(Boolean)
-      .map((producto) => ({
-        ...producto,
-        cantidad:
-          producto.stock > 0
-            ? Math.min(
-                producto.cantidad,
-                producto.stock
-              )
-            : 0,
-      }))
-      .filter((producto) => producto.cantidad > 0);
+    return datos.map(normalizarProducto).filter(Boolean);
   } catch {
     try {
       window.localStorage.removeItem(CART_STORAGE_KEY);
@@ -120,16 +117,103 @@ function normalizarCarrito(carrito) {
     return [];
   }
 
-  return carrito
-    .map(normalizarProducto)
-    .filter(Boolean)
-    .map((producto) => ({
+  return carrito.map(normalizarProducto).filter(Boolean);
+}
+
+export function reconciliarCarrito(carrito, catalogoPublico) {
+  const carritoActual = normalizarCarrito(carrito);
+  const catalogo = Array.isArray(catalogoPublico)
+    ? catalogoPublico
+    : [];
+  const productosPublicos = new Map(
+    catalogo
+      .map((producto) => {
+        const id = producto?.producto_id ?? producto?.id;
+
+        return id === null || id === undefined || id === ""
+          ? null
+          : [String(id), producto];
+      })
+      .filter(Boolean)
+  );
+
+  let huboCambios = false;
+
+  const carritoReconciliado = carritoActual.map((producto) => {
+    const productoActual = productosPublicos.get(producto.id);
+
+    if (!productoActual) {
+      const avisos = ["Este producto ya no está disponible públicamente."];
+
+      if (
+        producto.disponible !== false ||
+        JSON.stringify(producto.avisos) !== JSON.stringify(avisos)
+      ) {
+        huboCambios = true;
+      }
+
+      return {
+        ...producto,
+        disponible: false,
+        avisos,
+      };
+    }
+
+    const stockActual = Math.max(
+      0,
+      normalizarNumero(productoActual.stock)
+    );
+    const precioActual = Math.max(
+      0,
+      normalizarNumero(productoActual.precio)
+    );
+    const avisos = [];
+    let cantidad = producto.cantidad;
+
+    if (stockActual < producto.stock) {
+      if (cantidad > stockActual) {
+        cantidad = stockActual;
+
+        if (stockActual <= 0) {
+          avisos.push("El producto se quedó sin stock.");
+        } else {
+          avisos.push(
+            `La cantidad se ajustó a ${stockActual} por un cambio de stock.`
+          );
+        }
+      } else {
+        avisos.push(`El stock disponible cambió a ${stockActual}.`);
+      }
+    }
+
+    if (precioActual !== producto.precio) {
+      avisos.push("El precio fue actualizado según el catálogo actual.");
+    }
+
+    if (
+      stockActual !== producto.stock ||
+      precioActual !== producto.precio ||
+      cantidad !== producto.cantidad ||
+      producto.disponible === false ||
+      JSON.stringify(producto.avisos) !== JSON.stringify(avisos)
+    ) {
+      huboCambios = true;
+    }
+
+    return {
       ...producto,
-      cantidad:
-        producto.stock > 0
-          ? Math.min(producto.cantidad, producto.stock)
-          : 0,
-      }));
+      stock: stockActual,
+      precio: precioActual,
+      cantidad,
+      disponible: true,
+      avisos,
+    };
+  });
+
+  return {
+    carrito: carritoReconciliado,
+    huboCambios,
+  };
 }
 
 export function notificarActualizacionCarrito() {
@@ -147,10 +231,7 @@ export function notificarActualizacionCarrito() {
 }
 
 export function guardarCarrito(carrito) {
-  const carritoNormalizado =
-    normalizarCarrito(carrito).filter(
-      (producto) => producto.cantidad > 0
-    );
+  const carritoNormalizado = normalizarCarrito(carrito);
 
   guardarCarritoSinNotificar(carritoNormalizado);
   notificarActualizacionCarrito();
@@ -252,7 +333,11 @@ export function aumentarCantidad(productoId) {
     return carrito;
   }
 
-  if (producto.cantidad >= producto.stock) {
+  if (
+    producto.disponible === false ||
+    producto.stock <= 0 ||
+    producto.cantidad >= producto.stock
+  ) {
     return carrito;
   }
 
