@@ -658,6 +658,16 @@
   cursor: not-allowed;
 }
 
+.dashboard__import-button:not(:disabled) {
+  background: #111827;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.dashboard__import-button:disabled {
+  opacity: 0.68;
+}
+
 .dashboard__import-filename,
 .dashboard__import-note {
   margin: 0;
@@ -732,6 +742,76 @@
   font-weight: 700;
   line-height: 1.35;
   white-space: normal;
+}
+
+.dashboard__modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(17, 24, 39, 0.72);
+}
+
+.dashboard__modal {
+  width: min(100%, 560px);
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.dashboard__modal h2 {
+  margin: 0.35rem 0 0.75rem;
+  font-size: 1.4rem;
+}
+
+.dashboard__modal p:not(.dashboard__section-kicker) {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.dashboard__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.dashboard__modal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.dashboard__modal-button--secondary {
+  border-color: var(--color-border);
+  background: var(--color-page-background);
+  color: var(--color-text-primary);
+}
+
+.dashboard__modal-button--primary {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.dashboard__modal-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 .dashboard__help {
@@ -879,6 +959,14 @@
     justify-self: start;
   }
 
+  .dashboard__modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .dashboard__modal-button {
+    width: 100%;
+  }
+
   .dashboard__table th,
   .dashboard__table td {
     white-space: nowrap;
@@ -891,7 +979,8 @@
   .dashboard__nav-button,
   .dashboard__primary-link,
   .dashboard__quick-action,
-  .dashboard__switch span {
+  .dashboard__switch span,
+  .dashboard__import-button {
     transition: none;
   }
 }

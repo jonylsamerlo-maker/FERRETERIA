@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -28,6 +28,7 @@ import {
   descargarProductosPdf,
 } from "../../../config/exportacionesApi";
 import { getCategorias } from "../../categorias/services/categoriaApi";
+import { importarProductos } from "../../productos/services/importacionProductosApi";
 import { getProductosAdmin } from "../../productos/services/productoApi";
 import "./Dashboard.css";
 
@@ -35,7 +36,7 @@ const UMBRAL_STOCK_BAJO = 5;
 const FEATURE_FLAGS_INICIALES = {
   exportar_excel: false,
   exportar_pdf: false,
-  importar_productos: true,
+  importar_productos: false,
 };
 const CABECERA_IMPORTACION_PRODUCTOS = [
   "codigo",
@@ -157,6 +158,33 @@ function formatearFechaActual() {
   }).format(new Date());
 }
 
+function formatearErrorBackendImportacion(error) {
+  const mensaje =
+    error instanceof Error
+      ? error.message
+      : "No se pudieron importar los productos.";
+  const errores = Array.isArray(error?.errores) ? error.errores : [];
+
+  if (errores.length === 0) {
+    return mensaje;
+  }
+
+  const detalles = errores.slice(0, 5).map((errorFila) => {
+    const fila = errorFila.fila ? `Fila ${errorFila.fila}` : "Lote";
+    const campo = errorFila.campo ? `, ${errorFila.campo}` : "";
+    const detalle = errorFila.mensaje || "Dato inválido";
+
+    return `${fila}${campo}: ${detalle}`;
+  });
+  const restantes = errores.length - detalles.length;
+
+  return [
+    mensaje,
+    ...detalles,
+    restantes > 0 ? `Y ${restantes} error(es) más.` : "",
+  ].filter(Boolean).join(" ");
+}
+
 export default function Dashboard() {
   const [usuario, setUsuario] = useState(null);
   const [seccionActiva, setSeccionActiva] = useState("inicio");
@@ -174,8 +202,16 @@ export default function Dashboard() {
   const [errorExportacion, setErrorExportacion] = useState("");
   const [archivoImportacion, setArchivoImportacion] = useState(null);
   const [procesandoImportacion, setProcesandoImportacion] = useState(false);
+  const [importandoProductos, setImportandoProductos] = useState(false);
+  const [confirmacionImportacionAbierta, setConfirmacionImportacionAbierta] =
+    useState(false);
+  const [mensajeImportacion, setMensajeImportacion] = useState("");
   const [errorImportacion, setErrorImportacion] = useState("");
   const [filasImportacion, setFilasImportacion] = useState([]);
+  const archivoImportacionRef = useRef(null);
+  const botonImportarRef = useRef(null);
+  const modalImportacionRef = useRef(null);
+  const botonConfirmarImportacionRef = useRef(null);
 
   useEffect(() => {
     const validarSesion = async () => {
@@ -227,7 +263,7 @@ export default function Dashboard() {
           setFeatureFlags({
             exportar_excel: Boolean(featureFlagsData?.exportar_excel),
             exportar_pdf: Boolean(featureFlagsData?.exportar_pdf),
-            importar_productos: featureFlagsData?.importar_productos !== false,
+            importar_productos: featureFlagsData?.importar_productos === true,
           });
         } catch (err) {
           setErrorDatos(
@@ -249,6 +285,67 @@ export default function Dashboard() {
 
     validarSesion();
   }, []);
+
+  const cerrarConfirmacionImportacion = () => {
+    if (importandoProductos) {
+      return;
+    }
+
+    setConfirmacionImportacionAbierta(false);
+    window.setTimeout(() => botonImportarRef.current?.focus(), 0);
+  };
+
+  useEffect(() => {
+    if (!confirmacionImportacionAbierta) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    botonConfirmarImportacionRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && !importandoProductos) {
+        cerrarConfirmacionImportacion();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const elementosEnfocables = modalImportacionRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const elementos = Array.from(elementosEnfocables ?? []).filter(
+        (elemento) => !elemento.disabled
+      );
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (event.shiftKey && document.activeElement === primerElemento) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (!event.shiftKey && document.activeElement === ultimoElemento) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [confirmacionImportacionAbierta, importandoProductos]);
 
   const handleLogout = async () => {
     try {
@@ -277,6 +374,16 @@ export default function Dashboard() {
     conflictos: filasImportacion.filter((fila) => fila.estado === "CONFLICTO").length,
   };
   const importacionDisponible = Boolean(featureFlags.importar_productos);
+  const puedeImportar =
+    esAdmin &&
+    importacionDisponible &&
+    Boolean(archivoImportacion) &&
+    filasImportacion.length > 0 &&
+    resumenImportacion.validos > 0 &&
+    resumenImportacion.errores === 0 &&
+    resumenImportacion.conflictos === 0 &&
+    !procesandoImportacion &&
+    !importandoProductos;
   const seccionesMenu = [
     {
       id: "inicio",
@@ -541,6 +648,7 @@ export default function Dashboard() {
     setArchivoImportacion(archivo ?? null);
     setFilasImportacion([]);
     setErrorImportacion("");
+    setMensajeImportacion("");
 
     if (!archivo) {
       setErrorImportacion("Seleccioná un archivo CSV.");
@@ -609,6 +717,77 @@ export default function Dashboard() {
 
   const handleSeleccionarArchivoImportacion = (event) => {
     procesarArchivoImportacion(event.target.files?.[0] ?? null);
+  };
+
+  const abrirConfirmacionImportacion = () => {
+    if (!puedeImportar) {
+      return;
+    }
+
+    setErrorImportacion("");
+    setMensajeImportacion("");
+    setConfirmacionImportacionAbierta(true);
+  };
+
+  const handleConfirmarImportacion = async () => {
+    if (!puedeImportar || importandoProductos) {
+      return;
+    }
+
+    const productosParaImportar = filasImportacion
+      .filter((fila) => fila.estado === "VÁLIDO")
+      .map((fila) => ({
+        codigo: fila.codigo,
+        nombre: fila.nombre,
+        descripcion: fila.descripcion,
+        precio: Number(fila.precio),
+        stock: Number(fila.stock),
+        categoria: fila.categoria,
+      }));
+
+    try {
+      setImportandoProductos(true);
+      setErrorImportacion("");
+      setMensajeImportacion("");
+
+      const respuesta = await importarProductos(productosParaImportar);
+      const cantidadImportada = Number(respuesta.importados);
+      const cantidadConfirmada = Number.isInteger(cantidadImportada)
+        ? cantidadImportada
+        : productosParaImportar.length;
+
+      setArchivoImportacion(null);
+      setFilasImportacion([]);
+      setConfirmacionImportacionAbierta(false);
+      setMensajeImportacion(
+        `Se importaron ${cantidadConfirmada} productos correctamente.`
+      );
+
+      if (archivoImportacionRef.current) {
+        archivoImportacionRef.current.value = "";
+      }
+
+      try {
+        const productosActualizados = await getProductosAdmin();
+        setProductos(
+          Array.isArray(productosActualizados) ? productosActualizados : []
+        );
+      } catch (err) {
+        setErrorDatos(
+          err instanceof Error
+            ? err.message
+            : "Los productos se importaron, pero no se pudo actualizar el panel."
+        );
+      }
+
+      window.setTimeout(() => archivoImportacionRef.current?.focus(), 0);
+    } catch (err) {
+      setErrorImportacion(formatearErrorBackendImportacion(err));
+      setConfirmacionImportacionAbierta(false);
+      window.setTimeout(() => botonImportarRef.current?.focus(), 0);
+    } finally {
+      setImportandoProductos(false);
+    }
   };
 
   const renderTarjetasResumen = () => (
@@ -860,17 +1039,27 @@ export default function Dashboard() {
             className="dashboard__file-input"
             type="file"
             accept=".csv,text/csv"
-            disabled={!importacionDisponible || cargandoDatos || procesandoImportacion}
+            ref={archivoImportacionRef}
+            disabled={
+              !importacionDisponible ||
+              cargandoDatos ||
+              procesandoImportacion ||
+              importandoProductos ||
+              confirmacionImportacionAbierta
+            }
             onChange={handleSeleccionarArchivoImportacion}
           />
 
           <button
             className="dashboard__import-button"
             type="button"
-            disabled
-            aria-disabled="true"
+            ref={botonImportarRef}
+            disabled={!puedeImportar}
+            aria-disabled={!puedeImportar}
+            onClick={abrirConfirmacionImportacion}
           >
-            Importar productos
+            <FileUp aria-hidden="true" size={18} />
+            {importandoProductos ? "Importando..." : "Importar productos"}
           </button>
         </div>
 
@@ -892,6 +1081,12 @@ export default function Dashboard() {
             role="alert"
           >
             {errorImportacion}
+          </p>
+        )}
+
+        {mensajeImportacion && (
+          <p className="dashboard__export-message" role="status">
+            {mensajeImportacion}
           </p>
         )}
 
@@ -1277,6 +1472,58 @@ export default function Dashboard() {
           </section>
         </section>
       </section>
+
+      {esAdmin && confirmacionImportacionAbierta && (
+        <div
+          className="dashboard__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarConfirmacionImportacion();
+            }
+          }}
+        >
+          <div
+            className="dashboard__modal"
+            ref={modalImportacionRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmar-importacion-title"
+            aria-describedby="confirmar-importacion-description"
+          >
+            <p className="dashboard__section-kicker">Confirmar importación</p>
+            <h2 id="confirmar-importacion-title">
+              Se importarán {resumenImportacion.validos} productos
+            </h2>
+            <p id="confirmar-importacion-description">
+              Los productos se crearán como No publicados y sin imagen. Luego
+              deberán revisarse, agregarles una imagen y publicarlos.
+            </p>
+
+            <div className="dashboard__modal-actions">
+              <button
+                className="dashboard__modal-button dashboard__modal-button--secondary"
+                type="button"
+                disabled={importandoProductos}
+                onClick={cerrarConfirmacionImportacion}
+              >
+                Cancelar
+              </button>
+              <button
+                className="dashboard__modal-button dashboard__modal-button--primary"
+                type="button"
+                ref={botonConfirmarImportacionRef}
+                disabled={importandoProductos}
+                onClick={handleConfirmarImportacion}
+              >
+                <FileUp aria-hidden="true" size={18} />
+                {importandoProductos
+                  ? "Importando..."
+                  : `Importar ${resumenImportacion.validos} productos`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
