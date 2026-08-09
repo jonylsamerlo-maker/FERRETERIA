@@ -28,6 +28,7 @@ const imagenRecomendada = {
   alto: 600,
   pesoMaximoMb: 2,
 };
+const UMBRAL_STOCK_BAJO = 5;
 
 function formatearPrecio(valor) {
   return new Intl.NumberFormat('es-AR', {
@@ -63,6 +64,10 @@ export default function Productos() {
   });
   const [productoAEliminar, setProductoAEliminar] = useState(null);
   const [busqueda, setBusqueda] = useState('');
+  const [filtroPublicacion, setFiltroPublicacion] = useState('todos');
+  const [filtroImagen, setFiltroImagen] = useState('todas');
+  const [filtroStock, setFiltroStock] = useState('todos');
+  const [filtroCategoria, setFiltroCategoria] = useState('');
   const botonAgregarRef = useRef(null);
   const disparadorModalRef = useRef(null);
   const modalRef = useRef(null);
@@ -745,10 +750,6 @@ export default function Productos() {
   const mensajesImagen = obtenerMensajesImagen();
   const busquedaNormalizada = normalizarTexto(busqueda);
   const productosFiltrados = useMemo(() => {
-    if (!busquedaNormalizada) {
-      return productos;
-    }
-
     return productos.filter((producto) => {
       const campos = [
         producto.codigo,
@@ -757,21 +758,71 @@ export default function Productos() {
         producto.categoria,
       ];
 
-      return campos.some((campo) =>
-        normalizarTexto(campo).includes(busquedaNormalizada)
+      const coincideBusqueda =
+        !busquedaNormalizada ||
+        campos.some((campo) =>
+          normalizarTexto(campo).includes(busquedaNormalizada)
+        );
+      const coincidePublicacion =
+        filtroPublicacion === 'todos' ||
+        (filtroPublicacion === 'publicados' &&
+          Number(producto.publicado) === 1) ||
+        (filtroPublicacion === 'no-publicados' &&
+          Number(producto.publicado) === 0);
+      const sinImagen =
+        producto.imagen == null ||
+        String(producto.imagen).trim() === '';
+      const coincideImagen =
+        filtroImagen === 'todas' ||
+        (filtroImagen === 'sin-imagen' && sinImagen);
+      const coincideStock =
+        filtroStock === 'todos' ||
+        (filtroStock === 'stock-bajo' &&
+          Number(producto.stock) < UMBRAL_STOCK_BAJO);
+      const coincideCategoria =
+        filtroCategoria === '' ||
+        Number(producto.categoria_id) === Number(filtroCategoria);
+
+      return (
+        coincideBusqueda &&
+        coincidePublicacion &&
+        coincideImagen &&
+        coincideStock &&
+        coincideCategoria
       );
     });
-  }, [productos, busquedaNormalizada]);
-  const textoResultados = busquedaNormalizada
-    ? `${productosFiltrados.length} ${
-        productosFiltrados.length === 1 ? 'resultado' : 'resultados'
-      }`
-    : `${productos.length} ${
+  }, [
+    productos,
+    busquedaNormalizada,
+    filtroPublicacion,
+    filtroImagen,
+    filtroStock,
+    filtroCategoria,
+  ]);
+  const hayCriteriosActivos =
+    busquedaNormalizada !== '' ||
+    filtroPublicacion !== 'todos' ||
+    filtroImagen !== 'todas' ||
+    filtroStock !== 'todos' ||
+    filtroCategoria !== '';
+  const textoResultados = !hayCriteriosActivos
+    ? `${productos.length} ${
         productos.length === 1 ? 'producto' : 'productos'
-      }`;
+      }`
+    : productosFiltrados.length === 0
+      ? 'No se encontraron productos'
+      : `${productosFiltrados.length} ${
+          productosFiltrados.length === 1
+            ? 'producto encontrado'
+            : 'productos encontrados'
+        }`;
 
   const handleLimpiarBusqueda = () => {
     setBusqueda('');
+    setFiltroPublicacion('todos');
+    setFiltroImagen('todas');
+    setFiltroStock('todos');
+    setFiltroCategoria('');
     window.setTimeout(() => {
       busquedaRef.current?.focus();
     }, 0);
@@ -1298,11 +1349,73 @@ export default function Productos() {
               className="productos__search-clear"
               type="button"
               onClick={handleLimpiarBusqueda}
-              disabled={!busqueda}
-              aria-label="Limpiar búsqueda de productos"
+              disabled={!hayCriteriosActivos}
+              aria-label="Limpiar búsqueda y filtros de productos"
             >
               Limpiar
             </button>
+          </div>
+
+          <div className="productos__filters">
+            <label className="productos__filter" htmlFor="filtro-publicacion">
+              <span className="productos__filter-label">Estado</span>
+              <select
+                id="filtro-publicacion"
+                className="productos__filter-select"
+                value={filtroPublicacion}
+                onChange={(event) => setFiltroPublicacion(event.target.value)}
+              >
+                <option value="todos">Todos</option>
+                <option value="publicados">Publicados</option>
+                <option value="no-publicados">No publicados</option>
+              </select>
+            </label>
+
+            <label className="productos__filter" htmlFor="filtro-imagen">
+              <span className="productos__filter-label">Imagen</span>
+              <select
+                id="filtro-imagen"
+                className="productos__filter-select"
+                value={filtroImagen}
+                onChange={(event) => setFiltroImagen(event.target.value)}
+              >
+                <option value="todas">Todas</option>
+                <option value="sin-imagen">Sin imagen</option>
+              </select>
+            </label>
+
+            <label className="productos__filter" htmlFor="filtro-stock">
+              <span className="productos__filter-label">Stock</span>
+              <select
+                id="filtro-stock"
+                className="productos__filter-select"
+                value={filtroStock}
+                onChange={(event) => setFiltroStock(event.target.value)}
+              >
+                <option value="todos">Todos</option>
+                <option value="stock-bajo">Stock bajo</option>
+              </select>
+            </label>
+
+            <label className="productos__filter" htmlFor="filtro-categoria">
+              <span className="productos__filter-label">Categoría</span>
+              <select
+                id="filtro-categoria"
+                className="productos__filter-select"
+                value={filtroCategoria}
+                onChange={(event) => setFiltroCategoria(event.target.value)}
+              >
+                <option value="">Todas las categorías</option>
+                {categorias.map((categoria) => (
+                  <option
+                    key={categoria.categoria_id}
+                    value={categoria.categoria_id}
+                  >
+                    {categoria.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           {!cargando && productos.length > 0 && (
@@ -1326,7 +1439,7 @@ export default function Productos() {
           </p>
         ) : productosFiltrados.length === 0 ? (
           <p className="productos__empty">
-            No se encontraron productos para esta búsqueda.
+            No se encontraron productos con los criterios seleccionados.
           </p>
         ) : (
           <div className="productos__table-wrap">
