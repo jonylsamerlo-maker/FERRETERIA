@@ -76,11 +76,20 @@ function FeaturedProducts() {
       );
     });
   }, [productosGenerales, busquedaNormalizada]);
-  const textoResultados = `${productosFiltrados.length} ${
-    productosFiltrados.length === 1
-      ? "producto encontrado"
-      : "productos encontrados"
-  }`;
+  const hayBusqueda = busqueda.trim() !== "";
+  const textoResultados = !hayBusqueda
+    ? `${productosFiltrados.length} ${
+        productosFiltrados.length === 1
+          ? "producto disponible"
+          : "productos disponibles"
+      }`
+    : productosFiltrados.length === 0
+      ? "No se encontraron productos"
+      : `${productosFiltrados.length} ${
+          productosFiltrados.length === 1
+            ? "producto encontrado"
+            : "productos encontrados"
+        }`;
 
   const moverCarousel = (direction) => {
     if (!carouselRef.current) {
