@@ -57,12 +57,23 @@ export default function Productos() {
   const [autorizado, setAutorizado] = useState(false);
   const [esAdmin, setEsAdmin] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalErrorPublicacion, setModalErrorPublicacion] = useState({
+    abierto: false,
+    mensaje: '',
+  });
+  const [productoAEliminar, setProductoAEliminar] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const botonAgregarRef = useRef(null);
   const disparadorModalRef = useRef(null);
   const modalRef = useRef(null);
   const primerCampoRef = useRef(null);
   const busquedaRef = useRef(null);
+  const modalErrorPublicacionRef = useRef(null);
+  const botonEntendidoRef = useRef(null);
+  const disparadorErrorPublicacionRef = useRef(null);
+  const modalEliminacionRef = useRef(null);
+  const botonCancelarEliminacionRef = useRef(null);
+  const disparadorEliminacionRef = useRef(null);
 
   const cargarDatos = async () => {
     try {
@@ -245,6 +256,145 @@ export default function Productos() {
     };
   }, [modalAbierto]);
 
+  const cerrarModalErrorPublicacion = () => {
+    setModalErrorPublicacion({
+      abierto: false,
+      mensaje: '',
+    });
+    window.setTimeout(() => {
+      disparadorErrorPublicacionRef.current?.focus();
+    }, 0);
+  };
+
+  useEffect(() => {
+    if (!modalErrorPublicacion.abierto) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    botonEntendidoRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        cerrarModalErrorPublicacion();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables =
+        modalErrorPublicacionRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === primerElemento
+      ) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === ultimoElemento
+      ) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [modalErrorPublicacion.abierto]);
+
+  const cerrarModalEliminacion = () => {
+    if (eliminandoId !== null) {
+      return;
+    }
+
+    setProductoAEliminar(null);
+    window.setTimeout(() => {
+      disparadorEliminacionRef.current?.focus();
+    }, 0);
+  };
+
+  useEffect(() => {
+    if (!productoAEliminar) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    botonCancelarEliminacionRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && eliminandoId === null) {
+        cerrarModalEliminacion();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables =
+        modalEliminacionRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (
+        event.shiftKey &&
+        document.activeElement === primerElemento
+      ) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === ultimoElemento
+      ) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [productoAEliminar, eliminandoId]);
+
   const handleChange = (event) => {
     const { name, value, files } = event.target;
 
@@ -416,18 +566,24 @@ export default function Productos() {
     cerrarModal();
   };
 
-  const handleEliminar = async (producto) => {
+  const handleSolicitarEliminar = (producto, event) => {
     if (!esAdmin) {
       return;
     }
 
-    const confirmar = window.confirm(
-      `¿Seguro que querés eliminar el producto "${producto.nombre}"?`
-    );
+    disparadorEliminacionRef.current =
+      event?.currentTarget ?? null;
+    setMensaje('');
+    setError('');
+    setProductoAEliminar(producto);
+  };
 
-    if (!confirmar) {
+  const handleEliminar = async () => {
+    if (!esAdmin || !productoAEliminar || eliminandoId !== null) {
       return;
     }
+
+    const producto = productoAEliminar;
 
     try {
       setEliminandoId(producto.producto_id);
@@ -443,6 +599,7 @@ export default function Productos() {
       }
 
       setMensaje('Producto eliminado correctamente.');
+      setProductoAEliminar(null);
       await cargarDatos();
     } catch (err) {
       setError(
@@ -450,18 +607,27 @@ export default function Productos() {
           ? err.message
           : 'No se pudo eliminar el producto'
       );
+      setProductoAEliminar(null);
+      window.setTimeout(() => {
+        disparadorEliminacionRef.current?.focus();
+      }, 0);
     } finally {
       setEliminandoId(null);
     }
   };
 
-  const handleCambiarPublicacion = async (producto) => {
+  const handleCambiarPublicacion = async (producto, event) => {
     if (!esAdmin || actualizandoPublicadoId !== null) {
       return;
     }
 
     const nuevoEstado =
       Number(producto.publicado) === 1 ? 0 : 1;
+
+    if (nuevoEstado === 1) {
+      disparadorErrorPublicacionRef.current =
+        event?.currentTarget ?? null;
+    }
 
     try {
       setActualizandoPublicadoId(producto.producto_id);
@@ -495,11 +661,23 @@ export default function Productos() {
           : 'Producto ocultado correctamente.'
       );
     } catch (err) {
-      setError(
+      const mensajeError =
         err instanceof Error
           ? err.message
-          : 'No se pudo cambiar la publicación del producto'
-      );
+          : 'No se pudo cambiar la publicación del producto';
+
+      if (
+        nuevoEstado === 1 &&
+        Number(err?.status) === 422
+      ) {
+        setError('');
+        setModalErrorPublicacion({
+          abierto: true,
+          mensaje: mensajeError,
+        });
+      } else {
+        setError(mensajeError);
+      }
     } finally {
       setActualizandoPublicadoId(null);
     }
@@ -652,6 +830,128 @@ export default function Productos() {
         >
           {mensaje}
         </p>
+      )}
+
+      {esAdmin && modalErrorPublicacion.abierto && (
+        <div
+          className="productos__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModalErrorPublicacion();
+            }
+          }}
+        >
+          <div
+            className="productos__modal productos__modal--publication-error"
+            ref={modalErrorPublicacionRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productos-publication-error-title"
+            aria-describedby="productos-publication-error-message"
+          >
+            <div className="productos__modal-header">
+              <h2
+                className="productos__modal-title"
+                id="productos-publication-error-title"
+              >
+                No se puede publicar
+              </h2>
+
+              <button
+                className="productos__modal-close"
+                type="button"
+                aria-label="Cerrar"
+                onClick={cerrarModalErrorPublicacion}
+              >
+                ×
+              </button>
+            </div>
+
+            <p
+              className="productos__publication-error-message"
+              id="productos-publication-error-message"
+            >
+              {modalErrorPublicacion.mensaje}
+            </p>
+
+            <div className="productos__publication-error-actions">
+              <button
+                className="productos__button"
+                type="button"
+                ref={botonEntendidoRef}
+                onClick={cerrarModalErrorPublicacion}
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {esAdmin && productoAEliminar && (
+        <div
+          className="productos__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModalEliminacion();
+            }
+          }}
+        >
+          <div
+            className="productos__modal productos__modal--publication-error"
+            ref={modalEliminacionRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productos-delete-title"
+            aria-describedby="productos-delete-message"
+          >
+            <div className="productos__modal-header">
+              <h2
+                className="productos__modal-title"
+                id="productos-delete-title"
+              >
+                Eliminar producto
+              </h2>
+
+              <button
+                className="productos__modal-close"
+                type="button"
+                aria-label="Cerrar"
+                disabled={eliminandoId !== null}
+                onClick={cerrarModalEliminacion}
+              >
+                ×
+              </button>
+            </div>
+
+            <p
+              className="productos__publication-error-message"
+              id="productos-delete-message"
+            >
+              ¿Seguro que querés eliminar "{productoAEliminar.nombre}"?
+            </p>
+
+            <div className="productos__delete-actions">
+              <button
+                className="productos__button productos__button--secondary"
+                type="button"
+                ref={botonCancelarEliminacionRef}
+                disabled={eliminandoId !== null}
+                onClick={cerrarModalEliminacion}
+              >
+                Cancelar
+              </button>
+              <button
+                className="productos__action-button productos__action-button--danger"
+                type="button"
+                disabled={eliminandoId !== null}
+                onClick={handleEliminar}
+              >
+                {eliminandoId !== null ? 'Eliminando...' : 'Eliminar'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {esAdmin && modalAbierto && (
@@ -1088,8 +1388,8 @@ export default function Productos() {
                                 : 'productos__action-button--publish'
                             }`}
                             type="button"
-                            onClick={() =>
-                              handleCambiarPublicacion(producto)
+                            onClick={(event) =>
+                              handleCambiarPublicacion(producto, event)
                             }
                             disabled={
                               actualizandoPublicadoId !== null ||
@@ -1123,8 +1423,8 @@ export default function Productos() {
                           <button
                             className="productos__action-button productos__action-button--danger"
                             type="button"
-                            onClick={() =>
-                              handleEliminar(producto)
+                            onClick={(event) =>
+                              handleSolicitarEliminar(producto, event)
                             }
                             disabled={
                               actualizandoPublicadoId !== null ||
