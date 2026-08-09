@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { API_BASE_URL } from "../../config/appConfig";
-import { getProductos } from "../../modules/productos/services/productoApi";
+import { getProductosPublicos } from "../../modules/productos/services/productoApi";
 import "./Carousel.css";
 
 function obtenerProductos(data) {
@@ -59,7 +59,7 @@ function Carousel() {
         setLoading(true);
         setError("");
 
-        const data = await getProductos();
+        const data = await getProductosPublicos();
         const productos = obtenerProductos(data);
 
         const ofertas = productos.filter(

@@ -4,9 +4,10 @@ import { getCategorias } from '../../categorias/services/categoriaApi';
 import { obtenerSesionUsuario } from '../../auth/services/usuarioApi';
 import {
   actualizarProducto,
+  actualizarPublicado,
   crearProducto,
   eliminarProducto,
-  getProductos,
+  getProductosAdmin,
   subirImagen,
 } from '../services/productoApi';
 import './Productos.css';
@@ -50,6 +51,8 @@ export default function Productos() {
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
   const [eliminandoId, setEliminandoId] = useState(null);
+  const [actualizandoPublicadoId, setActualizandoPublicadoId] =
+    useState(null);
   const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
   const [esAdmin, setEsAdmin] = useState(false);
@@ -67,7 +70,7 @@ export default function Productos() {
       setError('');
 
       const [productosData, categoriasData] = await Promise.all([
-        getProductos(),
+        getProductosAdmin(),
         getCategorias(),
       ]);
 
@@ -308,13 +311,6 @@ export default function Productos() {
       return 'Seleccioná una categoría.';
     }
 
-    if (
-      productoEditandoId === null &&
-      !formulario.imagen
-    ) {
-      return 'Seleccioná una imagen.';
-    }
-
     return '';
   };
 
@@ -348,12 +344,6 @@ export default function Productos() {
         rutaImagen = imagenSubida.ruta;
       }
 
-      if (!rutaImagen) {
-        throw new Error(
-          'No se pudo obtener la ruta de la imagen'
-        );
-      }
-
       const datosProducto = {
         codigo: formulario.codigo.trim(),
         nombre: formulario.nombre.trim(),
@@ -362,7 +352,7 @@ export default function Productos() {
         precio: Number(formulario.precio),
         stock: Number(formulario.stock),
         categoria_id: Number(formulario.categoria_id),
-        imagen: rutaImagen,
+        imagen: rutaImagen || null,
       };
 
       if (productoEditandoId !== null) {
@@ -462,6 +452,56 @@ export default function Productos() {
       );
     } finally {
       setEliminandoId(null);
+    }
+  };
+
+  const handleCambiarPublicacion = async (producto) => {
+    if (!esAdmin || actualizandoPublicadoId !== null) {
+      return;
+    }
+
+    const nuevoEstado =
+      Number(producto.publicado) === 1 ? 0 : 1;
+
+    try {
+      setActualizandoPublicadoId(producto.producto_id);
+      setMensaje('');
+      setError('');
+
+      const respuesta = await actualizarPublicado(
+        producto.producto_id,
+        nuevoEstado
+      );
+      const estadoConfirmado =
+        respuesta?.publicado === undefined
+          ? nuevoEstado
+          : Number(respuesta.publicado) === 1
+            ? 1
+            : 0;
+
+      setProductos((productosActuales) =>
+        productosActuales.map((productoActual) =>
+          productoActual.producto_id === producto.producto_id
+            ? {
+                ...productoActual,
+                publicado: estadoConfirmado,
+              }
+            : productoActual
+        )
+      );
+      setMensaje(
+        estadoConfirmado === 1
+          ? 'Producto publicado correctamente.'
+          : 'Producto ocultado correctamente.'
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo cambiar la publicación del producto'
+      );
+    } finally {
+      setActualizandoPublicadoId(null);
     }
   };
 
@@ -999,6 +1039,7 @@ export default function Productos() {
                   <th>Precio</th>
                   <th>Stock</th>
                   <th>Categoría</th>
+                  <th>Estado</th>
                   {esAdmin && <th>Acciones</th>}
                 </tr>
               </thead>
@@ -1023,10 +1064,48 @@ export default function Productos() {
                     <td>{formatearPrecio(producto.precio)}</td>
                     <td>{producto.stock}</td>
                     <td>{producto.categoria}</td>
+                    <td>
+                      <span
+                        className={`productos__publication-state ${
+                          Number(producto.publicado) === 1
+                            ? 'productos__publication-state--published'
+                            : 'productos__publication-state--draft'
+                        }`}
+                      >
+                        {Number(producto.publicado) === 1
+                          ? 'Publicado'
+                          : 'No publicado'}
+                      </span>
+                    </td>
 
                     {esAdmin && (
                       <td>
                         <div className="productos__row-actions">
+                          <button
+                            className={`productos__action-button ${
+                              Number(producto.publicado) === 1
+                                ? 'productos__action-button--hide'
+                                : 'productos__action-button--publish'
+                            }`}
+                            type="button"
+                            onClick={() =>
+                              handleCambiarPublicacion(producto)
+                            }
+                            disabled={
+                              actualizandoPublicadoId !== null ||
+                              eliminandoId === producto.producto_id
+                            }
+                          >
+                            {actualizandoPublicadoId ===
+                            producto.producto_id
+                              ? Number(producto.publicado) === 1
+                                ? 'Ocultando...'
+                                : 'Publicando...'
+                              : Number(producto.publicado) === 1
+                                ? 'Ocultar'
+                                : 'Publicar'}
+                          </button>
+
                           <button
                             className="productos__action-button"
                             type="button"
@@ -1034,8 +1113,8 @@ export default function Productos() {
                               handleEditar(producto, event)
                             }
                             disabled={
-                              eliminandoId ===
-                              producto.producto_id
+                              actualizandoPublicadoId !== null ||
+                              eliminandoId === producto.producto_id
                             }
                           >
                             Editar
@@ -1048,8 +1127,8 @@ export default function Productos() {
                               handleEliminar(producto)
                             }
                             disabled={
-                              eliminandoId ===
-                              producto.producto_id
+                              actualizandoPublicadoId !== null ||
+                              eliminandoId === producto.producto_id
                             }
                           >
                             {eliminandoId ===

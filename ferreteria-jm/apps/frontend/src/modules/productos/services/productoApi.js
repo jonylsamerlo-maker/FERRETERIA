@@ -19,7 +19,9 @@ async function handleResponse(response) {
 
   if (!response.ok) {
     throw new Error(
-      data.mensaje || 'Ocurrió un error al procesar el producto'
+      data.mensaje ||
+        data.message ||
+        'Ocurrió un error al procesar el producto'
     );
   }
 
@@ -28,6 +30,24 @@ async function handleResponse(response) {
 
 export async function getProductos() {
   const response = await fetch(API_URL, {
+    cache: 'no-store',
+    credentials: 'include',
+  });
+
+  return handleResponse(response);
+}
+
+export async function getProductosPublicos() {
+  const response = await fetch(`${API_URL}?scope=public`, {
+    cache: 'no-store',
+    credentials: 'include',
+  });
+
+  return handleResponse(response);
+}
+
+export async function getProductosAdmin() {
+  const response = await fetch(`${API_URL}?scope=admin`, {
     cache: 'no-store',
     credentials: 'include',
   });
@@ -84,6 +104,22 @@ export async function actualizarProducto(id, datos) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(datos),
+    }
+  );
+
+  return handleResponse(response);
+}
+
+export async function actualizarPublicado(id, publicado) {
+  const response = await fetch(
+    `${API_URL}?id=${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ publicado }),
     }
   );
 

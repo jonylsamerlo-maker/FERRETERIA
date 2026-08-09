@@ -197,6 +197,16 @@ textarea.productos__input {
   color: var(--color-text-primary);
 }
 
+.productos__action-button--publish {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.productos__action-button--hide {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
 .productos__action-button--danger {
   background: #dc2626;
   color: #ffffff;
@@ -432,6 +442,42 @@ textarea.productos__input {
   height: 64px;
   object-fit: cover;
   border-radius: 0.4rem;
+}
+
+.productos__publication-state {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.productos__publication-state--published {
+  border-color: #86efac;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.productos__publication-state--draft {
+  border-color: #fcd34d;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+html[data-theme='dark'] .productos__publication-state--published {
+  border-color: #22c55e;
+  background: #14532d;
+  color: #dcfce7;
+}
+
+html[data-theme='dark'] .productos__publication-state--draft {
+  border-color: #d97706;
+  background: #78350f;
+  color: #fef3c7;
 }
 
 .productos__row-actions {

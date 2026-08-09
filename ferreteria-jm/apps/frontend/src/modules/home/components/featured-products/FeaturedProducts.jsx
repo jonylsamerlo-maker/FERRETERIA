@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { API_BASE_URL } from "../../../../config/appConfig";
 import { agregarAlCarrito } from "../../../../services/cartStorage";
-import { getProductos } from "../../../productos/services/productoApi";
+import { getProductosPublicos } from "../../../productos/services/productoApi";
 import ChatBot from "../../../chatbot/components/ChatBot.jsx";
 import "./FeaturedProducts.css";
 import ProductCard from "../product-card/ProductCard.index";
@@ -120,7 +120,7 @@ function FeaturedProducts() {
         setLoading(true);
         setError("");
 
-        const data = await getProductos();
+        const data = await getProductosPublicos();
 
         setProducts(obtenerProductos(data));
       } catch (err) {
