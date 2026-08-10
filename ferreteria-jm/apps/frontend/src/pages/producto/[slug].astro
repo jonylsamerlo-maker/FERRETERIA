@@ -44,6 +44,70 @@ function resolverImagenPublica(imagen) {
   return `${API_BASE_URL.replace(/\/+$/, "")}/${ruta.replace(/^\/+/, "")}`;
 }
 
+function obtenerOrigenPublico(valor) {
+  if (typeof valor !== "string" || valor.trim() === "") {
+    return null;
+  }
+
+  try {
+    const url = new URL(valor.trim());
+
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.username ||
+      url.password
+    ) {
+      return null;
+    }
+
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+function obtenerUrlSeoImagen(valor) {
+  if (!valor) {
+    return null;
+  }
+
+  try {
+    const url = new URL(valor);
+
+    if (
+      !["http:", "https:"].includes(url.protocol) ||
+      url.hostname.toLowerCase() === "backend"
+    ) {
+      return null;
+    }
+
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function crearMetaDescription(productoActual) {
+  const descripcion =
+    typeof productoActual.descripcion === "string"
+      ? productoActual.descripcion.trim().replace(/\s+/g, " ")
+      : "";
+  const base = descripcion ||
+    `Comprá ${productoActual.nombre} en Ferretería JM. Consultá precio, disponibilidad y características.`;
+
+  if (base.length <= 160) {
+    return base;
+  }
+
+  const recorte = base.slice(0, 157);
+  const ultimoEspacio = recorte.lastIndexOf(" ");
+  const final = ultimoEspacio >= 100
+    ? recorte.slice(0, ultimoEspacio)
+    : recorte;
+
+  return `${final.replace(/[\s,.;:!?-]+$/, "")}...`;
+}
+
 function formatearPrecio(valor) {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -82,9 +146,51 @@ const imagenPublica = producto
 const estadoStock = producto
   ? obtenerEstadoStock(producto.stock)
   : null;
+const descripcionSeo = producto
+  ? crearMetaDescription(producto)
+  : null;
+const origenPublico = obtenerOrigenPublico(import.meta.env.SITE_URL);
+const canonical = producto && origenPublico
+  ? new URL(`/producto/${encodeURIComponent(producto.slug)}`, origenPublico).href
+  : null;
+const imagenSeo = producto
+  ? obtenerUrlSeoImagen(imagenPublica)
+  : null;
+const precioSeo = producto ? Number(producto.precio) : Number.NaN;
+const jsonLd = producto && Number.isFinite(precioSeo)
+  ? {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: producto.nombre,
+      description: descripcionSeo,
+      sku: producto.codigo,
+      ...(producto.categoria ? { category: producto.categoria } : {}),
+      ...(imagenSeo ? { image: imagenSeo } : {}),
+      ...(canonical ? { url: canonical } : {}),
+      offers: {
+        "@type": "Offer",
+        price: precioSeo,
+        priceCurrency: "ARS",
+        availability: estadoStock.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+        ...(canonical ? { url: canonical } : {}),
+      },
+    }
+  : null;
 ---
 
-<MainLayout title={titulo}>
+<MainLayout
+  title={titulo}
+  description={descripcionSeo}
+  canonical={canonical}
+  ogTitle={producto ? titulo : null}
+  ogDescription={descripcionSeo}
+  ogImage={imagenSeo}
+  ogUrl={canonical}
+  ogType={producto ? "product" : null}
+  jsonLd={jsonLd}
+>
   <main class="producto-detalle">
     {
       producto ? (
