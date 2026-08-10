@@ -163,6 +163,41 @@ class Producto
             : null;
     }
 
+    public function obtenerPorSlug(string $slug): ?array
+    {
+        $sql = "
+            SELECT
+                p.producto_id,
+                p.codigo,
+                p.nombre,
+                p.slug,
+                p.descripcion,
+                p.precio,
+                p.stock,
+                p.imagen,
+                p.publicado,
+                p.categoria_id,
+                c.nombre AS categoria,
+                p.fecha_creacion
+            FROM productos p
+            INNER JOIN categorias c
+                ON p.categoria_id = c.categoria_id
+            WHERE p.slug = :slug
+                AND p.publicado = 1
+            LIMIT 1
+        ";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bindValue(':slug', $slug, PDO::PARAM_STR);
+        $stmt->execute();
+
+        $producto = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $producto
+            ? $this->normalizarProducto($producto)
+            : null;
+    }
+
     public function crear(array $datos): bool
     {
         $iniciarTransaccion = !$this->conn->inTransaction();

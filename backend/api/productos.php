@@ -51,6 +51,32 @@ function validarId(mixed $id): int
 }
 
 /**
+ * Valida el formato público de un slug persistente.
+ */
+function validarSlug(mixed $slug): string
+{
+    if (!is_string($slug)) {
+        responderJson([
+            'mensaje' => 'El slug del producto no es válido'
+        ], 400);
+    }
+
+    $slugNormalizado = trim($slug);
+
+    if (
+        $slugNormalizado === '' ||
+        strlen($slugNormalizado) > 191 ||
+        preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/D', $slugNormalizado) !== 1
+    ) {
+        responderJson([
+            'mensaje' => 'El slug del producto no es válido'
+        ], 400);
+    }
+
+    return $slugNormalizado;
+}
+
+/**
  * Obtiene y valida el JSON enviado por el frontend.
  */
 function obtenerDatosJson(): array
@@ -189,6 +215,21 @@ try {
 
     switch ($metodo) {
         case 'GET':
+            $slug = $_GET['slug'] ?? null;
+
+            if ($slug !== null) {
+                $slugProducto = validarSlug($slug);
+                $productoEncontrado = $producto->obtenerPorSlug($slugProducto);
+
+                if ($productoEncontrado === null) {
+                    responderJson([
+                        'mensaje' => 'Producto no encontrado'
+                    ], 404);
+                }
+
+                responderJson($productoEncontrado);
+            }
+
             $scope = $_GET['scope'] ?? null;
 
             if (
