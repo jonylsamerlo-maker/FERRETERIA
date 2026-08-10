@@ -167,6 +167,14 @@ export function reconciliarCarrito(carrito, catalogoPublico) {
       0,
       normalizarNumero(productoActual.precio)
     );
+    const nombreActual =
+      productoActual.nombre ??
+      productoActual.title ??
+      producto.nombre;
+    const imagenActual =
+      productoActual.imagen ??
+      productoActual.image ??
+      producto.imagen;
     const avisos = [];
     let cantidad = producto.cantidad;
 
@@ -193,6 +201,8 @@ export function reconciliarCarrito(carrito, catalogoPublico) {
     if (
       stockActual !== producto.stock ||
       precioActual !== producto.precio ||
+      nombreActual !== producto.nombre ||
+      imagenActual !== producto.imagen ||
       cantidad !== producto.cantidad ||
       producto.disponible === false ||
       JSON.stringify(producto.avisos) !== JSON.stringify(avisos)
@@ -202,6 +212,8 @@ export function reconciliarCarrito(carrito, catalogoPublico) {
 
     return {
       ...producto,
+      nombre: nombreActual,
+      imagen: imagenActual,
       stock: stockActual,
       precio: precioActual,
       cantidad,
