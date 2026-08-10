@@ -1,0 +1,172 @@
+---
+export const prerender = false;
+
+import MainLayout from "../../layouts/MainLayout.astro";
+import AgregarProductoCarrito from "../../modules/producto/components/AgregarProductoCarrito.jsx";
+import "../../modules/producto/styles/ProductoDetalle.css";
+import { API_BASE_URL } from "../../config/appConfig";
+import {
+  esSlugProductoValido,
+  obtenerProductoPublicoPorSlug,
+} from "../../services/productoPublicoServer";
+
+const slug = Astro.params.slug;
+let producto = null;
+let errorServidor = false;
+
+if (!esSlugProductoValido(slug)) {
+  Astro.response.status = 404;
+} else {
+  try {
+    producto = await obtenerProductoPublicoPorSlug(slug);
+
+    if (!producto) {
+      Astro.response.status = 404;
+    }
+  } catch (error) {
+    console.error("No se pudo renderizar la ficha del producto.", error);
+    errorServidor = true;
+    Astro.response.status = 500;
+  }
+}
+
+function resolverImagenPublica(imagen) {
+  if (typeof imagen !== "string" || imagen.trim() === "") {
+    return null;
+  }
+
+  const ruta = imagen.trim();
+
+  if (/^https?:\/\//i.test(ruta)) {
+    return ruta;
+  }
+
+  return `${API_BASE_URL.replace(/\/+$/, "")}/${ruta.replace(/^\/+/, "")}`;
+}
+
+function formatearPrecio(valor) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 2,
+  }).format(Number(valor) || 0);
+}
+
+function obtenerEstadoStock(valor) {
+  const numero = Number(valor);
+  const stock = Number.isFinite(numero) ? Math.max(0, numero) : 0;
+
+  if (stock <= 0) {
+    return { stock, texto: "Sin stock", tipo: "empty" };
+  }
+
+  if (stock === 1) {
+    return { stock, texto: "Última unidad", tipo: "low" };
+  }
+
+  if (stock < 5) {
+    return { stock, texto: `Últimas ${stock} unidades`, tipo: "low" };
+  }
+
+  return { stock, texto: "Disponible", tipo: "available" };
+}
+
+const titulo = producto
+  ? `${producto.nombre} | Ferretería JM`
+  : errorServidor
+    ? "Error del servidor | Ferretería JM"
+    : "Producto no disponible | Ferretería JM";
+const imagenPublica = producto
+  ? resolverImagenPublica(producto.imagen)
+  : null;
+const estadoStock = producto
+  ? obtenerEstadoStock(producto.stock)
+  : null;
+---
+
+<MainLayout title={titulo}>
+  <main class="producto-detalle">
+    {
+      producto ? (
+        <>
+          <a class="producto-detalle__volver" href="/">
+            Volver al inicio
+          </a>
+
+          <article class="producto-detalle__contenido">
+            <div class="producto-detalle__media">
+              {imagenPublica ? (
+                <img
+                  class="producto-detalle__imagen"
+                  src={imagenPublica}
+                  alt={producto.nombre}
+                />
+              ) : (
+                <div
+                  class="producto-detalle__imagen-fallback"
+                  role="img"
+                  aria-label={`Imagen no disponible para ${producto.nombre}`}
+                >
+                  Imagen no disponible
+                </div>
+              )}
+            </div>
+
+            <div class="producto-detalle__informacion">
+              <p class="producto-detalle__categoria">
+                {producto.categoria}
+              </p>
+
+              <h1 class="producto-detalle__titulo">
+                {producto.nombre}
+              </h1>
+
+              <p class="producto-detalle__codigo">
+                Código: <strong>{producto.codigo}</strong>
+              </p>
+
+              <p class="producto-detalle__descripcion">
+                {producto.descripcion || "Sin descripción disponible."}
+              </p>
+
+              <div class="producto-detalle__datos">
+                <p class="producto-detalle__precio">
+                  {formatearPrecio(producto.precio)}
+                </p>
+
+                <p
+                  class={`producto-detalle__stock producto-detalle__stock--${estadoStock.tipo}`}
+                >
+                  {estadoStock.texto}
+                </p>
+              </div>
+
+              <AgregarProductoCarrito
+                client:load
+                producto={{
+                  id: producto.producto_id,
+                  nombre: producto.nombre,
+                  precio: producto.precio,
+                  imagen: imagenPublica || "",
+                  stock: estadoStock.stock,
+                }}
+              />
+            </div>
+          </article>
+        </>
+      ) : errorServidor ? (
+        <section class="producto-detalle__estado" aria-labelledby="error-title">
+          <h1 id="error-title">No pudimos cargar el producto</h1>
+          <p>Ocurrió un problema temporal. Intentá nuevamente más tarde.</p>
+          <a href="/">Volver al inicio</a>
+        </section>
+      ) : (
+        <section class="producto-detalle__estado" aria-labelledby="not-found-title">
+          <h1 id="not-found-title">Producto no disponible</h1>
+          <p>El producto que buscás no existe o ya no está disponible.</p>
+          <a href="/">Volver al inicio</a>
+        </section>
+      )
+    }
+  </main>
+</MainLayout>
