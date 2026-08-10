@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS productos (
     producto_id INT NOT NULL AUTO_INCREMENT,
     codigo VARCHAR(30) NOT NULL,
     nombre VARCHAR(150) NOT NULL,
+    slug VARCHAR(191) NOT NULL,
     descripcion TEXT,
     precio DECIMAL(10,2) NOT NULL,
     stock INT NOT NULL DEFAULT 0,
@@ -46,6 +47,7 @@ CREATE TABLE IF NOT EXISTS productos (
     fecha_creacion TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (producto_id),
     UNIQUE KEY codigo (codigo),
+    UNIQUE KEY slug (slug),
     KEY fk_producto_categoria (categoria_id),
     CONSTRAINT fk_producto_categoria
         FOREIGN KEY (categoria_id)

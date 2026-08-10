@@ -231,7 +231,7 @@ try {
         case 'POST':
             requerirRolAdmin();
             $datos = obtenerDatosJson();
-            unset($datos['publicado']);
+            unset($datos['publicado'], $datos['slug']);
 
             validarProducto($datos);
 
@@ -249,7 +249,7 @@ try {
             requerirRolAdmin();
             $productoId = validarId($_GET['id'] ?? null);
             $datos = obtenerDatosJson();
-            unset($datos['publicado']);
+            unset($datos['publicado'], $datos['slug']);
 
             validarProducto($datos);
 

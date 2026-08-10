@@ -29,6 +29,54 @@ class Producto
         return $imagenNormalizada !== '' ? $imagenNormalizada : null;
     }
 
+    private function generarSlug(string $nombre, int $productoId): string
+    {
+        $caracteres = [
+            'á' => 'a', 'à' => 'a', 'ä' => 'a', 'â' => 'a', 'ã' => 'a',
+            'Á' => 'a', 'À' => 'a', 'Ä' => 'a', 'Â' => 'a', 'Ã' => 'a',
+            'é' => 'e', 'è' => 'e', 'ë' => 'e', 'ê' => 'e',
+            'É' => 'e', 'È' => 'e', 'Ë' => 'e', 'Ê' => 'e',
+            'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'î' => 'i',
+            'Í' => 'i', 'Ì' => 'i', 'Ï' => 'i', 'Î' => 'i',
+            'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ô' => 'o', 'õ' => 'o',
+            'Ó' => 'o', 'Ò' => 'o', 'Ö' => 'o', 'Ô' => 'o', 'Õ' => 'o',
+            'ú' => 'u', 'ù' => 'u', 'ü' => 'u', 'û' => 'u',
+            'Ú' => 'u', 'Ù' => 'u', 'Ü' => 'u', 'Û' => 'u',
+            'ñ' => 'n', 'Ñ' => 'n', 'ç' => 'c', 'Ç' => 'c', 'ß' => 'ss',
+        ];
+        $base = strtolower(strtr(trim($nombre), $caracteres));
+        $base = preg_replace('/[^a-z0-9]+/', '-', $base) ?? '';
+        $base = trim($base, '-');
+
+        if ($base === '') {
+            $base = 'producto';
+        }
+
+        return "{$base}-{$productoId}";
+    }
+
+    private function crearSlugTemporal(): string
+    {
+        return 'pendiente-' . bin2hex(random_bytes(16));
+    }
+
+    private function asignarSlug(int $productoId, string $nombre): void
+    {
+        $stmt = $this->conn->prepare("
+            UPDATE productos
+            SET slug = :slug
+            WHERE producto_id = :id
+        ");
+        $stmt->execute([
+            ':slug' => $this->generarSlug($nombre, $productoId),
+            ':id' => $productoId,
+        ]);
+
+        if ($stmt->rowCount() !== 1) {
+            throw new RuntimeException('No se pudo asignar el slug del producto.');
+        }
+    }
+
     private function listarSegunPublicacion(bool $soloPublicados): array
     {
         $filtroPublicacion = $soloPublicados
@@ -40,6 +88,7 @@ class Producto
                 p.producto_id,
                 p.codigo,
                 p.nombre,
+                p.slug,
                 p.descripcion,
                 p.precio,
                 p.stock,
@@ -85,6 +134,7 @@ class Producto
                 p.producto_id,
                 p.codigo,
                 p.nombre,
+                p.slug,
                 p.descripcion,
                 p.precio,
                 p.stock,
@@ -115,42 +165,77 @@ class Producto
 
     public function crear(array $datos): bool
     {
-        $sql = "
-            INSERT INTO productos
-            (
-                codigo,
-                nombre,
-                descripcion,
-                precio,
-                stock,
-                imagen,
-                publicado,
-                categoria_id
-            )
-            VALUES
-            (
-                :codigo,
-                :nombre,
-                :descripcion,
-                :precio,
-                :stock,
-                :imagen,
-                0,
-                :categoria_id
-            )
-        ";
+        $iniciarTransaccion = !$this->conn->inTransaction();
 
-        $stmt = $this->conn->prepare($sql);
+        if ($iniciarTransaccion) {
+            $this->conn->beginTransaction();
+        }
 
-        return $stmt->execute([
-            ':codigo' => $datos['codigo'],
-            ':nombre' => $datos['nombre'],
-            ':descripcion' => $datos['descripcion'] ?? null,
-            ':precio' => $datos['precio'],
-            ':stock' => $datos['stock'],
-            ':imagen' => $this->normalizarImagen($datos['imagen'] ?? null),
-            ':categoria_id' => $datos['categoria_id']
-        ]);
+        try {
+            $sql = "
+                INSERT INTO productos
+                (
+                    codigo,
+                    nombre,
+                    slug,
+                    descripcion,
+                    precio,
+                    stock,
+                    imagen,
+                    publicado,
+                    categoria_id
+                )
+                VALUES
+                (
+                    :codigo,
+                    :nombre,
+                    :slug,
+                    :descripcion,
+                    :precio,
+                    :stock,
+                    :imagen,
+                    0,
+                    :categoria_id
+                )
+            ";
+
+            $stmt = $this->conn->prepare($sql);
+
+            $creado = $stmt->execute([
+                ':codigo' => $datos['codigo'],
+                ':nombre' => $datos['nombre'],
+                ':slug' => $this->crearSlugTemporal(),
+                ':descripcion' => $datos['descripcion'] ?? null,
+                ':precio' => $datos['precio'],
+                ':stock' => $datos['stock'],
+                ':imagen' => $this->normalizarImagen($datos['imagen'] ?? null),
+                ':categoria_id' => $datos['categoria_id']
+            ]);
+
+            if (!$creado) {
+                throw new RuntimeException('No se pudo insertar el producto.');
+            }
+
+            $productoId = (int)$this->conn->lastInsertId();
+
+            if ($productoId <= 0) {
+                throw new RuntimeException('No se pudo obtener el ID del producto.');
+            }
+
+            $this->asignarSlug($productoId, (string)$datos['nombre']);
+
+            if ($iniciarTransaccion) {
+                $this->conn->commit();
+            }
+
+            return true;
+        } catch (Throwable $e) {
+            if ($iniciarTransaccion && $this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+
+            throw $e;
+        }
     }
 
     public function analizarCodigosImportacion(array $codigos): array
@@ -228,6 +313,7 @@ class Producto
             (
                 codigo,
                 nombre,
+                slug,
                 descripcion,
                 precio,
                 stock,
@@ -239,6 +325,7 @@ class Producto
             (
                 :codigo,
                 :nombre,
+                :slug,
                 :descripcion,
                 :precio,
                 :stock,
@@ -255,11 +342,20 @@ class Producto
             $stmt->execute([
                 ':codigo' => $producto['codigo'],
                 ':nombre' => $producto['nombre'],
+                ':slug' => $this->crearSlugTemporal(),
                 ':descripcion' => $producto['descripcion'],
                 ':precio' => $producto['precio'],
                 ':stock' => $producto['stock'],
                 ':categoria_id' => $producto['categoria_id'],
             ]);
+
+            $productoId = (int)$this->conn->lastInsertId();
+
+            if ($productoId <= 0) {
+                throw new RuntimeException('No se pudo obtener el ID del producto importado.');
+            }
+
+            $this->asignarSlug($productoId, (string)$producto['nombre']);
 
             $importados++;
         }

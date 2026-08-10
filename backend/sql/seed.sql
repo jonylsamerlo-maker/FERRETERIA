@@ -64,6 +64,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO productos (
     codigo,
     nombre,
+    slug,
     descripcion,
     precio,
     stock,
@@ -75,6 +76,7 @@ VALUES
     (
         'HM-001',
         'Llave francesa ajustable',
+        'pendiente-seed-hm-001',
         'Llave regulable para trabajos de ajuste en taller y hogar.',
         12500.00,
         18,
@@ -85,6 +87,7 @@ VALUES
     (
         'HM-002',
         'Juego de destornilladores',
+        'pendiente-seed-hm-002',
         'Set de destornilladores planos y Phillips para uso general.',
         9800.00,
         25,
@@ -95,6 +98,7 @@ VALUES
     (
         'HE-001',
         'Taladro electrico',
+        'pendiente-seed-he-001',
         'Taladro electrico practico para perforaciones en madera y mamposteria.',
         45900.00,
         10,
@@ -105,6 +109,7 @@ VALUES
     (
         'SEG-001',
         'Conjunto de lluvia',
+        'pendiente-seed-seg-001',
         'Equipo impermeable para trabajo en exteriores.',
         18900.00,
         12,
@@ -115,6 +120,7 @@ VALUES
     (
         'OFE-001',
         'Hormigonera en oferta',
+        'pendiente-seed-ofe-001',
         'Hormigonera destacada en ofertas especiales.',
         185000.00,
         4,
@@ -125,6 +131,7 @@ VALUES
     (
         'OFE-002',
         'Hidrolavadora en oferta',
+        'pendiente-seed-ofe-002',
         'Hidrolavadora destacada en ofertas especiales.',
         132000.00,
         6,
@@ -139,6 +146,22 @@ ON DUPLICATE KEY UPDATE
     stock = VALUES(stock),
     imagen = VALUES(imagen),
     categoria_id = VALUES(categoria_id);
+
+UPDATE productos
+SET slug = CONCAT(
+    CASE codigo
+        WHEN 'HM-001' THEN 'llave-francesa-ajustable'
+        WHEN 'HM-002' THEN 'juego-de-destornilladores'
+        WHEN 'HE-001' THEN 'taladro-electrico'
+        WHEN 'SEG-001' THEN 'conjunto-de-lluvia'
+        WHEN 'OFE-001' THEN 'hormigonera-en-oferta'
+        WHEN 'OFE-002' THEN 'hidrolavadora-en-oferta'
+    END,
+    '-',
+    producto_id
+)
+WHERE slug LIKE 'pendiente-seed-%'
+    AND codigo IN ('HM-001', 'HM-002', 'HE-001', 'SEG-001', 'OFE-001', 'OFE-002');
 
 INSERT INTO feature_flags (
     clave,
