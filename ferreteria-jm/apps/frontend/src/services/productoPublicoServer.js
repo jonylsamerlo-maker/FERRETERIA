@@ -16,7 +16,9 @@ export async function obtenerProductoPublicoPorSlug(slug) {
   }
 
   const apiBaseUrl =
-    import.meta.env.INTERNAL_API_BASE_URL?.trim() || "http://backend";
+    import.meta.env.INTERNAL_API_BASE_URL?.trim() ||
+    process.env.INTERNAL_API_BASE_URL?.trim() ||
+    "http://backend";
 
   let endpoint;
 
@@ -65,5 +67,57 @@ export async function obtenerProductoPublicoPorSlug(slug) {
   } catch (error) {
     console.error("El backend devolvió un producto inválido.", error);
     throw new Error("No se pudo consultar el producto.");
+  }
+}
+
+export async function obtenerProductosPublicos() {
+  const apiBaseUrl =
+    import.meta.env.INTERNAL_API_BASE_URL?.trim() ||
+    process.env.INTERNAL_API_BASE_URL?.trim() ||
+    "http://backend";
+
+  let endpoint;
+
+  try {
+    endpoint = new URL("/api/productos.php", `${apiBaseUrl.replace(/\/+$/, "")}/`);
+  } catch (error) {
+    console.error("La URL interna de productos no es válida.", error);
+    throw new Error("No se pudo consultar el catálogo.");
+  }
+
+  endpoint.searchParams.set("scope", "public");
+
+  let response;
+
+  try {
+    response = await fetch(endpoint, {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("Falló la consulta interna del catálogo público.", error);
+    throw new Error("No se pudo consultar el catálogo.");
+  }
+
+  if (!response.ok) {
+    console.error(
+      `El backend respondió ${response.status} al consultar el catálogo público.`
+    );
+    throw new Error("No se pudo consultar el catálogo.");
+  }
+
+  try {
+    const productos = await response.json();
+
+    if (!Array.isArray(productos)) {
+      throw new TypeError("La respuesta no contiene un listado válido.");
+    }
+
+    return productos;
+  } catch (error) {
+    console.error("El backend devolvió un catálogo público inválido.", error);
+    throw new Error("No se pudo consultar el catálogo.");
   }
 }
