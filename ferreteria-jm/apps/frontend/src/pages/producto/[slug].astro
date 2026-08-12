@@ -51,11 +51,15 @@ function obtenerOrigenPublico(valor) {
 
   try {
     const url = new URL(valor.trim());
+    const hostname = url.hostname.toLowerCase();
 
     if (
       !["http:", "https:"].includes(url.protocol) ||
       url.username ||
-      url.password
+      url.password ||
+      hostname === "backend" ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1"
     ) {
       return null;
     }
@@ -73,10 +77,13 @@ function obtenerUrlSeoImagen(valor) {
 
   try {
     const url = new URL(valor);
+    const hostname = url.hostname.toLowerCase();
 
     if (
       !["http:", "https:"].includes(url.protocol) ||
-      url.hostname.toLowerCase() === "backend"
+      hostname === "backend" ||
+      hostname === "localhost" ||
+      hostname === "127.0.0.1"
     ) {
       return null;
     }
@@ -149,7 +156,9 @@ const estadoStock = producto
 const descripcionSeo = producto
   ? crearMetaDescription(producto)
   : null;
-const origenPublico = obtenerOrigenPublico(import.meta.env.SITE_URL);
+const origenPublico = obtenerOrigenPublico(
+  import.meta.env.SITE_URL || process.env.SITE_URL
+);
 const canonical = producto && origenPublico
   ? new URL(`/producto/${encodeURIComponent(producto.slug)}`, origenPublico).href
   : null;
