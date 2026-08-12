@@ -251,6 +251,7 @@ function FeaturedProducts() {
                   price={product.precio}
                   stock={product.stock}
                   category={product.categoria}
+                  slug={product.slug}
                 />
               </div>
             ))}

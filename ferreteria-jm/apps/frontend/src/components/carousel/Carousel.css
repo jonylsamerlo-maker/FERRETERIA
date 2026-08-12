@@ -81,6 +81,21 @@
     margin-bottom: .5rem;
 }
 
+.ferreteria-carousel__title-link {
+    color: inherit;
+    text-decoration: none;
+    transition: color .2s ease;
+}
+
+.ferreteria-carousel__title-link:hover {
+    color: #fed7aa;
+}
+
+.ferreteria-carousel__title-link:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, .65);
+    outline-offset: 4px;
+}
+
 .ferreteria-carousel__description {
     font-size: 1rem;
     line-height: 1.6;

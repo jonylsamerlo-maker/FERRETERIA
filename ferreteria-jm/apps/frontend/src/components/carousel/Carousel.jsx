@@ -71,6 +71,9 @@ function Carousel() {
 
   const activeSlide = carouselSlides[safeIndex];
   const estadoStockActivo = obtenerEstadoStock(activeSlide?.stock);
+  const activeProductUrl = activeSlide?.slug
+    ? `/producto/${activeSlide.slug}`
+    : "";
 
   const activeTag =
     activeSlide?.categoria &&
@@ -175,7 +178,16 @@ function Carousel() {
             )}
 
             <h3 className="ferreteria-carousel__title">
-              {activeSlide.nombre}
+              {activeProductUrl ? (
+                <a
+                  className="ferreteria-carousel__title-link"
+                  href={activeProductUrl}
+                >
+                  {activeSlide.nombre}
+                </a>
+              ) : (
+                activeSlide.nombre
+              )}
             </h3>
 
             {activeSlide.descripcion && (

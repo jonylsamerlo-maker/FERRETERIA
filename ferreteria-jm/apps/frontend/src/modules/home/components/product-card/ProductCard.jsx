@@ -45,11 +45,13 @@ function ProductCard({
   price,
   stock,
   category,
+  slug,
 }) {
   const [mensaje, setMensaje] = useState("");
   const estadoStock = obtenerEstadoStock(stock);
   const stockDisponible = estadoStock.stock;
   const sinStock = stockDisponible <= 0;
+  const productUrl = slug ? `/producto/${slug}` : "";
 
   const handleAgregarAlCarrito = () => {
     const resultado = agregarAlCarrito({
@@ -67,17 +69,40 @@ function ProductCard({
     <article className="product-card">
 
       {image && (
-        <img
-          src={image}
-          alt={title}
-          className="product-card__image"
-        />
+        productUrl ? (
+          <a
+            className="product-card__image-link"
+            href={productUrl}
+            aria-label={`Ver ${title}`}
+          >
+            <img
+              src={image}
+              alt={title}
+              className="product-card__image"
+            />
+          </a>
+        ) : (
+          <img
+            src={image}
+            alt={title}
+            className="product-card__image"
+          />
+        )
       )}
 
       <div className="product-card__content">
 
         <h3 className="product-card__title">
-          {title}
+          {productUrl ? (
+            <a
+              className="product-card__title-link"
+              href={productUrl}
+            >
+              {title}
+            </a>
+          ) : (
+            title
+          )}
         </h3>
 
         {description && (
