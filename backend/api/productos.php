@@ -283,14 +283,17 @@ try {
 
             validarProducto($datos);
 
-            if (!$producto->crear($datos)) {
+            $productoId = $producto->crear($datos);
+
+            if ($productoId <= 0) {
                 responderJson([
                     'mensaje' => 'No se pudo crear el producto'
                 ], 400);
             }
 
             responderJson([
-                'mensaje' => 'Producto creado correctamente'
+                'mensaje' => 'Producto creado correctamente',
+                'producto_id' => $productoId
             ], 201);
 
         case 'PUT':

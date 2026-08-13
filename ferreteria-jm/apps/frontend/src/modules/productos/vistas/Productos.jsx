@@ -81,6 +81,8 @@ export default function Productos() {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(true);
   const [guardando, setGuardando] = useState(false);
+  const [imagenInicialVistaPrevia, setImagenInicialVistaPrevia] =
+    useState(null);
   const [eliminandoId, setEliminandoId] = useState(null);
   const [actualizandoPublicadoId, setActualizandoPublicadoId] =
     useState(null);
@@ -96,6 +98,8 @@ export default function Productos() {
   const [imagenesGaleria, setImagenesGaleria] = useState([]);
   const [cargandoGaleria, setCargandoGaleria] = useState(false);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [asociandoImagenInicial, setAsociandoImagenInicial] =
+    useState(false);
   const [cambiandoPrincipalId, setCambiandoPrincipalId] =
     useState(null);
   const [eliminandoImagenId, setEliminandoImagenId] = useState(null);
@@ -193,6 +197,20 @@ export default function Productos() {
 
     validarSesion();
   }, []);
+
+  useEffect(() => {
+    if (productoEditandoId !== null || !formulario.imagen) {
+      setImagenInicialVistaPrevia(null);
+      return undefined;
+    }
+
+    const urlTemporal = URL.createObjectURL(formulario.imagen);
+    setImagenInicialVistaPrevia(urlTemporal);
+
+    return () => {
+      URL.revokeObjectURL(urlTemporal);
+    };
+  }, [formulario.imagen, productoEditandoId]);
 
   useEffect(() => {
     if (!modalAbierto || imagenAmpliada || imagenAEliminar) {
@@ -522,6 +540,30 @@ export default function Productos() {
   const handleChange = (event) => {
     const { name, value, files } = event.target;
 
+    if (files?.[0] && name === 'imagen') {
+      const archivo = files[0];
+      const formatosPermitidos = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+      ];
+
+      if (
+        !formatosPermitidos.includes(archivo.type) ||
+        archivo.size > 2 * 1024 * 1024
+      ) {
+        setError(
+          'La imagen inicial debe ser JPG, PNG o WebP y no superar 2 MB.'
+        );
+        event.target.value = '';
+        setFormulario((formularioActual) => ({
+          ...formularioActual,
+          imagen: null,
+        }));
+        return;
+      }
+    }
+
     setFormulario((formularioActual) => ({
       ...formularioActual,
       [name]: files ? files[0] || null : value,
@@ -543,6 +585,7 @@ export default function Productos() {
     if (
       guardando ||
       subiendoImagen ||
+      asociandoImagenInicial ||
       cambiandoPrincipalId !== null ||
       eliminandoImagenId !== null
     ) {
@@ -768,11 +811,32 @@ export default function Productos() {
         setMensaje('Producto actualizado correctamente.');
       } else {
         datosProducto.imagen = null;
-        await crearProducto(datosProducto);
+        const respuestaCreacion = await crearProducto(datosProducto);
+        const productoId = Number(respuestaCreacion?.producto_id);
 
-        setMensaje(
-          'Producto creado correctamente. Podés agregar imágenes al editarlo.'
-        );
+        if (!Number.isInteger(productoId) || productoId <= 0) {
+          setMensaje(
+            'Producto creado, pero no se pudo agregar la imagen. Podés cargarla desde Editar.'
+          );
+        } else if (formulario.imagen) {
+          try {
+            setSubiendoImagen(true);
+            const imagenSubida = await subirImagen(formulario.imagen);
+            setSubiendoImagen(false);
+            setAsociandoImagenInicial(true);
+            await agregarProductoImagen(productoId, imagenSubida.ruta);
+            setAsociandoImagenInicial(false);
+            setMensaje('Producto creado con imagen correctamente.');
+          } catch {
+            setSubiendoImagen(false);
+            setAsociandoImagenInicial(false);
+            setMensaje(
+              'Producto creado, pero no se pudo agregar la imagen. Podés cargarla desde Editar.'
+            );
+          }
+        } else {
+          setMensaje('Producto creado correctamente.');
+        }
       }
 
       limpiarFormulario(event.currentTarget);
@@ -1510,9 +1574,36 @@ export default function Productos() {
         </div>
 
         {productoEditandoId === null ? (
-          <p className="productos__creation-image-note">
-            Las imágenes se agregan después de crear el producto, desde Editar.
-          </p>
+          <div className="productos__field productos__creation-image">
+            <label
+              className="productos__label"
+              htmlFor="imagen"
+            >
+              Imagen inicial (opcional)
+            </label>
+            <input
+              id="imagen"
+              className="productos__input"
+              type="file"
+              name="imagen"
+              accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+              onChange={handleChange}
+              disabled={
+                guardando || subiendoImagen || asociandoImagenInicial
+              }
+            />
+            <p className="productos__creation-image-note">
+              JPG, PNG o WebP de hasta 2 MB. Las imágenes adicionales se
+              administran desde Editar.
+            </p>
+            {imagenInicialVistaPrevia && (
+              <img
+                className="productos__creation-image-preview"
+                src={imagenInicialVistaPrevia}
+                alt={`Vista previa de ${formulario.nombre || 'la imagen inicial'}`}
+              />
+            )}
+          </div>
         ) : (
           <section
             className="productos__gallery"
@@ -1675,7 +1766,11 @@ export default function Productos() {
             disabled={guardando}
           >
             {guardando
-              ? 'Guardando...'
+              ? subiendoImagen
+                ? 'Subiendo imagen...'
+                : asociandoImagenInicial
+                  ? 'Asociando imagen...'
+                : 'Guardando...'
               : productoEditandoId !== null
                 ? 'Guardar cambios'
                 : 'Crear producto'}

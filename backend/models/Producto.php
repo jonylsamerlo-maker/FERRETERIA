@@ -198,7 +198,7 @@ class Producto
             : null;
     }
 
-    public function crear(array $datos): bool
+    public function crear(array $datos): int
     {
         $iniciarTransaccion = !$this->conn->inTransaction();
 
@@ -263,7 +263,7 @@ class Producto
                 $this->conn->commit();
             }
 
-            return true;
+            return $productoId;
         } catch (Throwable $e) {
             if ($iniciarTransaccion && $this->conn->inTransaction()) {
                 $this->conn->rollBack();

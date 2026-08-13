@@ -514,13 +514,21 @@ textarea.productos__input {
 }
 
 .productos__creation-image-note {
-  grid-column: 1 / -1;
-  margin: 0;
-  padding: 0.8rem;
+  margin: 0.55rem 0 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.productos__creation-image-preview {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  margin-top: 0.75rem;
   border: 1px solid var(--color-border);
   border-radius: 0.4rem;
   background: var(--color-page-background);
-  color: var(--color-text-secondary);
+  object-fit: contain;
 }
 
 .productos__gallery-header {
