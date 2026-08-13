@@ -3,6 +3,7 @@ export const prerender = false;
 
 import MainLayout from "../../layouts/MainLayout.astro";
 import AgregarProductoCarrito from "../../modules/producto/components/AgregarProductoCarrito.jsx";
+import GaleriaProducto from "../../modules/producto/components/GaleriaProducto.jsx";
 import "../../modules/producto/styles/ProductoDetalle.css";
 import { API_BASE_URL } from "../../config/appConfig";
 import {
@@ -94,6 +95,31 @@ function obtenerUrlSeoImagen(valor) {
   }
 }
 
+function ordenarImagenesSeo(imagenes) {
+  if (!Array.isArray(imagenes)) {
+    return [];
+  }
+
+  return [...imagenes].sort((imagenA, imagenB) => {
+    const principalA = Number(imagenA?.principal) === 1 ? 1 : 0;
+    const principalB = Number(imagenB?.principal) === 1 ? 1 : 0;
+
+    if (principalA !== principalB) {
+      return principalB - principalA;
+    }
+
+    const ordenA = Number(imagenA?.orden) || 0;
+    const ordenB = Number(imagenB?.orden) || 0;
+
+    if (ordenA !== ordenB) {
+      return ordenA - ordenB;
+    }
+
+    return (Number(imagenA?.imagen_id) || 0) -
+      (Number(imagenB?.imagen_id) || 0);
+  });
+}
+
 function crearMetaDescription(productoActual) {
   const descripcion =
     typeof productoActual.descripcion === "string"
@@ -150,6 +176,21 @@ const titulo = producto
 const imagenPublica = producto
   ? resolverImagenPublica(producto.imagen)
   : null;
+const imagenesGaleria = producto && Array.isArray(producto.imagenes)
+  ? producto.imagenes
+    .map((imagen) => {
+      const src = resolverImagenPublica(imagen?.ruta);
+
+      return src
+        ? {
+            imagen_id: imagen.imagen_id,
+            src,
+          }
+        : null;
+    })
+    .filter(Boolean)
+  : [];
+const imagenInicial = imagenesGaleria[0]?.src || imagenPublica;
 const estadoStock = producto
   ? obtenerEstadoStock(producto.stock)
   : null;
@@ -165,6 +206,18 @@ const canonical = producto && origenPublico
 const imagenSeo = producto
   ? obtenerUrlSeoImagen(imagenPublica)
   : null;
+const imagenesSeo = producto
+  ? Array.from(
+      new Set(
+        [
+          imagenSeo,
+          ...ordenarImagenesSeo(producto.imagenes).map((imagen) =>
+            obtenerUrlSeoImagen(resolverImagenPublica(imagen?.ruta))
+          ),
+        ].filter(Boolean)
+      )
+    )
+  : [];
 const precioSeo = producto ? Number(producto.precio) : Number.NaN;
 const jsonLd = producto && Number.isFinite(precioSeo)
   ? {
@@ -174,7 +227,7 @@ const jsonLd = producto && Number.isFinite(precioSeo)
       description: descripcionSeo,
       sku: producto.codigo,
       ...(producto.categoria ? { category: producto.categoria } : {}),
-      ...(imagenSeo ? { image: imagenSeo } : {}),
+      ...(imagenesSeo.length > 0 ? { image: imagenesSeo } : {}),
       ...(canonical ? { url: canonical } : {}),
       offers: {
         "@type": "Offer",
@@ -209,11 +262,19 @@ const jsonLd = producto && Number.isFinite(precioSeo)
           </a>
 
           <article class="producto-detalle__contenido">
-            <div class="producto-detalle__media">
-              {imagenPublica ? (
+            {
+              imagenesGaleria.length >= 2 ? (
+                <GaleriaProducto
+                  client:load
+                  imagenes={imagenesGaleria}
+                  nombre={producto.nombre}
+                />
+              ) : (
+                <div class="producto-detalle__media">
+              {imagenInicial ? (
                 <img
                   class="producto-detalle__imagen"
-                  src={imagenPublica}
+                  src={imagenInicial}
                   alt={producto.nombre}
                 />
               ) : (
@@ -225,7 +286,9 @@ const jsonLd = producto && Number.isFinite(precioSeo)
                   Imagen no disponible
                 </div>
               )}
-            </div>
+                </div>
+              )
+            }
 
             <div class="producto-detalle__informacion">
               <p class="producto-detalle__categoria">
