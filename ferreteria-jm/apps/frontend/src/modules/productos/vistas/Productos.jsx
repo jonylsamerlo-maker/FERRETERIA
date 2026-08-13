@@ -10,6 +10,12 @@ import {
   getProductosAdmin,
   subirImagen,
 } from '../services/productoApi';
+import {
+  agregarProductoImagen,
+  eliminarProductoImagen,
+  getProductoImagenes,
+  marcarImagenPrincipal,
+} from '../services/productoImagenApi';
 import './Productos.css';
 
 const formularioInicial = {
@@ -23,11 +29,6 @@ const formularioInicial = {
   imagenActual: '',
 };
 
-const imagenRecomendada = {
-  ancho: 800,
-  alto: 600,
-  pesoMaximoMb: 2,
-};
 const UMBRAL_STOCK_BAJO = 5;
 
 function formatearPrecio(valor) {
@@ -83,7 +84,6 @@ export default function Productos() {
   const [eliminandoId, setEliminandoId] = useState(null);
   const [actualizandoPublicadoId, setActualizandoPublicadoId] =
     useState(null);
-  const [imagenVistaPrevia, setImagenVistaPrevia] = useState(null);
   const [autorizado, setAutorizado] = useState(false);
   const [esAdmin, setEsAdmin] = useState(false);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -93,6 +93,15 @@ export default function Productos() {
   });
   const [productoAEliminar, setProductoAEliminar] = useState(null);
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
+  const [imagenesGaleria, setImagenesGaleria] = useState([]);
+  const [cargandoGaleria, setCargandoGaleria] = useState(false);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [cambiandoPrincipalId, setCambiandoPrincipalId] =
+    useState(null);
+  const [eliminandoImagenId, setEliminandoImagenId] = useState(null);
+  const [mensajeGaleria, setMensajeGaleria] = useState('');
+  const [errorGaleria, setErrorGaleria] = useState('');
+  const [imagenAEliminar, setImagenAEliminar] = useState(null);
   const [busqueda, setBusqueda] = useState('');
   const [filtroPublicacion, setFiltroPublicacion] = useState('todos');
   const [filtroImagen, setFiltroImagen] = useState('todas');
@@ -112,6 +121,9 @@ export default function Productos() {
   const modalImagenRef = useRef(null);
   const botonCerrarImagenRef = useRef(null);
   const disparadorImagenRef = useRef(null);
+  const modalEliminacionImagenRef = useRef(null);
+  const botonCancelarEliminacionImagenRef = useRef(null);
+  const disparadorEliminacionImagenRef = useRef(null);
 
   const cargarDatos = async () => {
     try {
@@ -183,60 +195,7 @@ export default function Productos() {
   }, []);
 
   useEffect(() => {
-    if (!formulario.imagen) {
-      setImagenVistaPrevia(null);
-      return undefined;
-    }
-
-    let componenteActivo = true;
-    const urlTemporal = URL.createObjectURL(formulario.imagen);
-    const imagen = new Image();
-    const pesoMb =
-      formulario.imagen.size / 1024 / 1024;
-
-    setImagenVistaPrevia({
-      url: urlTemporal,
-      ancho: null,
-      alto: null,
-      pesoMb,
-    });
-
-    imagen.onload = () => {
-      if (!componenteActivo) {
-        return;
-      }
-
-      setImagenVistaPrevia({
-        url: urlTemporal,
-        ancho: imagen.naturalWidth,
-        alto: imagen.naturalHeight,
-        pesoMb,
-      });
-    };
-
-    imagen.onerror = () => {
-      if (!componenteActivo) {
-        return;
-      }
-
-      setImagenVistaPrevia({
-        url: urlTemporal,
-        ancho: null,
-        alto: null,
-        pesoMb,
-      });
-    };
-
-    imagen.src = urlTemporal;
-
-    return () => {
-      componenteActivo = false;
-      URL.revokeObjectURL(urlTemporal);
-    };
-  }, [formulario.imagen]);
-
-  useEffect(() => {
-    if (!modalAbierto) {
+    if (!modalAbierto || imagenAmpliada || imagenAEliminar) {
       return undefined;
     }
 
@@ -292,7 +251,7 @@ export default function Productos() {
       document.body.style.overflow = overflowAnterior;
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [modalAbierto]);
+  }, [modalAbierto, imagenAmpliada, imagenAEliminar]);
 
   const cerrarModalErrorPublicacion = () => {
     setModalErrorPublicacion({
@@ -499,6 +458,67 @@ export default function Productos() {
     };
   }, [imagenAmpliada]);
 
+  const cerrarModalEliminacionImagen = () => {
+    if (eliminandoImagenId !== null) {
+      return;
+    }
+
+    setImagenAEliminar(null);
+    window.setTimeout(() => {
+      disparadorEliminacionImagenRef.current?.focus();
+    }, 0);
+  };
+
+  useEffect(() => {
+    if (!imagenAEliminar) {
+      return undefined;
+    }
+
+    botonCancelarEliminacionImagenRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        cerrarModalEliminacionImagen();
+        return;
+      }
+
+      if (event.key !== 'Tab') {
+        return;
+      }
+
+      const elementosEnfocables =
+        modalEliminacionImagenRef.current?.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+      const elementos = Array.from(
+        elementosEnfocables ?? []
+      ).filter((elemento) => !elemento.disabled);
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (event.shiftKey && document.activeElement === primerElemento) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (!event.shiftKey && document.activeElement === ultimoElemento) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [imagenAEliminar, eliminandoImagenId]);
+
   const handleChange = (event) => {
     const { name, value, files } = event.target;
 
@@ -511,11 +531,24 @@ export default function Productos() {
   const limpiarFormulario = (formularioHtml = null) => {
     setFormulario(formularioInicial);
     setProductoEditandoId(null);
+    setImagenesGaleria([]);
+    setMensajeGaleria('');
+    setErrorGaleria('');
+    setImagenAEliminar(null);
     setError('');
     formularioHtml?.reset();
   };
 
   const cerrarModal = () => {
+    if (
+      guardando ||
+      subiendoImagen ||
+      cambiandoPrincipalId !== null ||
+      eliminandoImagenId !== null
+    ) {
+      return;
+    }
+
     limpiarFormulario();
     setModalAbierto(false);
     window.setTimeout(() => {
@@ -568,6 +601,133 @@ export default function Productos() {
     return '';
   };
 
+  const cargarGaleria = async (productoId) => {
+    try {
+      setCargandoGaleria(true);
+      setErrorGaleria('');
+
+      const respuesta = await getProductoImagenes(productoId);
+      setImagenesGaleria(
+        Array.isArray(respuesta?.imagenes) ? respuesta.imagenes : []
+      );
+    } catch (err) {
+      setImagenesGaleria([]);
+      setErrorGaleria(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo cargar la galería del producto.'
+      );
+    } finally {
+      setCargandoGaleria(false);
+    }
+  };
+
+  const handleAgregarImagen = async (event) => {
+    const archivo = event.target.files?.[0];
+
+    if (
+      !archivo ||
+      productoEditandoId === null ||
+      subiendoImagen ||
+      imagenesGaleria.length >= 5
+    ) {
+      return;
+    }
+
+    try {
+      setSubiendoImagen(true);
+      setMensajeGaleria('');
+      setErrorGaleria('');
+
+      const imagenSubida = await subirImagen(archivo);
+      await agregarProductoImagen(productoEditandoId, imagenSubida.ruta);
+      await cargarGaleria(productoEditandoId);
+      await cargarDatos();
+      setMensajeGaleria('Imagen agregada correctamente.');
+    } catch (err) {
+      setErrorGaleria(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo agregar la imagen.'
+      );
+    } finally {
+      setSubiendoImagen(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleMarcarPrincipal = async (imagenId) => {
+    if (
+      productoEditandoId === null ||
+      cambiandoPrincipalId !== null ||
+      eliminandoImagenId !== null ||
+      subiendoImagen
+    ) {
+      return;
+    }
+
+    try {
+      setCambiandoPrincipalId(imagenId);
+      setMensajeGaleria('');
+      setErrorGaleria('');
+      await marcarImagenPrincipal(productoEditandoId, imagenId);
+      await cargarGaleria(productoEditandoId);
+      await cargarDatos();
+      setMensajeGaleria('Imagen principal actualizada.');
+    } catch (err) {
+      setErrorGaleria(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo actualizar la imagen principal.'
+      );
+    } finally {
+      setCambiandoPrincipalId(null);
+    }
+  };
+
+  const handleSolicitarEliminarImagen = (imagen, event) => {
+    if (subiendoImagen || cambiandoPrincipalId !== null) {
+      return;
+    }
+
+    disparadorEliminacionImagenRef.current = event.currentTarget;
+    setMensajeGaleria('');
+    setErrorGaleria('');
+    setImagenAEliminar(imagen);
+  };
+
+  const handleEliminarImagen = async () => {
+    if (
+      productoEditandoId === null ||
+      !imagenAEliminar ||
+      eliminandoImagenId !== null
+    ) {
+      return;
+    }
+
+    try {
+      setEliminandoImagenId(imagenAEliminar.imagen_id);
+      setMensajeGaleria('');
+      setErrorGaleria('');
+      await eliminarProductoImagen(
+        productoEditandoId,
+        imagenAEliminar.imagen_id
+      );
+      setImagenAEliminar(null);
+      await cargarGaleria(productoEditandoId);
+      await cargarDatos();
+      setMensajeGaleria('Imagen eliminada.');
+    } catch (err) {
+      setErrorGaleria(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo eliminar la imagen.'
+      );
+    } finally {
+      setEliminandoImagenId(null);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -588,16 +748,6 @@ export default function Productos() {
       setMensaje('');
       setError('');
 
-      let rutaImagen = formulario.imagenActual;
-
-      if (formulario.imagen) {
-        const imagenSubida = await subirImagen(
-          formulario.imagen
-        );
-
-        rutaImagen = imagenSubida.ruta;
-      }
-
       const datosProducto = {
         codigo: formulario.codigo.trim(),
         nombre: formulario.nombre.trim(),
@@ -606,10 +756,10 @@ export default function Productos() {
         precio: Number(formulario.precio),
         stock: Number(formulario.stock),
         categoria_id: Number(formulario.categoria_id),
-        imagen: rutaImagen || null,
       };
 
       if (productoEditandoId !== null) {
+        // La imagen legacy se actualiza exclusivamente desde la galería.
         await actualizarProducto(
           productoEditandoId,
           datosProducto
@@ -617,9 +767,12 @@ export default function Productos() {
 
         setMensaje('Producto actualizado correctamente.');
       } else {
+        datosProducto.imagen = null;
         await crearProducto(datosProducto);
 
-        setMensaje('Producto creado correctamente.');
+        setMensaje(
+          'Producto creado correctamente. Podés agregar imágenes al editarlo.'
+        );
       }
 
       limpiarFormulario(event.currentTarget);
@@ -663,7 +816,11 @@ export default function Productos() {
 
     setMensaje('');
     setError('');
+    setMensajeGaleria('');
+    setErrorGaleria('');
+    setImagenesGaleria([]);
     setModalAbierto(true);
+    cargarGaleria(producto.producto_id);
   };
 
   const handleCancelarEdicion = () => {
@@ -809,56 +966,6 @@ export default function Productos() {
     });
   };
 
-  const formatearPesoImagen = (pesoMb) =>
-    `${pesoMb.toFixed(2)} MB`;
-
-  const obtenerMensajesImagen = () => {
-    if (!imagenVistaPrevia) {
-      return [];
-    }
-
-    const superaPeso =
-      imagenVistaPrevia.pesoMb >
-      imagenRecomendada.pesoMaximoMb;
-    const superaResolucion =
-      imagenVistaPrevia.ancho !== null &&
-      imagenVistaPrevia.alto !== null &&
-      (imagenVistaPrevia.ancho >
-        imagenRecomendada.ancho ||
-        imagenVistaPrevia.alto >
-          imagenRecomendada.alto);
-
-    if (!superaPeso && !superaResolucion) {
-      return [
-        {
-          tipo: 'success',
-          texto: 'Imagen apta para subir.',
-        },
-      ];
-    }
-
-    const mensajes = [];
-
-    if (superaPeso) {
-      mensajes.push({
-        tipo: 'warning',
-        texto:
-          'La imagen supera el tamaño recomendado de 2 MB. Se recomienda reducirla u optimizarla antes de subirla para mejorar el rendimiento del sitio.',
-      });
-    }
-
-    if (superaResolucion) {
-      mensajes.push({
-        tipo: 'warning',
-        texto:
-          'La resolución es superior a la recomendada. Se aconseja utilizar una imagen cercana a 800 × 600 px para mejorar la velocidad de carga del sitio.',
-      });
-    }
-
-    return mensajes;
-  };
-
-  const mensajesImagen = obtenerMensajesImagen();
   const busquedaNormalizada = normalizarTexto(busqueda);
   const productosFiltrados = useMemo(() => {
     return productos.filter((producto) => {
@@ -1121,7 +1228,7 @@ export default function Productos() {
 
       {imagenAmpliada && (
         <div
-          className="productos__modal-overlay"
+          className="productos__modal-overlay productos__modal-overlay--image"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) {
               cerrarImagenAmpliada();
@@ -1160,6 +1267,73 @@ export default function Productos() {
                 src={imagenAmpliada.src}
                 alt={`Imagen ampliada de ${imagenAmpliada.nombre}`}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {esAdmin && imagenAEliminar && (
+        <div
+          className="productos__modal-overlay productos__modal-overlay--confirm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarModalEliminacionImagen();
+            }
+          }}
+        >
+          <div
+            className="productos__modal productos__modal--publication-error"
+            ref={modalEliminacionImagenRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="productos-delete-image-title"
+            aria-describedby="productos-delete-image-message"
+          >
+            <div className="productos__modal-header">
+              <h2
+                className="productos__modal-title"
+                id="productos-delete-image-title"
+              >
+                Eliminar imagen
+              </h2>
+
+              <button
+                className="productos__modal-close"
+                type="button"
+                aria-label="Cerrar"
+                disabled={eliminandoImagenId !== null}
+                onClick={cerrarModalEliminacionImagen}
+              >
+                ×
+              </button>
+            </div>
+
+            <p
+              className="productos__publication-error-message"
+              id="productos-delete-image-message"
+            >
+              Se quitará esta imagen de la galería del producto. El archivo
+              físico no se eliminará.
+            </p>
+
+            <div className="productos__delete-actions">
+              <button
+                className="productos__button productos__button--secondary"
+                type="button"
+                ref={botonCancelarEliminacionImagenRef}
+                disabled={eliminandoImagenId !== null}
+                onClick={cerrarModalEliminacionImagen}
+              >
+                Cancelar
+              </button>
+              <button
+                className="productos__action-button productos__action-button--danger"
+                type="button"
+                disabled={eliminandoImagenId !== null}
+                onClick={handleEliminarImagen}
+              >
+                {eliminandoImagenId !== null ? 'Eliminando...' : 'Eliminar'}
+              </button>
             </div>
           </div>
         </div>
@@ -1335,130 +1509,154 @@ export default function Productos() {
           </select>
         </div>
 
-        <div className="productos__field">
-          <label
-            className="productos__label"
-            htmlFor="imagen"
+        {productoEditandoId === null ? (
+          <p className="productos__creation-image-note">
+            Las imágenes se agregan después de crear el producto, desde Editar.
+          </p>
+        ) : (
+          <section
+            className="productos__gallery"
+            aria-labelledby="productos-gallery-title"
           >
-            Imagen
-          </label>
-
-          <input
-            id="imagen"
-            className="productos__input"
-            type="file"
-            name="imagen"
-            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-            onChange={handleChange}
-          />
-
-          {productoEditandoId !== null && (
-            <div className="productos__current-image">
-              <p>Imagen actual</p>
-
-              {tieneImagen(formulario.imagenActual) ? (
-                <img
-                  className="productos__image"
-                  src={obtenerImagen(
-                    formulario.imagenActual
-                  )}
-                  alt={`Imagen actual de ${formulario.nombre || 'producto'}`}
-                />
-              ) : (
-                <span className="productos__image-missing">
-                  Sin imagen
-                </span>
-              )}
-
-              {tieneImagen(formulario.imagenActual) && (
-                <small>
-                  Seleccioná otra imagen solo si querés reemplazarla.
-                </small>
-              )}
-            </div>
-          )}
-        </div>
-
-        {imagenVistaPrevia && (
-          <div className="productos__image-panel">
-            <div className="productos__preview-card">
-              <p className="productos__preview-title">
-                {productoEditandoId !== null
-                  ? 'Nueva imagen'
-                  : 'Vista previa'}
-              </p>
-
-              <img
-                className="productos__preview-image"
-                src={imagenVistaPrevia.url}
-                alt={
-                  productoEditandoId !== null
-                    ? `Nueva imagen de ${formulario.nombre || 'producto'}`
-                    : `Vista previa de ${formulario.nombre || 'producto'}`
-                }
-              />
-
-              {productoEditandoId !== null &&
-                tieneImagen(formulario.imagenActual) && (
-                  <p className="productos__preview-note">
-                    Reemplazará la imagen actual al guardar.
-                  </p>
-                )}
-            </div>
-
-            <div className="productos__image-info-card">
-              <p className="productos__preview-title">
-                Recomendaciones
-              </p>
-
-              <dl className="productos__image-info">
-                <div>
-                  <dt>Formatos</dt>
-                  <dd>JPG, PNG, WEBP</dd>
-                </div>
-
-                <div>
-                  <dt>Resolución recomendada</dt>
-                  <dd>800 × 600 px</dd>
-                </div>
-
-                <div>
-                  <dt>Tamaño recomendado</dt>
-                  <dd>Hasta 2 MB</dd>
-                </div>
-
-                <div>
-                  <dt>Resolución real</dt>
-                  <dd>
-                    {imagenVistaPrevia.ancho !== null &&
-                    imagenVistaPrevia.alto !== null
-                      ? `${imagenVistaPrevia.ancho} × ${imagenVistaPrevia.alto} px`
-                      : 'Calculando...'}
-                  </dd>
-                </div>
-
-                <div>
-                  <dt>Tamaño del archivo</dt>
-                  <dd>
-                    {formatearPesoImagen(
-                      imagenVistaPrevia.pesoMb
-                    )}
-                  </dd>
-                </div>
-              </dl>
-
-              <div className="productos__image-feedback">
-                {mensajesImagen.map((mensajeImagen) => (
-                  <p
-                    className={`productos__image-feedback-item productos__image-feedback-item--${mensajeImagen.tipo}`}
-                    key={mensajeImagen.texto}
-                  >
-                    {mensajeImagen.texto}
-                  </p>
-                ))}
+            <div className="productos__gallery-header">
+              <div>
+                <h3
+                  className="productos__gallery-title"
+                  id="productos-gallery-title"
+                >
+                  Imágenes del producto
+                </h3>
+                <p className="productos__gallery-count">
+                  {imagenesGaleria.length} de 5 imágenes
+                </p>
               </div>
+
+              <label
+                className="productos__button productos__gallery-upload"
+                htmlFor="producto-imagen-galeria"
+              >
+                {subiendoImagen ? 'Subiendo...' : 'Agregar imagen'}
+                <input
+                  id="producto-imagen-galeria"
+                  className="productos__gallery-file-input"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                  disabled={
+                    cargandoGaleria ||
+                    subiendoImagen ||
+                    cambiandoPrincipalId !== null ||
+                    eliminandoImagenId !== null ||
+                    imagenesGaleria.length >= 5
+                  }
+                  onChange={handleAgregarImagen}
+                />
+              </label>
             </div>
-          </div>
+
+            {imagenesGaleria.length >= 5 && (
+              <p className="productos__gallery-limit" role="status">
+                Se alcanzó el máximo de 5 imágenes por producto.
+              </p>
+            )}
+
+            {cargandoGaleria ? (
+              <p className="productos__gallery-status" role="status">
+                Cargando galería...
+              </p>
+            ) : imagenesGaleria.length === 0 ? (
+              <p className="productos__gallery-status">
+                Este producto todavía no tiene imágenes.
+              </p>
+            ) : (
+              <div className="productos__gallery-grid">
+                {imagenesGaleria.map((imagen, indice) => {
+                  const esPrincipal = Number(imagen.principal) === 1;
+                  const operacionEnCurso =
+                    subiendoImagen ||
+                    cambiandoPrincipalId !== null ||
+                    eliminandoImagenId !== null;
+
+                  return (
+                    <article
+                      className="productos__gallery-item"
+                      key={imagen.imagen_id}
+                    >
+                      <button
+                        className="productos__gallery-image-trigger"
+                        type="button"
+                        onClick={(event) =>
+                          abrirImagenAmpliada(
+                            {
+                              imagen: imagen.ruta,
+                              nombre: formulario.nombre || 'Producto',
+                            },
+                            event
+                          )
+                        }
+                        aria-label={`Ampliar imagen ${indice + 1} de ${formulario.nombre || 'producto'}`}
+                      >
+                        <img
+                          className="productos__gallery-image"
+                          src={obtenerImagen(imagen.ruta)}
+                          alt={`Imagen ${indice + 1} de ${formulario.nombre || 'producto'}`}
+                        />
+                      </button>
+
+                      <div className="productos__gallery-item-footer">
+                        {esPrincipal ? (
+                          <span className="productos__gallery-principal">
+                            Principal
+                          </span>
+                        ) : (
+                          <button
+                            className="productos__action-button"
+                            type="button"
+                            disabled={operacionEnCurso}
+                            onClick={() =>
+                              handleMarcarPrincipal(imagen.imagen_id)
+                            }
+                          >
+                            {cambiandoPrincipalId === imagen.imagen_id
+                              ? 'Actualizando...'
+                              : 'Marcar principal'}
+                          </button>
+                        )}
+
+                        <button
+                          className="productos__action-button productos__action-button--danger"
+                          type="button"
+                          disabled={operacionEnCurso}
+                          onClick={(event) =>
+                            handleSolicitarEliminarImagen(imagen, event)
+                          }
+                        >
+                          Eliminar
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {mensajeGaleria && (
+              <p
+                className="productos__message productos__message--success productos__gallery-message"
+                role="status"
+              >
+                {mensajeGaleria}
+              </p>
+            )}
+
+            {errorGaleria && (
+              <p
+                className="productos__message productos__message--error productos__gallery-message"
+                role="alert"
+              >
+                {errorGaleria}
+              </p>
+            )}
+          </section>
         )}
 
         {error && (
