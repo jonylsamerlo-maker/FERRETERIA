@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 require_once __DIR__ . '/config/Database.php';
 
 try {
@@ -9,11 +14,13 @@ try {
     $conn = $database->getConnection();
 
     if ($conn instanceof PDO) {
-        echo "✅ Conexión exitosa a la base de datos.";
+        echo "Conexion exitosa a la base de datos." . PHP_EOL;
     } else {
-        echo "❌ No se obtuvo una conexión.";
+        fwrite(STDERR, "No se obtuvo una conexion." . PHP_EOL);
+        exit(1);
     }
 
 } catch (Throwable $e) {
-    echo "❌ Error: " . $e->getMessage();
+    fwrite(STDERR, "No fue posible verificar la conexion." . PHP_EOL);
+    exit(1);
 }

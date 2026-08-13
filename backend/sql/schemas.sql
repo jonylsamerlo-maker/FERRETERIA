@@ -86,7 +86,7 @@ VALUES (
     'Merlo',
     'admin',
     'admin@ferreteriajm.com',
-    '$2y$10$UuxRhihaVDFS6YD.q1vGy.TjoxTtPVVyUDMuWcvWJbj0Y9MYo1LxG',
+    '!ROTACION_REQUERIDA!',
     'ADMIN'
 )
 ON DUPLICATE KEY UPDATE

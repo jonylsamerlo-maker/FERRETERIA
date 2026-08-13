@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-$password = "Admin123*";
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 
-$hash = password_hash($password, PASSWORD_DEFAULT);
-
-echo "Contraseña: " . $password . PHP_EOL;
-echo "Hash: " . $hash . PHP_EOL;
+fwrite(STDERR, "Use scripts/cambiar_password.php para rotar una credencial.\n");
+exit(1);

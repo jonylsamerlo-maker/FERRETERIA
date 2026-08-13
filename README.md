@@ -66,6 +66,7 @@ Los scripts disponibles en `ferreteria-jm/apps/frontend/package.json` son:
 │   │   ├── Producto.php
 │   │   └── Usuario.php
 │   ├── scripts/
+│   │   ├── cambiar_password.php
 │   │   └── generar_password.php
 │   ├── sql/
 │   │   ├── schema.sql
@@ -177,7 +178,18 @@ Datos existentes en `backend/sql/seed.sql`:
 | Usuario | `admin` |
 | Email | `admin@ferreteriajm.com` |
 | Rol | `ADMIN` |
-| Password | Hash bcrypt almacenado en `seed.sql`; no hay contrasena en texto plano dentro del seed. |
+| Password | Bloqueada hasta completar la rotacion CLI inicial. |
+
+Despues de crear una instalacion nueva, el propietario debe elegir la password
+fuera del repositorio y rotarla desde una terminal interactiva dentro del
+contenedor backend:
+
+```bash
+docker compose exec backend php scripts/cambiar_password.php admin
+```
+
+La herramienta solicita y confirma la password sin mostrarla, no la guarda en
+archivos y solo actualiza el usuario ADMIN indicado.
 
 ## API
 
@@ -204,11 +216,8 @@ http://localhost:8081
 | `POST` | `/api/upload.php` | Sube una imagen de producto mediante el campo `imagen`. |
 | `GET` | `/api/usuarios.php` | Lista usuarios. |
 
-### Endpoint de verificacion
-
-| Metodo | Endpoint | Descripcion |
-| --- | --- | --- |
-| `GET` | `/test-db.php` | Verifica la conexion del backend con la base de datos. |
+`test-db.php` y las herramientas de `backend/scripts/` son exclusivamente CLI;
+por HTTP responden `404` sin exponer informacion.
 
 ## Capturas
 
