@@ -1,6 +1,8 @@
 <?php
 // backend/index.php
 
+require_once __DIR__ . '/config/Security.php';
+
 // Una clase simple de prueba en POO
 class Ferreteria {
     public $nombre;

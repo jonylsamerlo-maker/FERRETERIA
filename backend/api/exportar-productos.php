@@ -4,14 +4,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
+require_once __DIR__ . '/../config/Csv.php';
 require_once __DIR__ . '/../models/FeatureFlag.php';
 require_once __DIR__ . '/../models/Producto.php';
 
-header('Access-Control-Allow-Origin: http://localhost:4321');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: GET, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
-header('Access-Control-Expose-Headers: Content-Disposition');
+configurarCors('GET, OPTIONS', false, true);
 header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -29,7 +26,11 @@ function responderJsonExportacion(array $datos, int $codigo): never
 
 function escribirFilaCsv($salida, array $fila): void
 {
-    fputcsv($salida, $fila, ';');
+    fputcsv(
+        $salida,
+        array_map('sanitizarCeldaCsv', $fila),
+        ';'
+    );
 }
 
 try {

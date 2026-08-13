@@ -2,7 +2,19 @@
 
 declare(strict_types=1);
 
-header_remove('X-Powered-By');
+require_once __DIR__ . '/Security.php';
+
+function cookieSesionDebeSerSecure(): bool
+{
+    $configuracion = getenv('SESSION_COOKIE_SECURE');
+
+    if (is_string($configuracion) && $configuracion !== '') {
+        return filter_var($configuracion, FILTER_VALIDATE_BOOL);
+    }
+
+    return esEntornoProduccion() ||
+        (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+}
 
 function iniciarSesionSegura(): void
 {
@@ -16,7 +28,7 @@ function iniciarSesionSegura(): void
         'lifetime' => 0,
         'path' => '/',
         'domain' => '',
-        'secure' => false,
+        'secure' => cookieSesionDebeSerSecure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);

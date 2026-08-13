@@ -219,6 +219,31 @@ http://localhost:8081
 `test-db.php` y las herramientas de `backend/scripts/` son exclusivamente CLI;
 por HTTP responden `404` sin exponer informacion.
 
+## Configuracion de produccion
+
+El despliegue debe definir estas variables sin guardar secretos en el
+repositorio:
+
+| Variable | Uso |
+| --- | --- |
+| `APP_ENV=production` | Desactiva errores PHP en respuestas y mantiene logging. |
+| `FRONTEND_ORIGIN` | Origen HTTPS exacto autorizado por CORS. |
+| `SESSION_COOKIE_SECURE=true` | Marca la cookie de sesion como exclusiva de HTTPS. |
+| `PUBLIC_API_BASE_URL` | URL publica HTTPS consumida por el navegador. |
+| `INTERNAL_API_BASE_URL` | URL interna usada por SSR para consultar el backend. |
+| `SITE_URL` | Origen publico canonical requerido por `sitemap.xml`. |
+| `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Conexion del backend a MySQL. |
+| `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` | Inicializacion del servicio MySQL. |
+
+En produccion, HTTPS y la redireccion de HTTP deben estar activas antes de
+habilitar HSTS en el proxy. `SITE_URL` no admite localhost; sin un dominio
+publico valido, el sitemap responde `500` intencionalmente para evitar URLs
+canonical incorrectas.
+
+Los headers anti-framing, `nosniff`, Referrer-Policy y Permissions-Policy se
+aplican en backend y frontend. Una CSP completa para scripts y estilos queda
+pendiente hasta poder introducir nonces sin romper la hidratacion de Astro.
+
 ## Capturas
 
 Seccion preparada para agregar capturas del sistema:

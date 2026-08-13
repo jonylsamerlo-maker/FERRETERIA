@@ -9,13 +9,11 @@ require_once __DIR__ . '/../models/Categoria.php';
 require_once __DIR__ . '/../models/FeatureFlag.php';
 require_once __DIR__ . '/../models/Producto.php';
 
-header('Access-Control-Allow-Origin: http://localhost:4321');
-header('Access-Control-Allow-Credentials: true');
-header('Access-Control-Allow-Methods: POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
+configurarCors('POST, OPTIONS', true);
 header('Content-Type: application/json; charset=UTF-8');
 
 const MAX_PRODUCTOS_IMPORTACION = 200;
+const MAX_BYTES_IMPORTACION = 1048576;
 const CAMPOS_PRODUCTO_IMPORTACION = [
     'codigo',
     'nombre',
@@ -130,7 +128,35 @@ function normalizarStockImportacion(mixed $valor): ?int
 
 function obtenerProductosImportacion(): array
 {
-    $contenido = file_get_contents('php://input');
+    $contentLength = $_SERVER['CONTENT_LENGTH'] ?? null;
+
+    if (
+        is_string($contentLength) &&
+        ctype_digit($contentLength) &&
+        (int)$contentLength > MAX_BYTES_IMPORTACION
+    ) {
+        responderImportacion([
+            'success' => false,
+            'message' => 'El cuerpo de la importación excede el tamaño permitido.',
+            'errores' => [],
+        ], 413);
+    }
+
+    $contenido = file_get_contents(
+        'php://input',
+        false,
+        null,
+        0,
+        MAX_BYTES_IMPORTACION + 1
+    );
+
+    if (!is_string($contenido) || strlen($contenido) > MAX_BYTES_IMPORTACION) {
+        responderImportacion([
+            'success' => false,
+            'message' => 'El cuerpo de la importación excede el tamaño permitido.',
+            'errores' => [],
+        ], 413);
+    }
 
     try {
         $datos = json_decode($contenido, true, 512, JSON_THROW_ON_ERROR);

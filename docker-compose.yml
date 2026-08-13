@@ -13,6 +13,9 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - PUBLIC_API_BASE_URL=${PUBLIC_API_BASE_URL:-http://localhost:8081}
+      - INTERNAL_API_BASE_URL=${INTERNAL_API_BASE_URL:-http://backend}
+      - SITE_URL=${SITE_URL:-}
     command: >
       sh -c "npm run astro -- dev stop || true && npm run dev"
 
@@ -23,6 +26,15 @@ services:
       - "8081:80"
     volumes:
       - ./backend:/var/www/html
+      - ./backend/config/php-security.ini:/usr/local/etc/php/conf.d/security.ini:ro
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - FRONTEND_ORIGIN=${FRONTEND_ORIGIN:-http://localhost:4321}
+      - SESSION_COOKIE_SECURE=${SESSION_COOKIE_SECURE:-false}
+      - DB_HOST=db
+      - DB_NAME=${MYSQL_DATABASE:-ferreteria_db}
+      - DB_USER=${MYSQL_USER:-jony_user}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-jony_password}
     depends_on:
       - db # Espera a que la base de datos esté lista
     # Instalamos la extensión PDO de MySQL para que PHP pueda conectarse orientada a objetos
@@ -34,10 +46,10 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: ferreteria_db
-      MYSQL_USER: jony_user
-      MYSQL_PASSWORD: jony_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ferreteria_db}
+      MYSQL_USER: ${MYSQL_USER:-jony_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jony_password}
     ports:
       - "3308:3306"
     volumes:
