@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../../config/appConfig';
+import { authenticatedFetch } from '../../../config/authenticatedFetch';
 
 const API_URL = `${API_BASE_URL}/api/productos.php`;
 const UPLOAD_URL = `${API_BASE_URL}/api/upload.php`;
@@ -75,7 +76,7 @@ export async function subirImagen(archivo) {
 
   formData.append('imagen', archivo);
 
-  const response = await fetch(UPLOAD_URL, {
+  const response = await authenticatedFetch(UPLOAD_URL, {
     method: 'POST',
     credentials: 'include',
     body: formData,
@@ -85,7 +86,7 @@ export async function subirImagen(archivo) {
 }
 
 export async function crearProducto(datos) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -98,7 +99,7 @@ export async function crearProducto(datos) {
 }
 
 export async function actualizarProducto(id, datos) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       method: 'PUT',
@@ -114,7 +115,7 @@ export async function actualizarProducto(id, datos) {
 }
 
 export async function actualizarPublicado(id, publicado) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       method: 'PATCH',
@@ -130,7 +131,7 @@ export async function actualizarPublicado(id, publicado) {
 }
 
 export async function eliminarProducto(id) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_URL}?id=${encodeURIComponent(id)}`,
     {
       method: 'DELETE',

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
+require_once __DIR__ . '/../config/Csrf.php';
 require_once __DIR__ . '/../models/Producto.php';
 require_once __DIR__ . '/../models/ProductoImagen.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PATCH, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
 header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -172,6 +173,7 @@ try {
             ]);
 
         case 'POST':
+            requerirTokenCsrf();
             $datos = obtenerDatosJson(['producto_id', 'ruta']);
             $productoId = validarIdJson($datos['producto_id'], 'producto_id');
             obtenerProductoOResponder($producto, $productoId);
@@ -192,6 +194,7 @@ try {
             ], 201);
 
         case 'PATCH':
+            requerirTokenCsrf();
             $datos = obtenerDatosJson(['producto_id', 'imagen_id']);
             $productoId = validarIdJson($datos['producto_id'], 'producto_id');
             $imagenId = validarIdJson($datos['imagen_id'], 'imagen_id');
@@ -222,6 +225,7 @@ try {
             ]);
 
         case 'DELETE':
+            requerirTokenCsrf();
             $productoId = validarIdQuery($_GET['producto_id'] ?? null, 'producto_id');
             $imagenId = validarIdQuery($_GET['imagen_id'] ?? null, 'imagen_id');
             obtenerProductoOResponder($producto, $productoId);

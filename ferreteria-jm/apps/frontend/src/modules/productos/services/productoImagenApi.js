@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../../config/appConfig';
+import { authenticatedFetch } from '../../../config/authenticatedFetch';
 
 const API_URL = `${API_BASE_URL}/api/producto-imagenes.php`;
 
@@ -43,7 +44,7 @@ export async function getProductoImagenes(productoId) {
 }
 
 export async function agregarProductoImagen(productoId, ruta) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -56,7 +57,7 @@ export async function agregarProductoImagen(productoId, ruta) {
 }
 
 export async function marcarImagenPrincipal(productoId, imagenId) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: 'PATCH',
     credentials: 'include',
     headers: {
@@ -72,7 +73,7 @@ export async function marcarImagenPrincipal(productoId, imagenId) {
 }
 
 export async function eliminarProductoImagen(productoId, imagenId) {
-  const response = await fetch(
+  const response = await authenticatedFetch(
     `${API_URL}?producto_id=${encodeURIComponent(productoId)}&imagen_id=${encodeURIComponent(imagenId)}`,
     {
       method: 'DELETE',

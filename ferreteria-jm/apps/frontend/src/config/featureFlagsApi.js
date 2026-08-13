@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "./appConfig";
+import { authenticatedFetch } from "./authenticatedFetch";
 
 const API_URL = `${API_BASE_URL}/api/feature-flags.php`;
 
@@ -26,7 +27,7 @@ export async function obtenerFeatureFlags() {
 }
 
 export async function actualizarFeatureFlag(clave, habilitado) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: "PUT",
     credentials: "include",
     headers: {

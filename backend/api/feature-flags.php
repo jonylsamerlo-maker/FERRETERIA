@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
+require_once __DIR__ . '/../config/Csrf.php';
 require_once __DIR__ . '/../models/FeatureFlag.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, PUT, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
 header('Content-Type: application/json; charset=UTF-8');
 
 const FEATURE_FLAGS_PERMITIDOS = [
@@ -84,6 +85,7 @@ try {
 
         case 'PUT':
             requerirRolAdmin();
+            requerirTokenCsrf();
 
             $datos = obtenerDatosFeatureFlag();
             $clave = validarClaveFeatureFlag($datos['clave'] ?? null);

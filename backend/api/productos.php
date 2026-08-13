@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
+require_once __DIR__ . '/../config/Csrf.php';
 require_once __DIR__ . '/../models/Producto.php';
 require_once __DIR__ . '/../models/ProductoImagen.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
 header('Content-Type: application/json; charset=UTF-8');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -278,6 +279,7 @@ try {
 
         case 'POST':
             requerirRolAdmin();
+            requerirTokenCsrf();
             $datos = obtenerDatosJson();
             unset($datos['publicado'], $datos['slug']);
 
@@ -298,6 +300,7 @@ try {
 
         case 'PUT':
             requerirRolAdmin();
+            requerirTokenCsrf();
             $productoId = validarId($_GET['id'] ?? null);
             $datos = obtenerDatosJson();
             unset($datos['publicado'], $datos['slug']);
@@ -316,6 +319,7 @@ try {
 
         case 'PATCH':
             requerirRolAdmin();
+            requerirTokenCsrf();
             $productoId = validarId($_GET['id'] ?? null);
             $datos = obtenerDatosJson();
 
@@ -365,6 +369,7 @@ try {
 
         case 'DELETE':
             requerirRolAdmin();
+            requerirTokenCsrf();
             $productoId = validarId($_GET['id'] ?? null);
 
             if (!$producto->eliminar($productoId)) {

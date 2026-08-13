@@ -1,4 +1,5 @@
 import { API_BASE_URL } from '../../../config/appConfig';
+import { authenticatedFetch } from '../../../config/authenticatedFetch';
 
 const API_URL = `${API_BASE_URL}/api/categorias.php`;
 
@@ -23,7 +24,7 @@ export async function getCategorias() {
 }
 
 export async function crearCategoria(categoria) {
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -36,7 +37,7 @@ export async function crearCategoria(categoria) {
 }
 
 export async function actualizarCategoria(id, categoria) {
-  const response = await fetch(`${API_URL}?id=${id}`, {
+  const response = await authenticatedFetch(`${API_URL}?id=${id}`, {
     method: 'PUT',
     credentials: 'include',
     headers: {
@@ -49,7 +50,7 @@ export async function actualizarCategoria(id, categoria) {
 }
 
 export async function eliminarCategoria(id) {
-  const response = await fetch(`${API_URL}?id=${id}`, {
+  const response = await authenticatedFetch(`${API_URL}?id=${id}`, {
     method: 'DELETE',
     credentials: 'include',
   });

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
+require_once __DIR__ . '/../config/Csrf.php';
 require_once __DIR__ . '/../models/Categoria.php';
 
 header("Access-Control-Allow-Origin: http://localhost:4321");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type");
+header("Access-Control-Allow-Headers: Content-Type, X-CSRF-Token");
 header("Content-Type: application/json; charset=UTF-8");
 
 function responderJson(bool $success, string $message, mixed $data = null, int $statusCode = 200): void
@@ -52,6 +53,7 @@ try {
 
         case 'POST':
             requerirRolAdmin();
+            requerirTokenCsrf();
 
             $datos = json_decode(file_get_contents("php://input"), true);
 
@@ -80,6 +82,7 @@ try {
 
         case 'PUT':
             requerirRolAdmin();
+            requerirTokenCsrf();
 
             $id = $_GET['id'] ?? null;
 
@@ -116,6 +119,7 @@ try {
 
         case 'DELETE':
             requerirRolAdmin();
+            requerirTokenCsrf();
 
             $id = $_GET['id'] ?? null;
 

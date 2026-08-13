@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "../../../config/appConfig";
+import { authenticatedFetch } from "../../../config/authenticatedFetch";
 
 const API_URL = `${API_BASE_URL}/api/importar-productos.php`;
 
@@ -21,7 +22,7 @@ export async function importarProductos(productos) {
     categoria: producto.categoria,
   }));
 
-  const response = await fetch(API_URL, {
+  const response = await authenticatedFetch(API_URL, {
     method: "POST",
     credentials: "include",
     headers: {
