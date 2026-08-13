@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config/Database.php';
 require_once __DIR__ . '/../config/Auth.php';
 require_once __DIR__ . '/../models/Producto.php';
+require_once __DIR__ . '/../models/ProductoImagen.php';
 
 header('Access-Control-Allow-Origin: http://localhost:4321');
 header('Access-Control-Allow-Credentials: true');
@@ -210,6 +211,7 @@ try {
     $conn = $database->getConnection();
 
     $producto = new Producto($conn);
+    $productoImagen = new ProductoImagen($conn);
 
     $metodo = $_SERVER['REQUEST_METHOD'];
 
@@ -226,6 +228,11 @@ try {
                         'mensaje' => 'Producto no encontrado'
                     ], 404);
                 }
+
+                $productoEncontrado['imagenes'] =
+                    $productoImagen->listarPublicasPorProducto(
+                        (int)$productoEncontrado['producto_id']
+                    );
 
                 responderJson($productoEncontrado);
             }

@@ -163,6 +163,24 @@ SET slug = CONCAT(
 WHERE slug LIKE 'pendiente-seed-%'
     AND codigo IN ('HM-001', 'HM-002', 'HE-001', 'SEG-001', 'OFE-001', 'OFE-002');
 
+INSERT INTO producto_imagenes (
+    producto_id,
+    ruta,
+    orden,
+    principal
+)
+SELECT
+    p.producto_id,
+    p.imagen,
+    1,
+    1
+FROM productos p
+LEFT JOIN producto_imagenes pi
+    ON pi.producto_id = p.producto_id
+WHERE p.imagen IS NOT NULL
+    AND TRIM(p.imagen) <> ''
+    AND pi.imagen_id IS NULL;
+
 INSERT INTO feature_flags (
     clave,
     habilitado,

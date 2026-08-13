@@ -31,6 +31,27 @@ class ProductoImagen
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function listarPublicasPorProducto(int $productoId): array
+    {
+        $this->validarProductoId($productoId);
+
+        $stmt = $this->conn->prepare("
+            SELECT imagen_id, ruta, orden, principal
+            FROM producto_imagenes
+            WHERE producto_id = :producto_id
+            ORDER BY principal DESC, orden ASC, imagen_id ASC
+        ");
+        $stmt->bindValue(':producto_id', $productoId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        return array_values(array_filter(
+            $stmt->fetchAll(PDO::FETCH_ASSOC),
+            fn(array $imagen): bool => $this->esArchivoImagenPublicoValido(
+                (string)$imagen['ruta']
+            )
+        ));
+    }
+
     public function contarPorProducto(int $productoId): int
     {
         $this->validarProductoId($productoId);
@@ -445,6 +466,36 @@ class ProductoImagen
         }
 
         return $rutaNormalizada;
+    }
+
+    private function esArchivoImagenPublicoValido(string $ruta): bool
+    {
+        if (preg_match('#^img/productos/[^/\\\\]+$#D', $ruta) !== 1) {
+            return false;
+        }
+
+        $directorio = realpath(__DIR__ . '/../img/productos');
+        $archivo = realpath(__DIR__ . '/../' . $ruta);
+
+        if (
+            $directorio === false ||
+            $archivo === false ||
+            !is_file($archivo) ||
+            !str_starts_with($archivo, $directorio . DIRECTORY_SEPARATOR)
+        ) {
+            return false;
+        }
+
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+
+        if ($finfo === false) {
+            return false;
+        }
+
+        $mime = finfo_file($finfo, $archivo);
+        finfo_close($finfo);
+
+        return in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true);
     }
 
     private function validarProductoId(int $productoId): void

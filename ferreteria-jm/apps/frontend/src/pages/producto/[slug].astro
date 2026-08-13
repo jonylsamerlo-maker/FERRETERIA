@@ -14,6 +14,11 @@ import {
 const slug = Astro.params.slug;
 let producto = null;
 let errorServidor = false;
+const baseImagenPublica =
+  import.meta.env.PUBLIC_API_BASE_URL?.trim() ||
+  import.meta.env.SITE_URL?.trim() ||
+  process.env.SITE_URL?.trim() ||
+  API_BASE_URL;
 
 if (!esSlugProductoValido(slug)) {
   Astro.response.status = 404;
@@ -42,7 +47,7 @@ function resolverImagenPublica(imagen) {
     return ruta;
   }
 
-  return `${API_BASE_URL.replace(/\/+$/, "")}/${ruta.replace(/^\/+/, "")}`;
+  return `${baseImagenPublica.replace(/\/+$/, "")}/${ruta.replace(/^\/+/, "")}`;
 }
 
 function obtenerOrigenPublico(valor) {
