@@ -66,6 +66,26 @@ export async function marcarImagenPrincipal(productoId, imagenId) {
     body: JSON.stringify({
       producto_id: productoId,
       imagen_id: imagenId,
+      operacion: 'principal',
+      direccion: null,
+    }),
+  });
+
+  return handleResponse(response);
+}
+
+export async function moverProductoImagen(productoId, imagenId, direccion) {
+  const response = await authenticatedFetch(API_URL, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      producto_id: productoId,
+      imagen_id: imagenId,
+      operacion: 'mover',
+      direccion,
     }),
   });
 

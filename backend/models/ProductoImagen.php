@@ -281,6 +281,96 @@ class ProductoImagen
         }
     }
 
+    public function mover(int $productoId, int $imagenId, string $direccion): ?array
+    {
+        $this->validarProductoId($productoId);
+        $this->validarImagenId($imagenId);
+
+        if (!in_array($direccion, ['arriba', 'abajo'], true)) {
+            throw new InvalidArgumentException('La dirección de movimiento no es válida.');
+        }
+
+        $this->conn->beginTransaction();
+
+        try {
+            if ($this->bloquearProducto($productoId) === null) {
+                $this->conn->rollBack();
+                return null;
+            }
+
+            $imagenes = $this->obtenerImagenesBloqueadas($productoId);
+            $indiceActual = null;
+
+            foreach ($imagenes as $indice => $imagen) {
+                if ((int)$imagen['imagen_id'] === $imagenId) {
+                    $indiceActual = $indice;
+                    break;
+                }
+            }
+
+            if ($indiceActual === null) {
+                $this->conn->rollBack();
+                return null;
+            }
+
+            $indiceDestino = $direccion === 'arriba'
+                ? $indiceActual - 1
+                : $indiceActual + 1;
+
+            if (!isset($imagenes[$indiceDestino])) {
+                $this->conn->commit();
+                return $imagenes[$indiceActual];
+            }
+
+            $imagenActual = $imagenes[$indiceActual];
+            $imagenDestino = $imagenes[$indiceDestino];
+            $ordenActual = (int)$imagenActual['orden'];
+            $ordenDestino = (int)$imagenDestino['orden'];
+
+            $stmt = $this->conn->prepare("
+                UPDATE producto_imagenes
+                SET orden = 0
+                WHERE producto_id = :producto_id
+                    AND imagen_id = :imagen_id
+            ");
+            $stmt->bindValue(':producto_id', $productoId, PDO::PARAM_INT);
+            $stmt->bindValue(':imagen_id', $imagenId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $stmt = $this->conn->prepare("
+                UPDATE producto_imagenes
+                SET orden = :orden
+                WHERE producto_id = :producto_id
+                    AND imagen_id = :imagen_id
+            ");
+            $stmt->bindValue(':orden', $ordenActual, PDO::PARAM_INT);
+            $stmt->bindValue(':producto_id', $productoId, PDO::PARAM_INT);
+            $stmt->bindValue(
+                ':imagen_id',
+                (int)$imagenDestino['imagen_id'],
+                PDO::PARAM_INT
+            );
+            $stmt->execute();
+
+            $stmt->bindValue(':orden', $ordenDestino, PDO::PARAM_INT);
+            $stmt->bindValue(':producto_id', $productoId, PDO::PARAM_INT);
+            $stmt->bindValue(':imagen_id', $imagenId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            $this->conn->commit();
+
+            $imagenActual['orden'] = $ordenDestino;
+
+            return $imagenActual;
+        } catch (Throwable $e) {
+            if ($this->conn->inTransaction()) {
+                $this->conn->rollBack();
+            }
+
+            throw $e;
+        }
+    }
+
     public function eliminarConReasignacionPrincipal(
         int $productoId,
         int $imagenId

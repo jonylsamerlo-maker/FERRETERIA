@@ -192,7 +192,12 @@ try {
 
         case 'PATCH':
             requerirTokenCsrf();
-            $datos = obtenerDatosJson(['producto_id', 'imagen_id']);
+            $datos = obtenerDatosJson([
+                'producto_id',
+                'imagen_id',
+                'operacion',
+                'direccion',
+            ]);
             $productoId = validarIdJson($datos['producto_id'], 'producto_id');
             $imagenId = validarIdJson($datos['imagen_id'], 'imagen_id');
             obtenerProductoOResponder($producto, $productoId);
@@ -203,6 +208,34 @@ try {
                     'success' => false,
                     'message' => 'Imagen no encontrada.',
                 ], 404);
+            }
+
+            if ($datos['operacion'] === 'mover') {
+                if (!is_string($datos['direccion'])) {
+                    responderImagenes([
+                        'success' => false,
+                        'message' => 'La dirección de movimiento no es válida.',
+                    ], 400);
+                }
+
+                $imagen = $productoImagen->mover(
+                    $productoId,
+                    $imagenId,
+                    $datos['direccion']
+                );
+
+                responderImagenes([
+                    'success' => true,
+                    'message' => 'Orden de imagen actualizado correctamente.',
+                    'imagen' => $imagen,
+                ]);
+            }
+
+            if ($datos['operacion'] !== 'principal' || $datos['direccion'] !== null) {
+                responderImagenes([
+                    'success' => false,
+                    'message' => 'La operación de imagen no es válida.',
+                ], 400);
             }
 
             validarRutaImagen($imagenActual['ruta']);

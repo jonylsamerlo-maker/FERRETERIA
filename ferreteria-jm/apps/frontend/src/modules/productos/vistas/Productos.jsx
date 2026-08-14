@@ -15,6 +15,7 @@ import {
   eliminarProductoImagen,
   getProductoImagenes,
   marcarImagenPrincipal,
+  moverProductoImagen,
 } from '../services/productoImagenApi';
 import './Productos.css';
 
@@ -103,6 +104,7 @@ export default function Productos() {
   const [cambiandoPrincipalId, setCambiandoPrincipalId] =
     useState(null);
   const [eliminandoImagenId, setEliminandoImagenId] = useState(null);
+  const [moviendoImagenId, setMoviendoImagenId] = useState(null);
   const [mensajeGaleria, setMensajeGaleria] = useState('');
   const [errorGaleria, setErrorGaleria] = useState('');
   const [imagenAEliminar, setImagenAEliminar] = useState(null);
@@ -729,7 +731,11 @@ export default function Productos() {
   };
 
   const handleSolicitarEliminarImagen = (imagen, event) => {
-    if (subiendoImagen || cambiandoPrincipalId !== null) {
+    if (
+      subiendoImagen ||
+      cambiandoPrincipalId !== null ||
+      moviendoImagenId !== null
+    ) {
       return;
     }
 
@@ -737,6 +743,35 @@ export default function Productos() {
     setMensajeGaleria('');
     setErrorGaleria('');
     setImagenAEliminar(imagen);
+  };
+
+  const handleMoverImagen = async (imagenId, direccion) => {
+    if (
+      productoEditandoId === null ||
+      moviendoImagenId !== null ||
+      cambiandoPrincipalId !== null ||
+      eliminandoImagenId !== null ||
+      subiendoImagen
+    ) {
+      return;
+    }
+
+    try {
+      setMoviendoImagenId(imagenId);
+      setMensajeGaleria('');
+      setErrorGaleria('');
+      await moverProductoImagen(productoEditandoId, imagenId, direccion);
+      await cargarGaleria(productoEditandoId);
+      setMensajeGaleria('Orden de imagen actualizado.');
+    } catch (err) {
+      setErrorGaleria(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo actualizar el orden de la imagen.'
+      );
+    } finally {
+      setMoviendoImagenId(null);
+    }
   };
 
   const handleEliminarImagen = async () => {
@@ -1665,7 +1700,8 @@ export default function Productos() {
                   const operacionEnCurso =
                     subiendoImagen ||
                     cambiandoPrincipalId !== null ||
-                    eliminandoImagenId !== null;
+                    eliminandoImagenId !== null ||
+                    moviendoImagenId !== null;
 
                   return (
                     <article
@@ -1694,6 +1730,33 @@ export default function Productos() {
                       </button>
 
                       <div className="productos__gallery-item-footer">
+                        <button
+                          className="productos__action-button"
+                          type="button"
+                          aria-label="Subir imagen"
+                          disabled={operacionEnCurso || indice === 0}
+                          onClick={() =>
+                            handleMoverImagen(imagen.imagen_id, 'arriba')
+                          }
+                        >
+                          ↑ Subir
+                        </button>
+
+                        <button
+                          className="productos__action-button"
+                          type="button"
+                          aria-label="Bajar imagen"
+                          disabled={
+                            operacionEnCurso ||
+                            indice === imagenesGaleria.length - 1
+                          }
+                          onClick={() =>
+                            handleMoverImagen(imagen.imagen_id, 'abajo')
+                          }
+                        >
+                          ↓ Bajar
+                        </button>
+
                         {esPrincipal ? (
                           <span className="productos__gallery-principal">
                             Principal
