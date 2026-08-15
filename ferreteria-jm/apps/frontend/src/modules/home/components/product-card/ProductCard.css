@@ -204,3 +204,24 @@ html[data-theme="dark"] .product-card__stock--empty {
     font-size: .9rem;
     font-weight: 700;
 }
+
+@media (max-width: 1023px) {
+    .product-card {
+        max-width: none;
+    }
+
+    .product-card__content {
+        padding: 1.25rem;
+    }
+
+    .product-card__title,
+    .product-card__description {
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 640px) {
+    .product-card__image {
+        height: clamp(190px, 58vw, 260px);
+    }
+}

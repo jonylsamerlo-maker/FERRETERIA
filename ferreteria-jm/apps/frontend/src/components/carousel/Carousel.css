@@ -269,3 +269,104 @@
     }
 
 }
+
+@media (max-width: 1023px) {
+    .ferreteria-carousel__viewport {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ferreteria-carousel__image-frame {
+        height: clamp(280px, 38vw, 380px);
+        min-height: 0;
+    }
+
+    .ferreteria-carousel__overlay {
+        position: static;
+        min-width: 0;
+        justify-content: center;
+        gap: .75rem;
+        padding: 1.5rem;
+        background: var(--color-surface);
+        color: var(--color-text-primary);
+    }
+
+    .ferreteria-carousel__tag {
+        margin-bottom: 0;
+    }
+
+    .ferreteria-carousel__title {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .ferreteria-carousel__title-link:hover {
+        color: var(--color-primary);
+    }
+
+    .ferreteria-carousel__title-link:focus-visible {
+        outline-color: var(--color-primary);
+    }
+
+    .ferreteria-carousel__description {
+        margin: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .ferreteria-carousel__details {
+        margin-top: .25rem;
+    }
+
+    .ferreteria-carousel__price {
+        color: var(--color-primary);
+    }
+
+    .ferreteria-carousel__stock {
+        background: var(--color-page-background);
+        border-color: var(--color-border);
+        color: var(--color-text-primary);
+    }
+
+    .ferreteria-carousel__control {
+        top: clamp(140px, 19vw, 190px);
+    }
+}
+
+@media (max-width: 767px) {
+    .ferreteria-carousel {
+        padding: 2.5rem 1rem;
+    }
+
+    .ferreteria-carousel__viewport {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ferreteria-carousel__image-frame {
+        height: clamp(220px, 58vw, 320px);
+        min-height: 0;
+        padding: 1rem;
+    }
+
+    .ferreteria-carousel__overlay {
+        padding: 1.25rem;
+    }
+
+    .ferreteria-carousel__title {
+        font-size: clamp(1.35rem, 6vw, 1.8rem);
+    }
+
+    .ferreteria-carousel__control {
+        top: clamp(110px, 29vw, 160px);
+        width: 42px;
+        height: 42px;
+        font-size: 1.75rem;
+    }
+
+    .ferreteria-carousel__control--prev {
+        left: .75rem;
+    }
+
+    .ferreteria-carousel__control--next {
+        right: .75rem;
+    }
+}
