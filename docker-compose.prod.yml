@@ -1,0 +1,97 @@
+name: ferreteria_jm_prod
+
+services:
+  frontend:
+    build:
+      context: ./ferreteria-jm/apps/frontend
+      dockerfile: Dockerfile.prod
+      args:
+        PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:?Defina PUBLIC_API_BASE_URL}
+        SITE_URL: ${SITE_URL:?Defina SITE_URL}
+    environment:
+      NODE_ENV: production
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-4321}
+      INTERNAL_API_BASE_URL: ${INTERNAL_API_BASE_URL:-http://backend}
+      SITE_URL: ${SITE_URL:?Defina SITE_URL}
+    expose:
+      - "4321"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4321/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - app_internal
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    environment:
+      APP_ENV: production
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?Defina FRONTEND_ORIGIN}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:?Defina SESSION_COOKIE_SECURE}
+      DB_HOST: ${DB_HOST:-db}
+      DB_NAME: ${DB_NAME:?Defina DB_NAME}
+      DB_USER: ${DB_USER:?Defina DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD}
+    expose:
+      - "80"
+    volumes:
+      - uploads_data:/var/www/html/img/productos
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "php -r 'exit(@file_get_contents(\"http://127.0.0.1/api/productos.php?scope=public\") === false ? 1 : 0);'"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    networks:
+      - app_internal
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Defina MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Defina MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER:?Defina MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Defina MYSQL_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./backend/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "mysqladmin ping -h localhost -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" --silent"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - app_internal
+
+networks:
+  app_internal:
+    internal: true
+
+volumes:
+  db_data:
+    name: ferreteria_jm_prod_db_data
+  uploads_data:
+    name: ferreteria_jm_prod_uploads_data

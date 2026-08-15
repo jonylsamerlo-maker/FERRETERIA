@@ -1,0 +1,5 @@
+sql/
+scripts/*
+!scripts/crear_admin.php
+test-db.php
+*.log

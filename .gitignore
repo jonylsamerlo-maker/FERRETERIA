@@ -22,6 +22,7 @@ pnpm-debug.log*
 # Environment files
 .env
 .env.*
+!.env.example
 
 # Temporary files
 *.tmp
@@ -44,6 +45,14 @@ Desktop.ini
 
 # Docker volumes / runtime state
 db_data/
+backups/
+*.dump
+*.sql.gz
+*.sql.xz
+*.sql.zip
+
+# Runtime uploads generated outside the source assets.
+/backend/img/productos/img_*
 
 # Ignore local build/test files
 *.log
