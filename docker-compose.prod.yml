@@ -9,13 +9,13 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "80:80"
+       - "127.0.0.1:8080:80"
     volumes:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
     networks:
+      - proxy_public
       - app_internal
-
 
   frontend:
     build:
@@ -103,6 +103,7 @@ services:
       - app_internal
 
 networks:
+  proxy_public:
   app_internal:
     internal: true
 
