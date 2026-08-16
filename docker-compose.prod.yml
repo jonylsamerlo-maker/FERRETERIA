@@ -1,6 +1,22 @@
 name: ferreteria_jm_prod
 
 services:
+  nginx:
+    image: nginx:alpine
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    networks:
+      - app_internal
+
+
   frontend:
     build:
       context: ./ferreteria-jm/apps/frontend
