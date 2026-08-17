@@ -115,6 +115,12 @@
 
 }
 
+@media (max-width: 1024px) {
+    .categories {
+        display: none;
+    }
+}
+
 @media (max-width:640px){
 
     .categories{

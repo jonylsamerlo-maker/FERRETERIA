@@ -1,6 +1,7 @@
 import "./Navbar.css";
 import { useEffect, useState } from "react";
 import { logoutUsuario } from "../../modules/auth/services/usuarioApi";
+import { getCategorias } from "../../modules/categorias/services/categoriaApi";
 import {
     CART_STORAGE_KEY,
     CART_UPDATED_EVENT,
@@ -45,8 +46,11 @@ function obtenerUsuarioGuardado() {
 function Navbar() {
     const [usuario, setUsuario] = useState(null);
     const [menuAbierto, setMenuAbierto] = useState(false);
+    const [categoriasAbiertas, setCategoriasAbiertas] = useState(false);
     const [cantidadCarrito, setCantidadCarrito] = useState(0);
     const [tema, setTema] = useState("light");
+    const [categorias, setCategorias] = useState([]);
+    const [cargandoCategorias, setCargandoCategorias] = useState(false);
 
     useEffect(() => {
         setUsuario(obtenerUsuarioGuardado());
@@ -82,6 +86,19 @@ function Navbar() {
             actualizarCantidadCarrito();
         };
 
+        const cargarCategorias = async () => {
+            try {
+                setCargandoCategorias(true);
+                const data = await getCategorias();
+                setCategorias(Array.isArray(data) ? data : []);
+            } catch {
+                setCategorias([]);
+            } finally {
+                setCargandoCategorias(false);
+            }
+        };
+
+        cargarCategorias();
         window.addEventListener("storage", onStorage);
         window.addEventListener("focus", onFocus);
         window.addEventListener(
@@ -114,6 +131,10 @@ function Navbar() {
     const rol = usuario?.rol?.trim().toUpperCase();
     const esAdmin = rol === "ADMIN";
     const estaAutenticado = Boolean(usuario);
+    const categoriasVisibles = categorias.filter(
+        (categoria) =>
+            categoria.nombre?.trim().toLowerCase() !== "ofertas especiales"
+    );
 
     const handleLogout = async () => {
         setMenuAbierto(false);
@@ -133,6 +154,7 @@ function Navbar() {
 
     const cerrarMenu = () => {
         setMenuAbierto(false);
+        setCategoriasAbiertas(false);
     };
 
     return (
@@ -159,6 +181,7 @@ function Navbar() {
                 className="navbar__menu"
                 aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
                 aria-expanded={menuAbierto}
+                aria-controls="navbar-menu"
                 onClick={() => setMenuAbierto((abierto) => !abierto)}
             >
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -170,6 +193,7 @@ function Navbar() {
         </div>
 
         <div
+            id="navbar-menu"
             className={`navbar__links ${
                 menuAbierto ? "navbar__links--open" : ""
             }`}
@@ -181,6 +205,55 @@ function Navbar() {
             >
                 Inicio
             </a>
+
+            <div className="navbar__categories">
+                <button
+                    type="button"
+                    className="navbar__categories-toggle"
+                    aria-expanded={categoriasAbiertas}
+                    aria-controls="navbar-categorias-panel"
+                    onClick={() => setCategoriasAbiertas((abierto) => !abierto)}
+                >
+                    <span>Categorías</span>
+                    <span className="navbar__categories-indicator" aria-hidden="true">
+                        {categoriasAbiertas ? "▴" : "▾"}
+                    </span>
+                </button>
+
+                <div
+                    id="navbar-categorias-panel"
+                    className={`navbar__categories-panel ${
+                        categoriasAbiertas ? "navbar__categories-panel--open" : ""
+                    }`}
+                >
+                    {cargandoCategorias && (
+                        <span className="navbar__categories-status">
+                            Cargando...
+                        </span>
+                    )}
+
+                    {!cargandoCategorias && categoriasVisibles.length === 0 && (
+                        <span className="navbar__categories-status">
+                            No hay categorías disponibles.
+                        </span>
+                    )}
+
+                    {!cargandoCategorias && categoriasVisibles.length > 0 && (
+                        <div className="navbar__categories-list">
+                            {categoriasVisibles.map((categoria) => (
+                                <a
+                                    key={categoria.categoria_id}
+                                    className="navbar__category-link"
+                                    href={`/?categoria=${encodeURIComponent(categoria.nombre)}#productos`}
+                                    onClick={cerrarMenu}
+                                >
+                                    {categoria.nombre}
+                                </a>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
 
             <a
                 className="navbar__link navbar__link--cart"
@@ -239,7 +312,7 @@ function Navbar() {
                         href="/categorias"
                         onClick={cerrarMenu}
                     >
-                        Categorías
+                        Administrar categorías
                     </a>
 
                     <a
