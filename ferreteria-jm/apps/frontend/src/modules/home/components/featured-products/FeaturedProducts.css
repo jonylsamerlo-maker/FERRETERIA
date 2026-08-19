@@ -115,7 +115,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: .5rem 0 1rem;
-    touch-action: pan-x;
 }
 
 .featured-products__carousel {

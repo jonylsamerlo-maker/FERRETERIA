@@ -112,6 +112,12 @@
     text-align:center;
 }
 
+@media (max-width: 1024px){
+    .footer__link-item--categories{
+        display:none;
+    }
+}
+
 @media (max-width: 600px){
     .footer{
         padding:2.25rem 1rem 1.25rem;

@@ -4,7 +4,7 @@ function Footer() {
     const enlacesRapidos = [
         ["Inicio", "/"],
         ["Productos", "/#productos"],
-        ["Categorías", "/#categorias"],
+        ["Categorías", "/#categorias", "footer__link-item--categories"],
         ["Iniciar sesión", "/login"],
     ];
 
@@ -32,8 +32,8 @@ function Footer() {
 
                         <nav aria-label="Enlaces rápidos del pie de página">
                             <ul className="footer__links">
-                                {enlacesRapidos.map(([texto, href]) => (
-                                    <li key={href}>
+                                {enlacesRapidos.map(([texto, href, itemClass]) => (
+                                    <li key={href} className={itemClass}>
                                         <a className="footer__link" href={href}>
                                             {texto}
                                         </a>
