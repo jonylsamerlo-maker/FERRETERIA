@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "../config/appConfig";
+
 export const CART_STORAGE_KEY = "ferreteria_jm_carrito";
 export const CART_UPDATED_EVENT = "ferreteria-jm:cart-updated";
 
@@ -9,6 +11,20 @@ function normalizarNumero(valor, valorPorDefecto = 0) {
   const numero = Number(valor);
 
   return Number.isFinite(numero) ? numero : valorPorDefecto;
+}
+
+function resolverImagen(imagen) {
+  if (typeof imagen !== "string" || imagen.trim() === "") {
+    return "";
+  }
+
+  const ruta = imagen.trim();
+
+  if (/^https?:\/\//i.test(ruta)) {
+    return ruta;
+  }
+
+  return `${API_BASE_URL.replace(/\/+$/, "")}/${ruta.replace(/^\/+/, "")}`;
 }
 
 function normalizarProducto(producto) {
@@ -171,10 +187,11 @@ export function reconciliarCarrito(carrito, catalogoPublico) {
       productoActual.nombre ??
       productoActual.title ??
       producto.nombre;
-    const imagenActual =
+    const imagenActual = resolverImagen(
       productoActual.imagen ??
-      productoActual.image ??
-      producto.imagen;
+        productoActual.image ??
+        producto.imagen
+    );
     const avisos = [];
     let cantidad = producto.cantidad;
 

@@ -167,6 +167,20 @@
     color: #b91c1c;
 }
 
+html[data-theme="dark"] .featured-products__search-clear,
+html[data-theme="dark"] .featured-products__control {
+    color: var(--color-page-background);
+}
+
+html[data-theme="dark"] .featured-products__search-clear:hover:not(:disabled),
+html[data-theme="dark"] .featured-products__control:hover {
+    color: #ffffff;
+}
+
+html[data-theme="dark"] .featured-products__status--error {
+    color: #fca5a5;
+}
+
 @media (min-width: 768px) {
     .featured-products__item {
         flex-basis: calc((100% - 2rem) / 2);

@@ -186,6 +186,15 @@
     color: #ffffff;
 }
 
+html[data-theme="dark"] .ferreteria-carousel__tag,
+html[data-theme="dark"] .ferreteria-carousel__control:hover {
+    color: var(--color-page-background);
+}
+
+html[data-theme="dark"] .ferreteria-carousel__status--error {
+    color: #fca5a5;
+}
+
 .ferreteria-carousel__control--prev {
     left: 1rem;
 }

@@ -324,6 +324,29 @@
   color: #fdb022;
 }
 
+[data-theme="dark"] .cart-item__price {
+  color: #86efac;
+}
+
+[data-theme="dark"] .cart-item__remove,
+[data-theme="dark"] .cart__clear-button {
+  border-color: #fda29b;
+  color: #fda29b;
+}
+
+[data-theme="dark"] .cart-item__remove:hover,
+[data-theme="dark"] .cart__clear-button:hover {
+  background: rgb(180 35 24 / 18%);
+}
+
+[data-theme="dark"] .cart__whatsapp-button {
+  background: #18763f;
+}
+
+[data-theme="dark"] .cart__whatsapp-button:hover:not(:disabled) {
+  background: #14532d;
+}
+
 @media (max-width: 850px) {
   .cart__layout {
     grid-template-columns: 1fr;

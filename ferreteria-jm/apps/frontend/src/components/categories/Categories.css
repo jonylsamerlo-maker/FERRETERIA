@@ -87,6 +87,10 @@
     color: #b91c1c;
 }
 
+html[data-theme="dark"] .categories__status--error {
+    color: #fca5a5;
+}
+
 /* ===========================
    TABLET
 =========================== */
