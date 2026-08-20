@@ -176,20 +176,39 @@ function Navbar() {
                 Ferretería JM
             </h1>
 
-            <button
-                type="button"
-                className="navbar__menu"
-                aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
-                aria-expanded={menuAbierto}
-                aria-controls="navbar-menu"
-                onClick={() => setMenuAbierto((abierto) => !abierto)}
-            >
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M4 6h16"></path>
-                    <path d="M4 12h16"></path>
-                    <path d="M4 18h16"></path>
-                </svg>
-            </button>
+            <div className="navbar__mobile-actions">
+                <a
+                    className="navbar__mobile-cart"
+                    href="/carrito"
+                    aria-label={`Carrito, ${cantidadCarrito} ${
+                        cantidadCarrito === 1 ? "unidad" : "unidades"
+                    }`}
+                >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="9" cy="20" r="1"></circle>
+                        <circle cx="20" cy="20" r="1"></circle>
+                        <path d="m1 1 4 4 2.68 13.39a2 2 0 0 0 2 1.61h7.72a2 2 0 0 0 2-1.61L21 8H6"></path>
+                    </svg>
+                    <span className="navbar__cart-count" aria-hidden="true">
+                        {cantidadCarrito}
+                    </span>
+                </a>
+
+                <button
+                    type="button"
+                    className="navbar__menu"
+                    aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+                    aria-expanded={menuAbierto}
+                    aria-controls="navbar-menu"
+                    onClick={() => setMenuAbierto((abierto) => !abierto)}
+                >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M4 6h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div
