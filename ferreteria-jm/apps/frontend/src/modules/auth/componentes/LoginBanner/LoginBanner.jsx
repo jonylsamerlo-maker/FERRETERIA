@@ -24,14 +24,41 @@ function LoginBanner() {
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setActiveImage((currentImage) => (
-        (currentImage + 1) % LOGIN_IMAGES.length
-      ));
-    }, 10000);
+    const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let intervalId = null;
+
+    const startRotation = () => {
+      if (intervalId !== null) return;
+
+      intervalId = window.setInterval(() => {
+        setActiveImage((currentImage) => (
+          (currentImage + 1) % LOGIN_IMAGES.length
+        ));
+      }, 10000);
+    };
+
+    const stopRotation = () => {
+      if (intervalId === null) return;
+
+      window.clearInterval(intervalId);
+      intervalId = null;
+    };
+
+    const handleReducedMotionChange = (event) => {
+      if (event.matches) {
+        stopRotation();
+        return;
+      }
+
+      startRotation();
+    };
+
+    handleReducedMotionChange(reducedMotionQuery);
+    reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
 
     return () => {
-      clearInterval(intervalId);
+      stopRotation();
+      reducedMotionQuery.removeEventListener("change", handleReducedMotionChange);
     };
   }, []);
 

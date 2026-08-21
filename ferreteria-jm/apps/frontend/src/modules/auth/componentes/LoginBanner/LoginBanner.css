@@ -24,6 +24,12 @@
     opacity: 1;
 }
 
+@media (prefers-reduced-motion: reduce) {
+    .login-banner__image {
+        transition: none;
+    }
+}
+
 @media (max-width: 900px) {
     .login-banner {
         width: 34%;

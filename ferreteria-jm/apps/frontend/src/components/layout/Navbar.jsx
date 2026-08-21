@@ -1,5 +1,5 @@
 import "./Navbar.css";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { logoutUsuario } from "../../modules/auth/services/usuarioApi";
 import { getCategorias } from "../../modules/categorias/services/categoriaApi";
 import {
@@ -51,6 +51,7 @@ function Navbar() {
     const [tema, setTema] = useState("light");
     const [categorias, setCategorias] = useState([]);
     const [cargandoCategorias, setCargandoCategorias] = useState(false);
+    const menuButtonRef = useRef(null);
 
     useEffect(() => {
         setUsuario(obtenerUsuarioGuardado());
@@ -157,6 +158,42 @@ function Navbar() {
         setCategoriasAbiertas(false);
     };
 
+    const alternarMenu = () => {
+        if (menuAbierto) {
+            cerrarMenu();
+            return;
+        }
+
+        setCategoriasAbiertas(false);
+        setMenuAbierto(true);
+    };
+
+    useEffect(() => {
+        if (!menuAbierto) {
+            return undefined;
+        }
+
+        const handleKeyDown = (event) => {
+            if (event.key !== "Escape") {
+                return;
+            }
+
+            setCategoriasAbiertas(false);
+            setMenuAbierto(false);
+
+            const menuButton = menuButtonRef.current;
+            if (menuButton?.getClientRects().length) {
+                menuButton.focus();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [menuAbierto]);
+
     return (
     <nav className="navbar">
         <div className="navbar__brand">
@@ -197,10 +234,11 @@ function Navbar() {
                 <button
                     type="button"
                     className="navbar__menu"
+                    ref={menuButtonRef}
                     aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
                     aria-expanded={menuAbierto}
                     aria-controls="navbar-menu"
-                    onClick={() => setMenuAbierto((abierto) => !abierto)}
+                    onClick={alternarMenu}
                 >
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M4 6h16"></path>
