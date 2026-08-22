@@ -231,6 +231,7 @@ export default function Dashboard() {
   const [importandoProductos, setImportandoProductos] = useState(false);
   const [confirmacionImportacionAbierta, setConfirmacionImportacionAbierta] =
     useState(false);
+  const [ejemploCsvAbierto, setEjemploCsvAbierto] = useState(false);
   const [mensajeImportacion, setMensajeImportacion] = useState("");
   const [errorImportacion, setErrorImportacion] = useState("");
   const [filasImportacion, setFilasImportacion] = useState([]);
@@ -238,6 +239,9 @@ export default function Dashboard() {
   const botonImportarRef = useRef(null);
   const modalImportacionRef = useRef(null);
   const botonConfirmarImportacionRef = useRef(null);
+  const botonEjemploCsvRef = useRef(null);
+  const modalEjemploCsvRef = useRef(null);
+  const botonCerrarEjemploCsvRef = useRef(null);
 
   useEffect(() => {
     const validarSesion = async () => {
@@ -321,6 +325,11 @@ export default function Dashboard() {
     window.setTimeout(() => botonImportarRef.current?.focus(), 0);
   };
 
+  const cerrarEjemploCsv = () => {
+    setEjemploCsvAbierto(false);
+    window.setTimeout(() => botonEjemploCsvRef.current?.focus(), 0);
+  };
+
   useEffect(() => {
     if (!confirmacionImportacionAbierta) {
       return undefined;
@@ -372,6 +381,58 @@ export default function Dashboard() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [confirmacionImportacionAbierta, importandoProductos]);
+
+  useEffect(() => {
+    if (!ejemploCsvAbierto) {
+      return undefined;
+    }
+
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    botonCerrarEjemploCsvRef.current?.focus();
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        cerrarEjemploCsv();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const elementosEnfocables = modalEjemploCsvRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      const elementos = Array.from(elementosEnfocables ?? []).filter(
+        (elemento) => !elemento.disabled
+      );
+
+      if (elementos.length === 0) {
+        return;
+      }
+
+      const primerElemento = elementos[0];
+      const ultimoElemento = elementos[elementos.length - 1];
+
+      if (event.shiftKey && document.activeElement === primerElemento) {
+        event.preventDefault();
+        ultimoElemento.focus();
+      }
+
+      if (!event.shiftKey && document.activeElement === ultimoElemento) {
+        event.preventDefault();
+        primerElemento.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [ejemploCsvAbierto]);
 
   const handleLogout = async () => {
     try {
@@ -1373,31 +1434,14 @@ export default function Dashboard() {
 
           <article className="dashboard__ayuda-bloque">
             <h4>Ejemplo</h4>
-            <div className="dashboard__table-wrap">
-              <table className="dashboard__table">
-                <thead>
-                  <tr>
-                    <th>codigo</th>
-                    <th>nombre</th>
-                    <th>descripcion</th>
-                    <th>precio</th>
-                    <th>stock</th>
-                    <th>categoria</th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  <tr>
-                    <td>HM-100</td>
-                    <td>Martillo</td>
-                    <td>Martillo mango de madera</td>
-                    <td>12500</td>
-                    <td>10</td>
-                    <td>Herramientas</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <button
+              className="dashboard__help-toggle"
+              type="button"
+              ref={botonEjemploCsvRef}
+              onClick={() => setEjemploCsvAbierto(true)}
+            >
+              Ver ejemplo de CSV
+            </button>
           </article>
 
           <article className="dashboard__ayuda-bloque">
@@ -1599,6 +1643,76 @@ export default function Dashboard() {
                 {importandoProductos
                   ? "Importando..."
                   : `Importar ${resumenImportacion.validos} productos`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {ejemploCsvAbierto && (
+        <div
+          className="dashboard__modal-overlay"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              cerrarEjemploCsv();
+            }
+          }}
+        >
+          <div
+            className="dashboard__modal"
+            ref={modalEjemploCsvRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ejemplo-csv-title"
+            aria-describedby="ejemplo-csv-description"
+          >
+            <p className="dashboard__section-kicker">Formato CSV</p>
+            <h2 id="ejemplo-csv-title">Ejemplo de archivo CSV</h2>
+            <p id="ejemplo-csv-description">
+              Esta tabla muestra el orden de las columnas esperado para la importación.
+            </p>
+            <p className="dashboard__import-note">
+              Deslizá horizontalmente para ver todas las columnas.
+            </p>
+
+            <div
+              className="dashboard__table-wrap"
+              tabIndex={0}
+              aria-label="Ejemplo de estructura del archivo CSV"
+            >
+              <table className="dashboard__table">
+                <thead>
+                  <tr>
+                    <th>codigo</th>
+                    <th>nombre</th>
+                    <th>descripcion</th>
+                    <th>precio</th>
+                    <th>stock</th>
+                    <th>categoria</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>HM-100</td>
+                    <td>Martillo</td>
+                    <td>Martillo mango de madera</td>
+                    <td>12500</td>
+                    <td>10</td>
+                    <td>Herramientas</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="dashboard__modal-actions">
+              <button
+                className="dashboard__modal-button dashboard__modal-button--secondary"
+                type="button"
+                ref={botonCerrarEjemploCsvRef}
+                onClick={cerrarEjemploCsv}
+              >
+                Cerrar
               </button>
             </div>
           </div>
